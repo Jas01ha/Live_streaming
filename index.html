@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js">
     </script>
     <style>
+        /* ===== 全局样式 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -453,11 +454,11 @@
             </div>
         </div>
 
-        <!-- ===== 账号趋势 + 热力图 ===== -->
+        <!-- ===== 账号开播趋势 + 热力图 ===== -->
         <div class="row-2col">
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-chart-line"></i> 账号趋势
+                    <i class="fas fa-chart-line"></i> 账号开播趋势
                     <span class="tag">总直播时长 &amp; 开播账号数</span>
                 </div>
                 <div class="chart-container-echarts" id="trendECharts"></div>
@@ -636,7 +637,6 @@
             const COMP_BRANDS = ['奥迪', '沃尔沃', '凯迪拉克', '保时捷', '路虎', '捷豹'];
             const COMP_DIMS = ['续航', '价格', '空间', '配置', '性能', '智能驾驶', '安全性', '外观', '内饰', '售后服务'];
             const SENTIMENTS = ['正面', '中性', '负面'];
-            // 流量来源：关注页、同城、视频推荐、其它
             const TRAFFIC_SOURCES = ['关注页', '同城', '视频推荐', '其它'];
             const LIVE_FORMATS = ['展厅直播', '户外路试', '访谈式', '发布会', '绿幕虚拟', '其他'];
 
@@ -1394,14 +1394,31 @@
                 });
             }
 
-            // 8.9 账号趋势折线图
+            // =============================================================
+            // 8.9 账号开播趋势（只展示最近7天）
+            // =============================================================
             function renderTrendECharts(data) {
                 const dom = document.getElementById('trendECharts');
                 const myChart = echarts.init(dom);
-                const dateAgg = aggregateByDate(data);
+
+                // 按日期聚合
+                let dateAgg = aggregateByDate(data);
+
+                // 只取最近7天（如果数据少于7天则显示全部）
+                if (dateAgg.length > 7) {
+                    dateAgg = dateAgg.slice(dateAgg.length - 7);
+                }
+
                 const dates = dateAgg.map(d => d.date);
                 const totalDuration = dateAgg.map(d => Math.round(d.duration / 60));
                 const accountCount = dateAgg.map(d => d.accounts.size);
+
+                if (dates.length === 0) {
+                    myChart.setOption({
+                        title: { text: '暂无数据', left: 'center', top: 'center' }
+                    });
+                    return;
+                }
 
                 const option = {
                     tooltip: {
@@ -1422,7 +1439,14 @@
                     xAxis: {
                         type: 'category',
                         data: dates,
-                        axisLabel: { fontSize: 10, rotate: 25 },
+                        axisLabel: {
+                            fontSize: 10,
+                            rotate: 25,
+                            formatter: function(value) {
+                                // 只显示月-日，更简洁
+                                return value.slice(5);
+                            }
+                        },
                         axisLine: { show: true }
                     },
                     yAxis: [{
@@ -1705,7 +1729,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 8.13 TOP10 直播明细列表（视频推荐高亮显示）
+            // 8.13 TOP10 直播明细列表
             function renderTop10Table(data) {
                 const tbody = document.getElementById('top10TableBody');
                 if (data.length === 0) {
@@ -1726,7 +1750,6 @@
                     const durationHours = (d.duration / 60).toFixed(1);
                     const hasAudience = d.hasLiveAudience === 1;
 
-                    // 流量来源徽章：视频推荐用橙色高亮
                     let trafficBadge = `<span class="badge badge-gray">${d.trafficSource || '—'}</span>`;
                     if (d.trafficSource === '视频推荐') {
                         trafficBadge = `<span class="badge badge-video">视频推荐</span>`;

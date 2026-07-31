@@ -6,14 +6,12 @@
     <title>直播情报 · 数据看板</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
     </script>
-    <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js">
     </script>
     <style>
-        /* ===== 全局样式（与之前完全一致） ===== */
+        /* ===== 全局样式 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -261,7 +259,8 @@
         }
         .chart-container { position: relative; height: 220px; }
         .chart-container.tall { height: 260px; }
-        .chart-container-echarts { width: 100%; height: 260px; }
+        .chart-container-echarts { width: 100%; height: 320px; }  /* 增高 */
+        .chart-container-echarts-pie { width: 100%; height: 260px; }
 
         .suggest-list { list-style: none; padding: 0; }
         .suggest-list li {
@@ -303,6 +302,8 @@
             .filter-actions { justify-content: stretch; flex-wrap: wrap; }
             .filter-actions .btn-apply, .filter-actions .btn-reset { flex: 1; justify-content: center; }
             .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+            .chart-container-echarts { height: 260px; }
+            .chart-container-echarts-pie { height: 220px; }
         }
         @media (max-width: 480px) {
             body { padding: 12px; }
@@ -311,7 +312,8 @@
             .card { padding: 16px; }
             .topbar { flex-direction: column; align-items: flex-start; }
             .topbar-right { width: 100%; justify-content: flex-start; }
-            .chart-container-echarts { height: 200px; }
+            .chart-container-echarts { height: 220px; }
+            .chart-container-echarts-pie { height: 200px; }
         }
     </style>
 </head>
@@ -329,7 +331,7 @@
             </div>
         </div>
 
-        <!-- ===== 筛选器栏 ===== -->
+        <!-- ===== 筛选器 ===== -->
         <div class="filters-bar" id="filterArea">
             <div class="filter-group">
                 <label><i class="far fa-calendar"></i> 时间维度</label>
@@ -377,7 +379,7 @@
             </div>
         </div>
 
-        <!-- ===== KPI 卡片 ===== -->
+        <!-- ===== KPI ===== -->
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="label"><i class="fas fa-video"></i> 监测场次</div>
@@ -411,7 +413,7 @@
             </div>
         </div>
 
-        <!-- ===== 大分类：直播运营态势内容 ===== -->
+        <!-- ===== 直播运营态势内容 ===== -->
         <div class="card" style="margin-bottom:12px;">
             <div class="card-title" style="font-size:18px; margin-bottom:0;">
                 <i class="fas fa-calendar-check" style="color:#4f46e5;"></i> 直播运营态势内容（直播排班 &amp; 节奏策略）
@@ -448,7 +450,7 @@
             </div>
         </div>
 
-        <!-- ===== 新增两个图表 ===== -->
+        <!-- ===== 账号趋势 + 热力图 ===== -->
         <div class="row-2col">
             <div class="card">
                 <div class="card-title">
@@ -463,6 +465,24 @@
                     <span class="tag">时段分布</span>
                 </div>
                 <div class="chart-container-echarts" id="heatmapECharts"></div>
+            </div>
+        </div>
+
+        <!-- ===== 新增：流量来源 + 直播形式 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-wifi"></i> 流量来源结构
+                    <span class="tag">占比</span>
+                </div>
+                <div class="chart-container-echarts-pie" id="trafficChart"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-tv"></i> 直播形式结构
+                    <span class="tag">场次占比</span>
+                </div>
+                <div class="chart-container-echarts-pie" id="formatChart"></div>
             </div>
         </div>
 
@@ -557,7 +577,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- JavaScript 部分 -->
+    <!-- JavaScript -->
     <!-- ============================================================ -->
     <script>
         (function() {
@@ -580,6 +600,9 @@
             const COMP_BRANDS = ['奥迪', '沃尔沃', '凯迪拉克', '保时捷', '路虎', '捷豹'];
             const COMP_DIMS = ['续航', '价格', '空间', '配置', '性能', '智能驾驶', '安全性', '外观', '内饰', '售后服务'];
             const SENTIMENTS = ['正面', '中性', '负面'];
+            // 流量来源和直播形式
+            const TRAFFIC_SOURCES = ['自然推荐', '付费投流', '同城页', '其他'];
+            const LIVE_FORMATS = ['展厅直播', '户外路试', '访谈式', '发布会', '绿幕虚拟', '其他'];
 
             // =============================================================
             // 2. 工具函数
@@ -623,7 +646,7 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据（含 startHour）
+            // 3. 生成模拟数据（新增 trafficSource, liveFormat）
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -652,9 +675,11 @@
                             const viewership = Math.floor(peak * (5 + Math.random() * 15));
                             const interactions = 200 + Math.floor(Math.random() * 2300);
                             const leads = 1 + Math.floor(Math.random() * 7);
-
-                            // 随机生成开播小时 (0-23)
                             const startHour = Math.floor(Math.random() * 24);
+
+                            // 新增字段
+                            const trafficSource = TRAFFIC_SOURCES[Math.floor(Math.random() * TRAFFIC_SOURCES.length)];
+                            const liveFormat = LIVE_FORMATS[Math.floor(Math.random() * LIVE_FORMATS.length)];
 
                             const compCount = Math.floor(Math.random() * 3);
                             const compList = [];
@@ -680,6 +705,8 @@
                                 contentTopic: topic,
                                 promoType: promo,
                                 startHour: startHour,
+                                trafficSource: trafficSource,
+                                liveFormat: liveFormat,
                                 competitorMentions: compList,
                                 sessionCount: 1
                             });
@@ -751,7 +778,7 @@
             populateStoreOptions('all');
 
             // =============================================================
-            // 5. 日期选择器动态变化
+            // 5. 日期选择器
             // =============================================================
             function updateDatePicker() {
                 const dim = timeDimension.value;
@@ -790,7 +817,7 @@
             updateDatePicker();
 
             // =============================================================
-            // 6. 数据过滤核心
+            // 6. 数据过滤
             // =============================================================
             function getFilters() {
                 const brand = brandFilter.value;
@@ -870,7 +897,9 @@
                             topics: {},
                             promos: {},
                             comps: [],
-                            timeSlots: {}
+                            timeSlots: {},
+                            trafficSources: {},
+                            liveFormats: {}
                         };
                     }
                     const a = map[key];
@@ -889,6 +918,9 @@
                     }
                     const slot = getTimeSlot(d.startHour);
                     a.timeSlots[slot] = (a.timeSlots[slot] || 0) + 1;
+                    // 新增
+                    if (d.trafficSource) a.trafficSources[d.trafficSource] = (a.trafficSources[d.trafficSource] || 0) + 1;
+                    if (d.liveFormat) a.liveFormats[d.liveFormat] = (a.liveFormats[d.liveFormat] || 0) + 1;
                 }
                 for (const key of Object.keys(map)) {
                     const a = map[key];
@@ -1325,14 +1357,14 @@
             }
 
             // =============================================================
-            // 8.9 新增 ECharts 图表：账号趋势折线图（双轴）
+            // 8.9 ECharts：账号趋势折线图（双轴）
             // =============================================================
             function renderTrendECharts(data) {
                 const dom = document.getElementById('trendECharts');
                 const myChart = echarts.init(dom);
                 const dateAgg = aggregateByDate(data);
                 const dates = dateAgg.map(d => d.date);
-                const totalDuration = dateAgg.map(d => Math.round(d.duration / 60)); // 转为小时
+                const totalDuration = dateAgg.map(d => Math.round(d.duration / 60));
                 const accountCount = dateAgg.map(d => d.accounts.size);
 
                 const option = {
@@ -1347,14 +1379,14 @@
                     grid: {
                         left: '8%',
                         right: '8%',
-                        bottom: '10%',
+                        bottom: '12%',   // 增加底部空间
                         top: '15%',
                         containLabel: false
                     },
                     xAxis: {
                         type: 'category',
                         data: dates,
-                        axisLabel: { fontSize: 10, rotate: 20 },
+                        axisLabel: { fontSize: 10, rotate: 25 },
                         axisLine: { show: true }
                     },
                     yAxis: [{
@@ -1399,7 +1431,7 @@
             }
 
             // =============================================================
-            // 8.10 热力图（颜色条已移到右侧）
+            // 8.10 ECharts：热力图（颜色条右侧，已调整）
             // =============================================================
             function renderHeatmap(data) {
                 const dom = document.getElementById('heatmapECharts');
@@ -1442,8 +1474,8 @@
                     },
                     grid: {
                         left: '12%',
-                        right: '15%',      // 右侧留出空间给垂直颜色条
-                        bottom: '10%',
+                        right: '15%',
+                        bottom: '12%',   // 增加底部空间
                         top: '6%',
                         containLabel: false
                     },
@@ -1465,8 +1497,8 @@
                         min: 0,
                         max: maxVal,
                         calculable: true,
-                        orient: 'vertical',   // 改为垂直
-                        right: '2%',           // 靠右
+                        orient: 'vertical',
+                        right: '2%',
                         top: 'center',
                         inRange: {
                             color: ['#f0f4f8', '#dbeafe', '#93c5fd', '#3b82f6', '#1e40af']
@@ -1500,7 +1532,149 @@
             }
 
             // =============================================================
-            // 8.11 策略建议
+            // 8.11 新增：流量来源结构图（饼图）
+            // =============================================================
+            function renderTrafficChart(data) {
+                const dom = document.getElementById('trafficChart');
+                const myChart = echarts.init(dom);
+
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+
+                const map = {};
+                for (const d of data) {
+                    if (d.trafficSource) {
+                        map[d.trafficSource] = (map[d.trafficSource] || 0) + (d.sessionCount || 1);
+                    }
+                }
+
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+
+                const colors = ['#4f46e5', '#10b981', '#f59e0b', '#9ca3af'];
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{b}<br/>场次: {c} ({d}%)'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        top: 'center',
+                        textStyle: { fontSize: 12 },
+                        itemWidth: 12,
+                        itemHeight: 12
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['60%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: {
+                            show: true,
+                            formatter: '{d}%',
+                            fontSize: 11,
+                            fontWeight: 500
+                        },
+                        labelLine: { show: true },
+                        data: pieData.map((item, idx) => ({
+                            ...item,
+                            itemStyle: { color: colors[idx % colors.length] }
+                        })),
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0,0,0,0.2)'
+                            }
+                        }
+                    }]
+                };
+
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 8.12 新增：直播形式结构图（饼图）
+            // =============================================================
+            function renderFormatChart(data) {
+                const dom = document.getElementById('formatChart');
+                const myChart = echarts.init(dom);
+
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+
+                const map = {};
+                for (const d of data) {
+                    if (d.liveFormat) {
+                        map[d.liveFormat] = (map[d.liveFormat] || 0) + (d.sessionCount || 1);
+                    }
+                }
+
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+
+                const colors = ['#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#9ca3af'];
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{b}<br/>场次: {c} ({d}%)'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        top: 'center',
+                        textStyle: { fontSize: 12 },
+                        itemWidth: 12,
+                        itemHeight: 12
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['60%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: {
+                            show: true,
+                            formatter: '{d}%',
+                            fontSize: 11,
+                            fontWeight: 500
+                        },
+                        labelLine: { show: true },
+                        data: pieData.map((item, idx) => ({
+                            ...item,
+                            itemStyle: { color: colors[idx % colors.length] }
+                        })),
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0,0,0,0.2)'
+                            }
+                        }
+                    }]
+                };
+
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 8.13 策略建议（不变）
             // =============================================================
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
@@ -1573,6 +1747,8 @@
                 renderTrendChartJS(data);
                 renderTrendECharts(data);
                 renderHeatmap(data);
+                renderTrafficChart(data);   // 新增
+                renderFormatChart(data);    // 新增
                 renderSuggestions(data);
             }
 

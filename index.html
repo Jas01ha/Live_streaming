@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>汽车直播竞争情报看板</title>
-    <!-- Font Awesome 图标库 -->
+    <title>直播竞争情报 · 数据看板</title>
+    <!-- 字体与图标库 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <!-- ECharts CDN -->
+    <!-- ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js">
     </script>
     <style>
-        /* ===== 全局样式 ===== */
+        /* ===== 全局重置 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -18,78 +19,79 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f3f6fc;
-            color: #1a2634;
-            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f4f8;
+            color: #0a0f1e;
+            padding: 24px;
         }
 
-        .dashboard {
+        .container {
             max-width: 1440px;
             margin: 0 auto;
         }
 
-        /* ===== 顶部标题栏 ===== */
-        .header {
+        /* ===== 顶部栏 ===== */
+        .topbar {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
             flex-wrap: wrap;
             gap: 16px;
             margin-bottom: 24px;
-            background: #ffffff;
-            padding: 16px 28px;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0, 20, 50, 0.06);
+            background: #fff;
+            padding: 16px 24px;
+            border-radius: 16px;
+            border: 1px solid #f0f2f5;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
         }
 
-        .header h1 {
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .topbar-left h1 {
             font-size: 22px;
             font-weight: 700;
             letter-spacing: -0.3px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            color: #0a0f1e;
         }
-        .header h1 i {
-            color: #2563eb;
-        }
-        .header h1 small {
-            font-size: 14px;
-            font-weight: 400;
+        .topbar-left h1 span {
             color: #6b7280;
-            margin-left: 8px;
+            font-weight: 400;
+            font-size: 16px;
         }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .topbar-right {
             font-size: 14px;
             color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 16px;
             flex-wrap: wrap;
         }
-        .header-right .badge {
+        .topbar-right .badge {
             background: #eef2ff;
-            color: #2563eb;
+            color: #4f46e5;
             padding: 4px 14px;
             border-radius: 40px;
             font-weight: 500;
             font-size: 13px;
         }
 
-        /* ===== 筛选器区域 ===== */
-        .filters {
-            background: #ffffff;
-            padding: 16px 24px;
+        /* ===== 筛选栏 ===== */
+        .filters-bar {
+            background: #fff;
             border-radius: 16px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            padding: 16px 24px;
+            margin-bottom: 28px;
+            border: 1px solid #f0f2f5;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
             display: flex;
             flex-wrap: wrap;
             align-items: flex-end;
-            gap: 16px 28px;
-            border: 1px solid #eef2f6;
+            gap: 16px 24px;
         }
 
         .filter-group {
@@ -97,6 +99,7 @@
             flex-direction: column;
             gap: 4px;
             min-width: 140px;
+            flex: 1 0 auto;
         }
         .filter-group label {
             font-size: 12px;
@@ -108,29 +111,28 @@
         .filter-group select,
         .filter-group input {
             padding: 8px 12px;
-            border: 1px solid #d1d9e6;
+            border: 1px solid #e5e7eb;
             border-radius: 10px;
             background: #fafcff;
             font-size: 14px;
-            color: #1a2634;
+            color: #1f2937;
             outline: none;
             transition: 0.2s;
             min-width: 140px;
+            font-family: 'Inter', sans-serif;
         }
         .filter-group select:focus,
         .filter-group input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
         .filter-group select[multiple] {
             min-height: 44px;
             padding: 4px 8px;
         }
-        .filter-group select[multiple] option {
-            padding: 4px 8px;
-        }
+
         .btn-apply {
-            background: #2563eb;
+            background: #4f46e5;
             color: #fff;
             border: none;
             padding: 8px 28px;
@@ -139,33 +141,36 @@
             font-size: 14px;
             cursor: pointer;
             transition: 0.2s;
-            margin-left: auto;
             height: 42px;
-            align-self: flex-end;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            margin-left: auto;
         }
         .btn-apply:hover {
-            background: #1d4ed8;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            background: #4338ca;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         }
 
         /* ===== KPI 卡片 ===== */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 16px;
             margin-bottom: 28px;
         }
 
         .kpi-card {
-            background: #ffffff;
+            background: #fff;
             border-radius: 16px;
             padding: 18px 20px 16px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            border: 1px solid #f0f2f5;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
             transition: 0.2s;
         }
         .kpi-card:hover {
-            border-color: #cbd5e1;
+            border-color: #e5e7eb;
         }
         .kpi-card .label {
             font-size: 13px;
@@ -180,121 +185,202 @@
             font-weight: 700;
             margin-top: 4px;
             letter-spacing: -0.3px;
-            color: #0b1a2b;
+            color: #0a0f1e;
         }
-        .kpi-card .sub {
+        .kpi-card .change {
             font-size: 12px;
-            color: #9ca3af;
+            font-weight: 500;
             margin-top: 4px;
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 40px;
         }
-        .kpi-card .trend-up {
+        .change.up {
+            background: #ecfdf5;
             color: #059669;
         }
-        .kpi-card .trend-down {
+        .change.down {
+            background: #fef2f2;
             color: #dc2626;
         }
-
-        /* ===== 图表通用卡片 ===== */
-        .chart-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 24px;
+        .change.neutral {
+            background: #f3f4f6;
+            color: #6b7280;
         }
 
-        .chart-card {
-            background: #ffffff;
+        /* ===== 卡片通用 ===== */
+        .card {
+            background: #fff;
             border-radius: 16px;
-            padding: 18px 18px 10px;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            padding: 20px 22px 22px;
+            border: 1px solid #f0f2f5;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            margin-bottom: 20px;
         }
-        .chart-card .card-title {
+
+        .card .card-title {
             font-size: 15px;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 8px;
+            color: #0a0f1e;
         }
-        .chart-card .card-title i {
-            color: #2563eb;
+        .card .card-title i {
+            color: #4f46e5;
+            font-size: 16px;
         }
+        .card .card-title .tag {
+            font-size: 11px;
+            font-weight: 500;
+            background: #eef2ff;
+            color: #4f46e5;
+            padding: 2px 10px;
+            border-radius: 40px;
+            margin-left: 6px;
+        }
+
+        /* ===== 双栏布局 ===== */
+        .row-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* ===== 图表容器 ===== */
         .chart-container {
+            position: relative;
             width: 100%;
             height: 260px;
         }
         .chart-container.tall {
             height: 300px;
         }
-        .full-width {
-            grid-column: 1 / -1;
-        }
 
-        /* ===== 促销对比表格 ===== */
+        /* ===== 表格样式 ===== */
         .table-wrap {
             overflow-x: auto;
             margin-top: 4px;
         }
-        .promo-table {
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 14px;
         }
-        .promo-table th {
+
+        table thead th {
             text-align: left;
-            padding: 10px 10px 10px 0;
+            padding: 10px 8px 10px 0;
             font-weight: 600;
             color: #4b5563;
-            border-bottom: 2px solid #e5e9f0;
+            border-bottom: 2px solid #e5e7eb;
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
-            white-space: nowrap;
         }
-        .promo-table td {
-            padding: 10px 10px 10px 0;
-            border-bottom: 1px solid #f0f3f8;
+
+        table tbody td {
+            padding: 10px 8px 10px 0;
+            border-bottom: 1px solid #f3f4f6;
             color: #1f2937;
             vertical-align: middle;
         }
-        .promo-table tr:last-child td {
+
+        table tbody tr:last-child td {
             border-bottom: none;
         }
-        .promo-table .highlight {
-            font-weight: 700;
-            color: #2563eb;
+
+        .trend-up {
+            color: #059669;
         }
-        .tag {
+        .trend-down {
+            color: #dc2626;
+        }
+        .trend-neutral {
+            color: #6b7280;
+        }
+
+        .badge {
             display: inline-block;
             padding: 2px 10px;
             border-radius: 40px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 500;
-            background: #f0f3f8;
-            color: #4b5563;
-            margin-right: 4px;
+            white-space: nowrap;
         }
-        .tag-red {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-        .tag-green {
+        .badge-green {
             background: #ecfdf5;
             color: #059669;
         }
-        .tag-blue {
-            background: #eef2ff;
-            color: #2563eb;
+        .badge-red {
+            background: #fef2f2;
+            color: #dc2626;
         }
-        .tag-yellow {
+        .badge-yellow {
             background: #fffbeb;
             color: #d97706;
+        }
+        .badge-gray {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        .badge-blue {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+        .badge-purple {
+            background: #f5f3ff;
+            color: #7c3aed;
+        }
+
+        /* ===== 洞察/策略列表 ===== */
+        .insight-list {
+            list-style: none;
+            padding: 0;
+        }
+        .insight-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+            line-height: 1.6;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .insight-list li:last-child {
+            border-bottom: none;
+        }
+        .insight-list .priority {
+            font-weight: 600;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 40px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .priority.urgent {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .priority.important {
+            background: #fffbeb;
+            color: #d97706;
+        }
+        .priority.normal {
+            background: #f3f4f6;
+            color: #6b7280;
         }
 
         /* ===== 响应式 ===== */
         @media (max-width: 1024px) {
-            .chart-grid {
+            .row-2col {
                 grid-template-columns: 1fr;
             }
             .full-width {
@@ -302,79 +388,71 @@
             }
         }
 
-        @media (max-width: 640px) {
-            body {
-                padding: 12px;
+        @media (max-width: 820px) {
+            .topbar-left h1 {
+                font-size: 18px;
             }
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 16px;
+            .topbar-left h1 span {
+                font-size: 13px;
+                display: block;
             }
-            .filters {
+            .filters-bar {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 12px;
             }
             .filter-group {
                 min-width: 100%;
             }
             .btn-apply {
                 margin-left: 0;
-                width: 100%;
                 justify-content: center;
             }
             .kpi-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-            }
-            .kpi-card .value {
-                font-size: 22px;
-            }
-            .chart-card {
-                padding: 12px;
-            }
-            .chart-container {
-                height: 220px;
-            }
-            .promo-table {
-                font-size: 12px;
-            }
-            .promo-table th,
-            .promo-table td {
-                padding: 6px 6px 6px 0;
             }
         }
 
-        @media (max-width: 420px) {
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
             .kpi-grid {
                 grid-template-columns: 1fr 1fr;
+                gap: 10px;
             }
-            .header h1 {
-                font-size: 18px;
-                flex-wrap: wrap;
+            .kpi-card .value {
+                font-size: 20px;
+            }
+            .card {
+                padding: 16px;
+            }
+            .topbar-left .back-btn span {
+                display: none;
+            }
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
+    <div class="container">
 
-        <!-- ===== 顶部标题 ===== -->
-        <div class="header">
-            <h1>
-                <i class="fas fa-tower-broadcast"></i> 直播竞争情报看板
-                <small>终端促销 · 获客留资 · 竞品追踪</small>
-            </h1>
-            <div class="header-right">
+        <!-- ===== 顶部栏 ===== -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <h1>📊 竞争情报看板 <span>· 终端促销 & 获客策略追踪</span></h1>
+            </div>
+            <div class="topbar-right">
                 <span class="badge"><i class="far fa-calendar-alt"></i> 数据更新: 今日 18:00</span>
                 <span><i class="far fa-building"></i> 覆盖 6 个账号</span>
             </div>
         </div>
 
-        <!-- ===== 筛选器 ===== -->
-        <div class="filters" id="filterArea">
+        <!-- ===== 筛选栏 ===== -->
+        <div class="filters-bar" id="filterArea">
             <div class="filter-group">
                 <label><i class="far fa-calendar"></i> 时间维度</label>
                 <select id="timeDimension">
@@ -439,79 +517,79 @@
             <div class="kpi-card">
                 <div class="label"><i class="fas fa-video"></i> 监测场次</div>
                 <div class="value" id="kpiSessions">--</div>
-                <div class="sub">较上周期 <span class="trend-up">↑ 12%</span></div>
+                <span class="change up"><i class="fas fa-arrow-up"></i> +12%</span>
             </div>
             <div class="kpi-card">
                 <div class="label"><i class="fas fa-eye"></i> 总观看人次</div>
                 <div class="value" id="kpiViewership">--</div>
-                <div class="sub">较上周期 <span class="trend-up">↑ 8%</span></div>
+                <span class="change up"><i class="fas fa-arrow-up"></i> +8%</span>
             </div>
             <div class="kpi-card">
                 <div class="label"><i class="fas fa-chart-line"></i> 最高峰值在线</div>
                 <div class="value" id="kpiPeak">--</div>
-                <div class="sub">较上周期 <span class="trend-up">↑ 5%</span></div>
+                <span class="change up"><i class="fas fa-arrow-up"></i> +5%</span>
             </div>
             <div class="kpi-card">
                 <div class="label"><i class="fas fa-heart"></i> 总互动量</div>
                 <div class="value" id="kpiInteraction">--</div>
-                <div class="sub">较上周期 <span class="trend-up">↑ 15%</span></div>
+                <span class="change up"><i class="fas fa-arrow-up"></i> +15%</span>
             </div>
             <div class="kpi-card">
                 <div class="label"><i class="fas fa-user-plus"></i> 总留资引导</div>
                 <div class="value" id="kpiLeads">--</div>
-                <div class="sub">较上周期 <span class="trend-up">↑ 22%</span></div>
+                <span class="change up"><i class="fas fa-arrow-up"></i> +22%</span>
             </div>
             <div class="kpi-card">
                 <div class="label"><i class="fas fa-bullseye"></i> 竞品提及</div>
                 <div class="value" id="kpiCompetitor">--</div>
-                <div class="sub">较上周期 <span class="trend-up">↑ 18%</span></div>
+                <span class="change up"><i class="fas fa-arrow-up"></i> +18%</span>
             </div>
         </div>
 
-        <!-- ===== 板块2: 流量与互动 ===== -->
-        <div class="chart-grid">
-            <div class="chart-card full-width">
+        <!-- ===== 板块1: 流量与互动 ===== -->
+        <div class="row-2col">
+            <div class="card full-width">
                 <div class="card-title"><i class="fas fa-chart-area"></i> 各账号观看趋势 (近7日)</div>
                 <div class="chart-container tall" id="trendChart"></div>
             </div>
-            <div class="chart-card">
+            <div class="card">
                 <div class="card-title"><i class="fas fa-chart-bar"></i> 账号流量排行</div>
                 <div class="chart-container" id="rankChart"></div>
             </div>
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-circle-pie"></i> 流量来源分布 (按账号)</div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-circle-pie"></i> 流量来源分布</div>
                 <div class="chart-container" id="sourceChart"></div>
             </div>
-            <div class="chart-card">
+            <div class="card">
                 <div class="card-title"><i class="fas fa-icons"></i> 直播形式分布</div>
                 <div class="chart-container" id="formatChart"></div>
             </div>
         </div>
 
-        <!-- ===== 板块3: 内容与车型 ===== -->
-        <div class="chart-grid">
-            <div class="chart-card">
+        <!-- ===== 板块2: 内容与车型 ===== -->
+        <div class="row-2col">
+            <div class="card">
                 <div class="card-title"><i class="fas fa-car"></i> 车型提及热度 TOP10</div>
                 <div class="chart-container" id="modelHeatChart"></div>
             </div>
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-boxes"></i> 库存状态分布 (按账号)</div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-boxes"></i> 库存状态分布</div>
                 <div class="chart-container" id="inventoryChart"></div>
             </div>
-            <div class="chart-card">
+            <div class="card">
                 <div class="card-title"><i class="fas fa-tag"></i> 内容主题分布</div>
                 <div class="chart-container" id="topicChart"></div>
             </div>
-            <div class="chart-card">
+            <div class="card">
                 <div class="card-title"><i class="fas fa-palette"></i> 配置与颜色提及</div>
                 <div class="chart-container" id="configChart"></div>
             </div>
         </div>
 
-        <!-- ===== 板块4: 促销与价格 (最核心) ===== -->
-        <div class="chart-grid">
-            <div class="chart-card full-width">
-                <div class="card-title"><i class="fas fa-tags" style="color:#dc2626;"></i> 同城竞品优惠对比 (综合优惠排行)</div>
+        <!-- ===== 板块3: 促销与价格 (核心) ===== -->
+        <div class="row-2col">
+            <div class="card full-width">
+                <div class="card-title"><i class="fas fa-tags" style="color:#dc2626;"></i> 同城竞品优惠对比 <span class="tag">综合优惠排行</span></div>
                 <div class="table-wrap">
                     <table class="promo-table" id="promoTable">
                         <thead>
@@ -530,55 +608,55 @@
                     </table>
                 </div>
             </div>
-            <div class="chart-card">
+            <div class="card">
                 <div class="card-title"><i class="fas fa-chart-line"></i> 各账号优惠力度趋势</div>
                 <div class="chart-container" id="promoTrendChart"></div>
             </div>
-            <div class="chart-card">
+            <div class="card">
                 <div class="card-title"><i class="fas fa-circle-pie"></i> 优惠形式分布</div>
                 <div class="chart-container" id="promoTypeChart"></div>
             </div>
         </div>
 
-        <!-- ===== 板块5: 获客与留资 ===== -->
-        <div class="chart-grid">
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-phone"></i> 留资引导方式分布</div>
+        <!-- ===== 板块4: 获客与留资 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-phone"></i> 留资引导方式</div>
                 <div class="chart-container" id="leadMethodChart"></div>
             </div>
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-comment-dots"></i> 钩子话术类型分布</div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-comment-dots"></i> 钩子话术类型</div>
                 <div class="chart-container" id="hookChart"></div>
             </div>
-            <div class="chart-card">
+            <div class="card">
                 <div class="card-title"><i class="fas fa-chart-simple"></i> 各账号引导频次</div>
                 <div class="chart-container" id="leadFreqChart"></div>
             </div>
-            <div class="chart-card">
+            <div class="card">
                 <div class="card-title"><i class="fas fa-flag"></i> 粉丝群引导占比</div>
                 <div class="chart-container" id="fanGroupChart"></div>
             </div>
         </div>
 
-        <!-- ===== 板块6: 竞争态势 ===== -->
-        <div class="chart-grid">
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-bolt"></i> 竞品提及热度排行</div>
+        <!-- ===== 板块5: 竞争态势 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-bolt"></i> 竞品提及热度</div>
                 <div class="chart-container" id="compHeatChart"></div>
             </div>
-            <div class="chart-card">
-                <div class="card-title"><i class="fas fa-face-smile"></i> 竞品提及口径分布</div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-face-smile"></i> 竞品提及口碑</div>
                 <div class="chart-container" id="compSentimentChart"></div>
             </div>
-            <div class="chart-card full-width">
-                <div class="card-title"><i class="fas fa-arrows-left-right"></i> 竞品对比维度分布</div>
+            <div class="card full-width">
+                <div class="card-title"><i class="fas fa-arrows-left-right"></i> 竞品对比维度</div>
                 <div class="chart-container" id="compDimensionChart"></div>
             </div>
         </div>
 
-        <!-- 底部信息 -->
-        <div style="margin-top: 20px; text-align: center; font-size: 13px; color: #9ca3af; border-top: 1px solid #e5e9f0; padding-top: 18px;">
-            <i class="far fa-copyright"></i> 直播情报SaaS · 数据仅供内部参考 · 模拟演示版本
+        <!-- ===== 底部 ===== -->
+        <div style="margin-top:24px;text-align:center;font-size:13px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:20px;">
+            <i class="far fa-file-alt"></i> 数据基于实时采集 · 模拟演示版本
         </div>
 
     </div>
@@ -591,7 +669,7 @@
             'use strict';
 
             // =============================================================
-            // 1. 模拟数据集（已调整为雷克萨斯、宝马、奔驰）
+            // 1. 模拟数据集
             // =============================================================
             const ACCOUNTS = [
                 { id: 'acc_01', name: '上海东昌_001', store: '上海东昌', brand: '雷克萨斯' },
@@ -602,17 +680,13 @@
                 { id: 'acc_06', name: '上海中升之星_001', store: '上海中升之星', brand: '奔驰' }
             ];
 
-            // 各品牌对应车型
             const MODELS_BY_BRAND = {
                 '雷克萨斯': ['ES', 'NX', 'RX', 'LM'],
                 '宝马': ['3系', '5系', 'X3', 'X5', 'iX3'],
                 '奔驰': ['C级', 'E级', 'GLC', 'GLE']
             };
             const ALL_MODELS = ['ES', 'NX', 'RX', 'LM', '3系', '5系', 'X3', 'X5', 'iX3', 'C级', 'E级', 'GLC', 'GLE'];
-
-            // 竞品品牌（含自身品牌，用于模拟提及）
             const COMP_BRANDS = ['雷克萨斯', '宝马', '奔驰', '奥迪', '沃尔沃', '凯迪拉克', '保时捷', '路虎', '捷豹'];
-
             const FORMATS = ['展厅直播', '户外路试', '访谈式', '发布会', '绿幕虚拟', '其他'];
             const TOPICS = ['参数讲解', '试驾体验', '价格对比', '车主分享', '车型推荐', '促销活动', '品牌故事', '技术解析'];
             const PROMO_TYPES = ['现金直降', '综合优惠', '金融贴息', '置换补贴', '赠品', '送保养', '抵用券'];
@@ -621,19 +695,16 @@
             const SENTIMENTS = ['正面', '中性', '负面'];
             const COMP_DIMS = ['续航', '价格', '空间', '配置', '性能', '智能驾驶', '安全性', '外观', '内饰', '售后服务'];
 
-            // 生成随机日期 (最近7天)
             function randomDate(daysAgo) {
                 const d = new Date('2026-07-30');
                 d.setDate(d.getDate() - daysAgo);
                 return d.toISOString().split('T')[0];
             }
 
-            // 根据品牌获取该品牌车型列表
             function getModelsForBrand(brand) {
                 return MODELS_BY_BRAND[brand] || ['ES', '3系', 'C级'];
             }
 
-            // 生成模拟场次数据
             function generateSessions(count) {
                 const sessions = [];
                 for (let i = 0; i < count; i++) {
@@ -650,14 +721,12 @@
                     const liveFormat = FORMATS[Math.floor(Math.random() * FORMATS.length)];
                     const hasAudience = Math.random() > 0.6 ? 1 : 0;
 
-                    // 流量来源
                     const follow = 15 + Math.floor(Math.random() * 35);
                     const city = 10 + Math.floor(Math.random() * 25);
                     const video = 20 + Math.floor(Math.random() * 40);
                     const other = 100 - follow - city - video;
                     const traffic = { follow, city, video, other };
 
-                    // 车型提及：根据账号品牌选择该品牌车型
                     const brandModels = getModelsForBrand(acc.brand);
                     const modelCount = 1 + Math.min(Math.floor(Math.random() * 3), brandModels.length);
                     const mentioned = [];
@@ -667,15 +736,12 @@
                         const idx = Math.floor(Math.random() * pool.length);
                         mentioned.push(pool.splice(idx, 1)[0]);
                     }
-                    // 如果mentioned为空，兜底
                     if (mentioned.length === 0) mentioned.push(brandModels[0]);
                     const mainModel = mentioned[0];
 
-                    // 库存状态
                     const invStatuses = ['现车充足', '在途', '需预定', '库存紧张'];
                     const inv = invStatuses[Math.floor(Math.random() * invStatuses.length)];
 
-                    // 促销 (针对主推车型)
                     const hasPromo = Math.random() > 0.3;
                     let promo = null;
                     if (hasPromo) {
@@ -708,7 +774,6 @@
                         };
                     }
 
-                    // 留资
                     const leadMethods = [];
                     const lmPool = [...LEAD_METHODS];
                     const lmCount = 1 + Math.floor(Math.random() * 3);
@@ -726,7 +791,6 @@
                     }
                     const hasFanGroup = Math.random() > 0.6 ? 1 : 0;
 
-                    // 竞品提及：从 COMP_BRANDS 中随机选，排除自身品牌
                     const compCount = Math.floor(Math.random() * 3);
                     const comps = [];
                     const availableComp = COMP_BRANDS.filter(b => b !== acc.brand);
@@ -739,7 +803,6 @@
                         comps.push({ brand, model, sentiment });
                     }
 
-                    // 竞品对比
                     const compCompareCount = Math.floor(Math.random() * 2);
                     const compares = [];
                     for (let c = 0; c < compCompareCount; c++) {
@@ -766,20 +829,16 @@
                         format: liveFormat,
                         traffic: traffic,
                         hasAudience: hasAudience,
-                        // 内容与车型
                         mentionedModels: mentioned,
                         mainModel: mainModel,
                         inventoryStatus: inv,
                         contentTopic: TOPICS[Math.floor(Math.random() * TOPICS.length)],
-                        // 促销
                         promo: promo,
-                        // 留资
                         leadMethods: leadMethods,
                         guideFreq: guideFreq,
                         hooks: hooks,
                         hasFanGroup: hasFanGroup,
                         firstGuideMinute: 5 + Math.floor(Math.random() * 30),
-                        // 竞品
                         competitorMentions: comps,
                         competitorComparisons: compares
                     });
@@ -787,11 +846,10 @@
                 return sessions;
             }
 
-            // 生成100场模拟数据
-            const allSessions = generateSessions(100);
+            const allSessions = generateSessions(120);
 
             // =============================================================
-            // 2. 核心渲染引擎
+            // 2. 核心逻辑
             // =============================================================
             function getFilterValues() {
                 const timeDim = document.getElementById('timeDimension').value;
@@ -805,23 +863,15 @@
 
             function filterData(filters) {
                 let data = allSessions;
-
-                // 按门店
                 if (filters.store !== 'all') {
                     data = data.filter(s => s.account.store === filters.store);
                 }
-
-                // 按账号 (多选)
                 if (!filters.selectedAccounts.includes('all')) {
                     data = data.filter(s => filters.selectedAccounts.includes(s.account.name));
                 }
-
-                // 按车型
                 if (filters.model !== 'all') {
                     data = data.filter(s => s.mentionedModels.includes(filters.model) || s.mainModel === filters.model);
                 }
-
-                // 按日期 (简单过滤最近7天)
                 if (filters.dateVal) {
                     const pickDate = new Date(filters.dateVal);
                     const start = new Date(pickDate);
@@ -831,12 +881,10 @@
                         return d >= start && d <= pickDate;
                     });
                 }
-
                 return data;
             }
 
-            // 颜色盘 (动态适配)
-            const colorPalette = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
+            const colorPalette = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
                 '#6366f1', '#06b6d4'
             ];
 
@@ -844,17 +892,14 @@
                 return colorPalette[index % colorPalette.length];
             }
 
-            // 聚合账号列表
             function getAccountsFromData(data) {
                 const accMap = {};
-                data.forEach(s => {
-                    accMap[s.account.name] = s.account;
-                });
+                data.forEach(s => { accMap[s.account.name] = s.account; });
                 return Object.values(accMap);
             }
 
             // =============================================================
-            // 3. 图表渲染函数
+            // 3. 渲染函数
             // =============================================================
 
             // 3.1 KPI
@@ -874,11 +919,10 @@
                 document.getElementById('kpiCompetitor').textContent = totalComp;
             }
 
-            // 3.2 趋势图 (多线)
+            // 3.2 趋势图
             function renderTrend(data) {
                 const chart = echarts.init(document.getElementById('trendChart'));
                 const accounts = getAccountsFromData(data);
-                // 按日期聚合
                 const dateMap = {};
                 data.forEach(s => {
                     if (!dateMap[s.start_date]) dateMap[s.start_date] = {};
@@ -901,44 +945,46 @@
                 });
                 chart.setOption({
                     tooltip: { trigger: 'axis' },
-                    legend: { data: accounts.map(a => a.name), top: 0, right: 0, textStyle: { fontSize: 11 } },
+                    legend: { data: accounts.map(a => a.name), top: 0, right: 0, textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
                     grid: { left: 60, right: 20, bottom: 30, top: 40 },
-                    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 11 } },
-                    yAxis: { type: 'value', name: '观看人次', nameTextStyle: { fontSize: 11 } },
+                    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 11 }, axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '观看人次', nameTextStyle: { fontSize: 11 }, splitLine: { lineStyle: {
+                                color: '#f3f4f6', type: 'dashed' } } },
                     series: series,
                     color: colorPalette
                 });
                 window.addEventListener('resize', () => chart.resize());
             }
 
-            // 3.3 账号流量排行 (柱状图)
+            // 3.3 流量排行
             function renderRank(data) {
                 const chart = echarts.init(document.getElementById('rankChart'));
                 const accMap = {};
                 data.forEach(s => {
-                    if (!accMap[s.account.name]) accMap[s.account.name] = { view: 0, sessions: 0, peak: 0 };
+                    if (!accMap[s.account.name]) accMap[s.account.name] = { view: 0 };
                     accMap[s.account.name].view += s.viewership;
-                    accMap[s.account.name].sessions += 1;
-                    accMap[s.account.name].peak = Math.max(accMap[s.account.name].peak, s.peak);
                 });
-                const names = Object.keys(accMap);
-                const views = names.map(n => accMap[n].view);
-                const colors = names.map((_, i) => getColor(i));
+                const sorted = Object.entries(accMap).sort((a, b) => b[1].view - a[1].view);
+                const names = sorted.map(a => a[0]);
+                const views = sorted.map(a => a[1].view);
                 chart.setOption({
                     tooltip: { trigger: 'axis' },
                     grid: { left: 50, right: 20, bottom: 30, top: 10 },
-                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 20, fontSize: 10 } },
-                    yAxis: { type: 'value', name: '总观看人次' },
+                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 },
+                    axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '总观看人次', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: [{
                         type: 'bar',
-                        data: views.map((v, i) => ({ value: v, itemStyle: { color: colors[i] } })),
-                        barWidth: '40%'
+                        data: views.map((v, i) => ({ value: v, itemStyle: { color: getColor(i) } })),
+                        barWidth: '35%'
                     }]
                 });
                 window.addEventListener('resize', () => chart.resize());
             }
 
-            // 3.4 流量来源 (堆叠)
+            // 3.4 流量来源
             function renderSource(data) {
                 const chart = echarts.init(document.getElementById('sourceChart'));
                 const accMap = {};
@@ -958,12 +1004,15 @@
 
                 chart.setOption({
                     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                    legend: { data: ['关注', '同城', '视频推荐', '其他'], top: 0, right: 0 },
+                    legend: { data: ['关注', '同城', '视频推荐', '其他'], top: 0, right: 0, textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
                     grid: { left: 50, right: 20, bottom: 30, top: 40 },
-                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 } },
-                    yAxis: { type: 'value', name: '占比 (%)' },
+                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 },
+                    axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '占比 (%)', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: [
-                        { name: '关注', type: 'bar', stack: 'total', data: follow, color: '#2563eb' },
+                        { name: '关注', type: 'bar', stack: 'total', data: follow, color: '#4f46e5' },
                         { name: '同城', type: 'bar', stack: 'total', data: city, color: '#10b981' },
                         { name: '视频推荐', type: 'bar', stack: 'total', data: video, color: '#f59e0b' },
                         { name: '其他', type: 'bar', stack: 'total', data: other, color: '#9ca3af' }
@@ -972,7 +1021,7 @@
                 window.addEventListener('resize', () => chart.resize());
             }
 
-            // 3.5 直播形式分布
+            // 3.5 直播形式
             function renderFormat(data) {
                 const chart = echarts.init(document.getElementById('formatChart'));
                 const map = {};
@@ -981,19 +1030,20 @@
                 const vals = Object.values(map);
                 chart.setOption({
                     tooltip: { trigger: 'item' },
-                    legend: { orient: 'vertical', left: 'left', top: 'center' },
+                    legend: { orient: 'vertical', left: 'left', top: 'center', textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
                     series: [{
                         type: 'pie',
                         radius: ['40%', '70%'],
                         data: names.map((n, i) => ({ name: n, value: vals[i], itemStyle: { color: getColor(
                                 i) } })),
-                        label: { show: true, formatter: '{b}\n{d}%', fontSize: 11 }
+                        label: { show: true, formatter: '{b}\n{d}%', fontSize: 11, fontWeight: 500 }
                     }]
                 });
                 window.addEventListener('resize', () => chart.resize());
             }
 
-            // 3.6 车型热度 TOP10
+            // 3.6 车型热度
             function renderModelHeat(data) {
                 const chart = echarts.init(document.getElementById('modelHeatChart'));
                 const map = {};
@@ -1005,13 +1055,15 @@
                 const vals = sorted.map(a => a[1]);
                 chart.setOption({
                     tooltip: { trigger: 'axis' },
-                    grid: { left: 80, right: 20, bottom: 20, top: 10 },
-                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 20, fontSize: 10 } },
-                    yAxis: { type: 'value', name: '提及次数' },
+                    grid: { left: 60, right: 20, bottom: 30, top: 10 },
+                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 20, fontSize: 10 },
+                    axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '提及次数', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: [{
                         type: 'bar',
                         data: vals.map((v, i) => ({ value: v, itemStyle: { color: getColor(i) } })),
-                        barWidth: '35%'
+                        barWidth: '30%'
                     }]
                 });
                 window.addEventListener('resize', () => chart.resize());
@@ -1034,10 +1086,12 @@
                 });
                 chart.setOption({
                     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                    legend: { data: statuses, top: 0, right: 0 },
+                    legend: { data: statuses, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
                     grid: { left: 60, right: 20, bottom: 30, top: 40 },
-                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 } },
-                    yAxis: { type: 'value', name: '场次' },
+                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 },
+                    axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '场次', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: series
                 });
                 window.addEventListener('resize', () => chart.resize());
@@ -1052,13 +1106,14 @@
                 const vals = Object.values(map);
                 chart.setOption({
                     tooltip: { trigger: 'item' },
-                    legend: { orient: 'vertical', left: 'left', top: 'center' },
+                    legend: { orient: 'vertical', left: 'left', top: 'center', textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
                     series: [{
                         type: 'pie',
                         radius: ['35%', '65%'],
                         data: names.map((n, i) => ({ name: n, value: vals[i], itemStyle: { color: getColor(
                                 i) } })),
-                        label: { fontSize: 11 }
+                        label: { fontSize: 11, fontWeight: 500 }
                     }]
                 });
                 window.addEventListener('resize', () => chart.resize());
@@ -1069,7 +1124,6 @@
                 const chart = echarts.init(document.getElementById('configChart'));
                 const trimMap = {};
                 const colorMap = {};
-                // 各品牌常用配置和颜色
                 const trimMapByBrand = {
                     '雷克萨斯': ['卓越版', '运动版', '豪华版', '尊贵版', 'F SPORT'],
                     '宝马': ['运动套装', 'M运动套装', '豪华套装', '曜夜版', 'iPerformance'],
@@ -1095,13 +1149,15 @@
                     v]) => ({ name: '颜色:' + k, value: v }))];
                 chart.setOption({
                     tooltip: { trigger: 'axis' },
-                    grid: { left: 80, right: 20, bottom: 20, top: 10 },
-                    xAxis: { type: 'category', data: all.map(a => a.name), axisLabel: { rotate: 25, fontSize: 10 } },
-                    yAxis: { type: 'value', name: '提及次数' },
+                    grid: { left: 80, right: 20, bottom: 30, top: 10 },
+                    xAxis: { type: 'category', data: all.map(a => a.name), axisLabel: { rotate: 25, fontSize: 10 },
+                        axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '提及次数', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: [{
                         type: 'bar',
                         data: all.map((a, i) => ({ value: a.value, itemStyle: { color: getColor(i) } })),
-                        barWidth: '30%'
+                        barWidth: '25%'
                     }]
                 });
                 window.addEventListener('resize', () => chart.resize());
@@ -1129,19 +1185,19 @@
                 rows.sort((a, b) => b.total - a.total);
                 const top10 = rows.slice(0, 10);
                 tbody.innerHTML = top10.map(r => `
-                    <tr>
-                        <td><strong>${r.account}</strong><br/><span style="font-size:12px;color:#6b7280;">${r.store} · ${r.brand}</span></td>
-                        <td><span class="tag tag-blue">${r.model}</span></td>
-                        <td>${r.types}</td>
-                        <td class="highlight">${r.total.toLocaleString()}</td>
-                        <td>${r.price ? r.price.toLocaleString() : '—'}</td>
-                        <td>${r.deadline}</td>
-                        <td><span class="tag ${r.urgency !== '无' ? 'tag-red' : 'tag-gray'}">${r.urgency}</span></td>
-                    </tr>
-                `).join('');
+                            <tr>
+                                <td><strong>${r.account}</strong><br/><span style="font-size:12px;color:#6b7280;">${r.store} · ${r.brand}</span></td>
+                                <td><span class="badge badge-blue">${r.model}</span></td>
+                                <td>${r.types}</td>
+                                <td><strong style="color:#4f46e5;">${r.total.toLocaleString()}</strong></td>
+                                <td>${r.price ? r.price.toLocaleString() : '—'}</td>
+                                <td>${r.deadline}</td>
+                                <td><span class="badge ${r.urgency !== '无' ? 'badge-red' : 'badge-gray'}">${r.urgency}</span></td>
+                            </tr>
+                        `).join('');
             }
 
-            // 3.11 优惠力度趋势
+            // 3.11 优惠趋势
             function renderPromoTrend(data) {
                 const chart = echarts.init(document.getElementById('promoTrendChart'));
                 const accMap = {};
@@ -1156,15 +1212,16 @@
                     const dates = sorted.map(d => d.date);
                     const vals = sorted.map(d => d.total);
                     return { name: acc, type: 'line', data: vals, smooth: true, color: getColor(idx),
-                    symbol: 'circle' };
+                        symbol: 'circle' };
                 });
                 const allDates = [...new Set(data.map(s => s.start_date))].sort();
                 chart.setOption({
                     tooltip: { trigger: 'axis' },
-                    legend: { data: accounts, top: 0, right: 0, textStyle: { fontSize: 11 } },
+                    legend: { data: accounts, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
                     grid: { left: 60, right: 20, bottom: 30, top: 40 },
-                    xAxis: { type: 'category', data: allDates, axisLabel: { fontSize: 10 } },
-                    yAxis: { type: 'value', name: '综合优惠 (元)', nameTextStyle: { fontSize: 11 } },
+                    xAxis: { type: 'category', data: allDates, axisLabel: { fontSize: 10 }, axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '综合优惠 (元)', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: series,
                     color: colorPalette
                 });
@@ -1183,13 +1240,14 @@
                 const vals = Object.values(map);
                 chart.setOption({
                     tooltip: { trigger: 'item' },
-                    legend: { orient: 'vertical', left: 'left', top: 'center' },
+                    legend: { orient: 'vertical', left: 'left', top: 'center', textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
                     series: [{
                         type: 'pie',
                         radius: ['35%', '65%'],
                         data: names.map((n, i) => ({ name: n, value: vals[i], itemStyle: { color: getColor(
                                 i) } })),
-                        label: { fontSize: 11 }
+                        label: { fontSize: 11, fontWeight: 500 }
                     }]
                 });
                 window.addEventListener('resize', () => chart.resize());
@@ -1213,10 +1271,12 @@
                 });
                 chart.setOption({
                     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                    legend: { data: methods, top: 0, right: 0 },
+                    legend: { data: methods, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
                     grid: { left: 60, right: 20, bottom: 30, top: 40 },
-                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 } },
-                    yAxis: { type: 'value', name: '提及次数' },
+                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 },
+                    axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '提及次数', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: series
                 });
                 window.addEventListener('resize', () => chart.resize());
@@ -1234,13 +1294,14 @@
                 const vals = Object.values(map);
                 chart.setOption({
                     tooltip: { trigger: 'item' },
-                    legend: { orient: 'vertical', left: 'left', top: 'center' },
+                    legend: { orient: 'vertical', left: 'left', top: 'center', textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
                     series: [{
                         type: 'pie',
                         radius: ['35%', '65%'],
                         data: names.map((n, i) => ({ name: n, value: vals[i], itemStyle: { color: getColor(
                                 i) } })),
-                        label: { fontSize: 11 }
+                        label: { fontSize: 11, fontWeight: 500 }
                     }]
                 });
                 window.addEventListener('resize', () => chart.resize());
@@ -1260,8 +1321,10 @@
                 chart.setOption({
                     tooltip: { trigger: 'axis' },
                     grid: { left: 60, right: 20, bottom: 30, top: 10 },
-                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 } },
-                    yAxis: { type: 'value', name: '场均引导频次' },
+                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 },
+                    axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '场均引导频次', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: [{
                         type: 'bar',
                         data: avg.map((v, i) => ({ value: v, itemStyle: { color: getColor(i) } })),
@@ -1271,7 +1334,7 @@
                 window.addEventListener('resize', () => chart.resize());
             }
 
-            // 3.16 粉丝群引导占比
+            // 3.16 粉丝群引导
             function renderFanGroup(data) {
                 const chart = echarts.init(document.getElementById('fanGroupChart'));
                 const accMap = {};
@@ -1285,10 +1348,13 @@
                 const no = names.map(n => accMap[n].no);
                 chart.setOption({
                     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                    legend: { data: ['有引导', '无引导'], top: 0, right: 0 },
+                    legend: { data: ['有引导', '无引导'], top: 0, right: 0, textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
                     grid: { left: 60, right: 20, bottom: 30, top: 40 },
-                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 } },
-                    yAxis: { type: 'value', name: '场次' },
+                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 15, fontSize: 10 },
+                    axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '场次', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: [
                         { name: '有引导', type: 'bar', stack: 'total', data: yes, color: '#10b981' },
                         { name: '无引导', type: 'bar', stack: 'total', data: no, color: '#e5e7eb' }
@@ -1297,7 +1363,7 @@
                 window.addEventListener('resize', () => chart.resize());
             }
 
-            // 3.17 竞品提及热度
+            // 3.17 竞品热度
             function renderCompHeat(data) {
                 const chart = echarts.init(document.getElementById('compHeatChart'));
                 const map = {};
@@ -1312,19 +1378,20 @@
                 const vals = sorted.map(a => a[1]);
                 chart.setOption({
                     tooltip: { trigger: 'axis' },
-                    grid: { left: 60, right: 20, bottom: 20, top: 10 },
-                    xAxis: { type: 'category', data: names, axisLabel: { fontSize: 11 } },
-                    yAxis: { type: 'value', name: '提及次数' },
+                    grid: { left: 60, right: 20, bottom: 30, top: 10 },
+                    xAxis: { type: 'category', data: names, axisLabel: { fontSize: 11 }, axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '提及次数', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: [{
                         type: 'bar',
                         data: vals.map((v, i) => ({ value: v, itemStyle: { color: getColor(i) } })),
-                        barWidth: '35%'
+                        barWidth: '30%'
                     }]
                 });
                 window.addEventListener('resize', () => chart.resize());
             }
 
-            // 3.18 竞品口径
+            // 3.18 竞品口碑
             function renderCompSentiment(data) {
                 const chart = echarts.init(document.getElementById('compSentimentChart'));
                 const accMap = {};
@@ -1340,10 +1407,12 @@
                 const negative = brands.map(b => accMap[b]['负面'] || 0);
                 chart.setOption({
                     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                    legend: { data: ['正面', '中性', '负面'], top: 0, right: 0 },
+                    legend: { data: ['正面', '中性', '负面'], top: 0, right: 0, textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
                     grid: { left: 60, right: 20, bottom: 30, top: 40 },
-                    xAxis: { type: 'category', data: brands, axisLabel: { fontSize: 11 } },
-                    yAxis: { type: 'value', name: '提及次数' },
+                    xAxis: { type: 'category', data: brands, axisLabel: { fontSize: 11 }, axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '提及次数', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: [
                         { name: '正面', type: 'bar', stack: 'total', data: positive, color: '#10b981' },
                         { name: '中性', type: 'bar', stack: 'total', data: neutral, color: '#f59e0b' },
@@ -1369,8 +1438,10 @@
                 chart.setOption({
                     tooltip: { trigger: 'axis' },
                     grid: { left: 80, right: 20, bottom: 30, top: 10 },
-                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 20, fontSize: 10 } },
-                    yAxis: { type: 'value', name: '对比次数' },
+                    xAxis: { type: 'category', data: names, axisLabel: { rotate: 20, fontSize: 10 },
+                    axisLine: { show: false } },
+                    yAxis: { type: 'value', name: '对比次数', splitLine: { lineStyle: { color: '#f3f4f6',
+                                type: 'dashed' } } },
                     series: [{
                         type: 'bar',
                         data: vals.map((v, i) => ({ value: v, itemStyle: { color: getColor(i) } })),
@@ -1381,12 +1452,11 @@
             }
 
             // =============================================================
-            // 4. 主更新函数
+            // 4. 主更新与初始化
             // =============================================================
             function updateDashboard() {
                 const filters = getFilterValues();
                 const data = filterData(filters);
-
                 renderKPI(data);
                 renderTrend(data);
                 renderRank(data);
@@ -1408,9 +1478,6 @@
                 renderCompDimension(data);
             }
 
-            // =============================================================
-            // 5. 事件绑定 & 初始化
-            // =============================================================
             document.getElementById('applyFilters').addEventListener('click', updateDashboard);
 
             window.addEventListener('load', function() {

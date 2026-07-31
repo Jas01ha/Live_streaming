@@ -316,6 +316,11 @@
             margin-top: 4px;
         }
 
+        /* 互动指数样式 */
+        .score-high { color: #059669; font-weight: 700; }
+        .score-mid { color: #d97706; font-weight: 700; }
+        .score-low { color: #dc2626; font-weight: 700; }
+
         @media (max-width: 1024px) {
             .row-2col { grid-template-columns: 1fr; }
             .filter-group { min-width: 100px; max-width: 100%; flex: 1 1 40%; }
@@ -561,7 +566,7 @@
             </div>
         </div>
 
-        <!-- ===== 账号横向对比（互动版） ===== -->
+        <!-- ===== 账号横向对比（互动版 + 互动指数） ===== -->
         <div class="card">
             <div class="card-title">
                 <i class="fas fa-people-arrows"></i> 账号横向对比
@@ -575,13 +580,14 @@
                             <th>品牌</th>
                             <th>经销商</th>
                             <th>直播场次</th>
+                            <th>互动指数</th>
                             <th>总互动量</th>
                             <th>场均互动量</th>
                             <th>主要互动构成</th>
                         </tr>
                     </thead>
                     <tbody id="interactionTableBody">
-                        <tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
+                        <tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -780,7 +786,6 @@
 
                             // 生成独立的点赞、评论、分享数据
                             const totalInteractions = 200 + Math.floor(Math.random() * 2300);
-                            // 随机分配占比：点赞 30%-70%，评论 10%-40%，分享 5%-30%
                             const likeRatio = 0.3 + Math.random() * 0.4;
                             const commentRatio = 0.1 + Math.random() * 0.3;
                             const shareRatio = 1 - likeRatio - commentRatio;
@@ -1856,24 +1861,49 @@
             }
 
             // =============================================================
-            // 8.14 账号横向对比（互动版）- 新增
+            // 8.14 账号横向对比（互动版 + 互动指数）
             // =============================================================
             function renderInteractionTable(data) {
                 const tbody = document.getElementById('interactionTableBody');
                 if (data.length === 0) {
                     tbody.innerHTML =
-                    `<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>`;
+                        `<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>`;
                     return;
                 }
                 const accounts = aggregateByAccount(data);
                 accounts.sort((a, b) => b.interactionSum - a.interactionSum);
 
-                tbody.innerHTML = accounts.map(a => {
+                // 计算每个账号的原始加权密度分
+                const rawScores = accounts.map(a => {
+                    // 时长（分钟）
+                    const durationMin = a.duration;
+                    // 防止除零
+                    const denom = durationMin > 0 ? durationMin : 1;
+                    const commentDensity = a.commentsSum / denom;
+                    const likeDensity = a.likesSum / denom;
+                    const shareDensity = a.sharesSum / denom;
+                    // 加权：评论50%，点赞30%，分享20%
+                    return commentDensity * 0.5 + likeDensity * 0.3 + shareDensity * 0.2;
+                });
+
+                const maxRaw = Math.max(...rawScores, 0);
+                const minRaw = Math.min(...rawScores, 0);
+                const range = maxRaw - minRaw;
+
+                // 归一化到0-100
+                const normalizedScores = rawScores.map(raw => {
+                    if (range === 0) return 50; // 所有相同则给50分
+                    return Math.round(((raw - minRaw) / range) * 100);
+                });
+
+                // 构建行数据
+                const rows = accounts.map((a, idx) => {
                     const sessions = a.sessions;
                     const totalInteraction = a.interactionSum;
                     const avgInteraction = a.count > 0 ? Math.round(a.interactionSum / a.count) : 0;
+                    const score = normalizedScores[idx];
 
-                    // 判断主要互动构成
+                    // 主要互动构成
                     const likePct = a.interactionSum > 0 ? Math.round((a.likesSum / a.interactionSum) * 100) : 0;
                     const commentPct = a.interactionSum > 0 ? Math.round((a.commentsSum / a.interactionSum) * 100) :
                         0;
@@ -1892,16 +1922,40 @@
                         mainBadge = 'badge-share';
                     }
 
-                    return `<tr>
-                                <td><strong>${a.account}</strong></td>
-                                <td><span class="badge badge-blue">${a.brand}</span></td>
-                                <td>${a.store}</td>
-                                <td>${sessions}</td>
-                                <td>${totalInteraction.toLocaleString()}</td>
-                                <td>${avgInteraction.toLocaleString()}</td>
-                                <td><span class="badge ${mainBadge}">${mainType}</span></td>
-                            </tr>`;
-                }).join('');
+                    // 根据分数决定颜色样式
+                    let scoreClass = 'score-mid';
+                    if (score >= 70) scoreClass = 'score-high';
+                    else if (score < 40) scoreClass = 'score-low';
+
+                    return {
+                        account: a.account,
+                        brand: a.brand,
+                        store: a.store,
+                        sessions: sessions,
+                        score: score,
+                        scoreClass: scoreClass,
+                        totalInteraction: totalInteraction,
+                        avgInteraction: avgInteraction,
+                        mainType: mainType,
+                        mainBadge: mainBadge
+                    };
+                });
+
+                // 按总互动量降序
+                rows.sort((a, b) => b.totalInteraction - a.totalInteraction);
+
+                tbody.innerHTML = rows.map(r => `
+                            <tr>
+                                <td><strong>${r.account}</strong></td>
+                                <td><span class="badge badge-blue">${r.brand}</span></td>
+                                <td>${r.store}</td>
+                                <td>${r.sessions}</td>
+                                <td><span class="${r.scoreClass}">${r.score}</span></td>
+                                <td>${r.totalInteraction.toLocaleString()}</td>
+                                <td>${r.avgInteraction.toLocaleString()}</td>
+                                <td><span class="badge ${r.mainBadge}">${r.mainType}</span></td>
+                            </tr>
+                        `).join('');
             }
 
             // 8.15 策略建议
@@ -1979,7 +2033,7 @@
                 renderTrafficChart(data);
                 renderFormatChart(data);
                 renderTop10Table(data);
-                renderInteractionTable(data);  // 新增互动版表格
+                renderInteractionTable(data);
                 renderSuggestions(data);
             }
 

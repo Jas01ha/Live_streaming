@@ -223,6 +223,7 @@
             border-bottom: 1px solid #f3f4f6;
             color: #1f2937;
             vertical-align: middle;
+            font-size: 13px;
         }
         table tbody tr:last-child td { border-bottom: none; }
 
@@ -245,6 +246,8 @@
         .badge-blue { background: #eef2ff; color: #4f46e5; }
         .badge-purple { background: #f5f3ff; color: #7c3aed; }
         .badge-time { background: #fef9e7; color: #b7950b; }
+        .badge-audience-yes { background: #ecfdf5; color: #059669; }
+        .badge-audience-no { background: #f3f4f6; color: #6b7280; }
 
         .trend-indicator { font-size: 12px; font-weight: 500; margin-left: 6px; display: inline-block; }
         .trend-indicator.up { color: #059669; }
@@ -259,7 +262,7 @@
         }
         .chart-container { position: relative; height: 220px; }
         .chart-container.tall { height: 260px; }
-        .chart-container-echarts { width: 100%; height: 320px; }  /* 增高 */
+        .chart-container-echarts { width: 100%; height: 320px; }
         .chart-container-echarts-pie { width: 100%; height: 260px; }
 
         .suggest-list { list-style: none; padding: 0; }
@@ -468,7 +471,7 @@
             </div>
         </div>
 
-        <!-- ===== 新增：流量来源 + 直播形式 ===== -->
+        <!-- ===== 流量来源 + 直播形式（颜色已简化） ===== -->
         <div class="row-2col">
             <div class="card">
                 <div class="card-title">
@@ -483,6 +486,39 @@
                     <span class="tag">场次占比</span>
                 </div>
                 <div class="chart-container-echarts-pie" id="formatChart"></div>
+            </div>
+        </div>
+
+        <!-- ===== 新增：TOP10 直播明细列表 ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-list"></i> TOP10 直播明细
+                <span class="tag">按直播时长排序</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>账号</th>
+                            <th>所属门店</th>
+                            <th>开播时间</th>
+                            <th>下播时间</th>
+                            <th>直播时长</th>
+                            <th>累计观看人数</th>
+                            <th>累计观看人次</th>
+                            <th>峰值在线人数</th>
+                            <th>点赞数</th>
+                            <th>评论数</th>
+                            <th>分享数</th>
+                            <th>流量来源</th>
+                            <th>直播形式</th>
+                            <th>是否现场观众</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top10TableBody">
+                        <tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -600,7 +636,6 @@
             const COMP_BRANDS = ['奥迪', '沃尔沃', '凯迪拉克', '保时捷', '路虎', '捷豹'];
             const COMP_DIMS = ['续航', '价格', '空间', '配置', '性能', '智能驾驶', '安全性', '外观', '内饰', '售后服务'];
             const SENTIMENTS = ['正面', '中性', '负面'];
-            // 流量来源和直播形式
             const TRAFFIC_SOURCES = ['自然推荐', '付费投流', '同城页', '其他'];
             const LIVE_FORMATS = ['展厅直播', '户外路试', '访谈式', '发布会', '绿幕虚拟', '其他'];
 
@@ -614,12 +649,8 @@
                 return y + '-' + m + '-' + day;
             }
 
-            function getWeekNumber(d) {
-                const date = new Date(d);
-                date.setHours(0, 0, 0, 0);
-                date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
-                const week1 = new Date(date.getFullYear(), 0, 4);
-                return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+            function formatTime(hour) {
+                return String(hour).padStart(2, '0') + ':00';
             }
 
             function getStartOfWeek(year, weekNum) {
@@ -646,7 +677,7 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据（新增 trafficSource, liveFormat）
+            // 3. 生成模拟数据
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -677,9 +708,10 @@
                             const leads = 1 + Math.floor(Math.random() * 7);
                             const startHour = Math.floor(Math.random() * 24);
 
-                            // 新增字段
                             const trafficSource = TRAFFIC_SOURCES[Math.floor(Math.random() * TRAFFIC_SOURCES.length)];
                             const liveFormat = LIVE_FORMATS[Math.floor(Math.random() * LIVE_FORMATS.length)];
+                            // 是否现场观众（模拟）
+                            const hasLiveAudience = Math.random() > 0.5 ? 1 : 0;
 
                             const compCount = Math.floor(Math.random() * 3);
                             const compList = [];
@@ -707,6 +739,7 @@
                                 startHour: startHour,
                                 trafficSource: trafficSource,
                                 liveFormat: liveFormat,
+                                hasLiveAudience: hasLiveAudience,
                                 competitorMentions: compList,
                                 sessionCount: 1
                             });
@@ -918,7 +951,6 @@
                     }
                     const slot = getTimeSlot(d.startHour);
                     a.timeSlots[slot] = (a.timeSlots[slot] || 0) + 1;
-                    // 新增
                     if (d.trafficSource) a.trafficSources[d.trafficSource] = (a.trafficSources[d.trafficSource] || 0) + 1;
                     if (d.liveFormat) a.liveFormats[d.liveFormat] = (a.liveFormats[d.liveFormat] || 0) + 1;
                 }
@@ -1270,7 +1302,7 @@
                 }).join('');
             }
 
-            // 8.8 原有 Chart.js 趋势图（场观趋势）
+            // 8.8 原有 Chart.js 趋势图
             let trendChartInstance = null;
 
             function renderTrendChartJS(data) {
@@ -1357,7 +1389,7 @@
             }
 
             // =============================================================
-            // 8.9 ECharts：账号趋势折线图（双轴）
+            // 8.9 ECharts：账号趋势折线图
             // =============================================================
             function renderTrendECharts(data) {
                 const dom = document.getElementById('trendECharts');
@@ -1379,7 +1411,7 @@
                     grid: {
                         left: '8%',
                         right: '8%',
-                        bottom: '12%',   // 增加底部空间
+                        bottom: '12%',
                         top: '15%',
                         containLabel: false
                     },
@@ -1431,7 +1463,7 @@
             }
 
             // =============================================================
-            // 8.10 ECharts：热力图（颜色条右侧，已调整）
+            // 8.10 热力图
             // =============================================================
             function renderHeatmap(data) {
                 const dom = document.getElementById('heatmapECharts');
@@ -1475,7 +1507,7 @@
                     grid: {
                         left: '12%',
                         right: '15%',
-                        bottom: '12%',   // 增加底部空间
+                        bottom: '12%',
                         top: '6%',
                         containLabel: false
                     },
@@ -1532,7 +1564,7 @@
             }
 
             // =============================================================
-            // 8.11 新增：流量来源结构图（饼图）
+            // 8.11 流量来源结构图（简约配色）
             // =============================================================
             function renderTrafficChart(data) {
                 const dom = document.getElementById('trafficChart');
@@ -1558,7 +1590,8 @@
                     percent: ((value / total) * 100).toFixed(1)
                 }));
 
-                const colors = ['#4f46e5', '#10b981', '#f59e0b', '#9ca3af'];
+                // 简约灰蓝色系
+                const colors = ['#4f6f8f', '#7a9bb5', '#b0c4d9', '#d5dce6'];
                 const option = {
                     tooltip: {
                         trigger: 'item',
@@ -1581,7 +1614,8 @@
                             show: true,
                             formatter: '{d}%',
                             fontSize: 11,
-                            fontWeight: 500
+                            fontWeight: 500,
+                            color: '#374151'
                         },
                         labelLine: { show: true },
                         data: pieData.map((item, idx) => ({
@@ -1592,7 +1626,7 @@
                             itemStyle: {
                                 shadowBlur: 10,
                                 shadowOffsetX: 0,
-                                shadowColor: 'rgba(0,0,0,0.2)'
+                                shadowColor: 'rgba(0,0,0,0.08)'
                             }
                         }
                     }]
@@ -1603,7 +1637,7 @@
             }
 
             // =============================================================
-            // 8.12 新增：直播形式结构图（饼图）
+            // 8.12 直播形式结构图（简约配色）
             // =============================================================
             function renderFormatChart(data) {
                 const dom = document.getElementById('formatChart');
@@ -1629,7 +1663,8 @@
                     percent: ((value / total) * 100).toFixed(1)
                 }));
 
-                const colors = ['#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#9ca3af'];
+                // 简约大地色/灰绿系
+                const colors = ['#8a9ba8', '#a8b9c5', '#c2d1db', '#d5dfe6', '#e2e8ef', '#edf0f5'];
                 const option = {
                     tooltip: {
                         trigger: 'item',
@@ -1652,7 +1687,8 @@
                             show: true,
                             formatter: '{d}%',
                             fontSize: 11,
-                            fontWeight: 500
+                            fontWeight: 500,
+                            color: '#374151'
                         },
                         labelLine: { show: true },
                         data: pieData.map((item, idx) => ({
@@ -1663,7 +1699,7 @@
                             itemStyle: {
                                 shadowBlur: 10,
                                 shadowOffsetX: 0,
-                                shadowColor: 'rgba(0,0,0,0.2)'
+                                shadowColor: 'rgba(0,0,0,0.08)'
                             }
                         }
                     }]
@@ -1674,7 +1710,54 @@
             }
 
             // =============================================================
-            // 8.13 策略建议（不变）
+            // 8.13 TOP10 直播明细列表（按直播时长排序）
+            // =============================================================
+            function renderTop10Table(data) {
+                const tbody = document.getElementById('top10TableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        `<tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+
+                // 按直播时长降序排列，取前10
+                const sorted = [...data].sort((a, b) => b.duration - a.duration);
+                const top10 = sorted.slice(0, 10);
+
+                tbody.innerHTML = top10.map(d => {
+                    const startTime = formatTime(d.startHour);
+                    const endHour = (d.startHour + Math.floor(d.duration / 60)) % 24;
+                    const endMinute = d.duration % 60;
+                    const endTime = formatTime(endHour) + (endMinute > 0 ? `:${String(endMinute).padStart(2,'0')}` :
+                    '');
+                    const durationHours = (d.duration / 60).toFixed(1);
+                    const hasAudience = d.hasLiveAudience === 1;
+
+                    return `<tr>
+                                <td><strong>${d.account}</strong></td>
+                                <td>${d.store}</td>
+                                <td>${startTime}</td>
+                                <td>${endTime}</td>
+                                <td>${durationHours}h</td>
+                                <td>${Math.floor(d.viewership * 0.7).toLocaleString()}</td>
+                                <td>${d.viewership.toLocaleString()}</td>
+                                <td>${d.peakViewers.toLocaleString()}</td>
+                                <td>${Math.floor(d.interactions * 0.4).toLocaleString()}</td>
+                                <td>${Math.floor(d.interactions * 0.3).toLocaleString()}</td>
+                                <td>${Math.floor(d.interactions * 0.3).toLocaleString()}</td>
+                                <td><span class="badge badge-gray">${d.trafficSource || '—'}</span></td>
+                                <td><span class="badge badge-blue">${d.liveFormat || '—'}</span></td>
+                                <td>
+                                    <span class="badge ${hasAudience ? 'badge-audience-yes' : 'badge-audience-no'}">
+                                        ${hasAudience ? '✅ 是' : '❌ 否'}
+                                    </span>
+                                </td>
+                            </tr>`;
+                }).join('');
+            }
+
+            // =============================================================
+            // 8.14 策略建议
             // =============================================================
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
@@ -1747,8 +1830,9 @@
                 renderTrendChartJS(data);
                 renderTrendECharts(data);
                 renderHeatmap(data);
-                renderTrafficChart(data);   // 新增
-                renderFormatChart(data);    // 新增
+                renderTrafficChart(data);
+                renderFormatChart(data);
+                renderTop10Table(data); // 新增
                 renderSuggestions(data);
             }
 

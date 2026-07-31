@@ -6,7 +6,11 @@
     <title>直播情报 · 数据看板</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Chart.js (用于趋势图) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <!-- ECharts (用于热力图和折线图) -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js">
     </script>
     <style>
         /* ===== 全局重置 ===== */
@@ -378,6 +382,10 @@
         .chart-container.tall {
             height: 260px;
         }
+        .chart-container-echarts {
+            width: 100%;
+            height: 260px;
+        }
 
         /* ===== 策略建议 ===== */
         .suggest-list {
@@ -504,6 +512,9 @@
                 width: 100%;
                 justify-content: flex-start;
             }
+            .chart-container-echarts {
+                height: 200px;
+            }
         }
     </style>
 </head>
@@ -603,16 +614,24 @@
             </div>
         </div>
 
-        <!-- ===== 账号对比表 ===== -->
+        <!-- ============================================================ -->
+        <!-- 新增大分类：直播运营态势内容（直播排班 & 节奏策略）            -->
+        <!-- ============================================================ -->
+        <div class="card" style="margin-bottom:12px;">
+            <div class="card-title" style="font-size:18px; margin-bottom:0;">
+                <i class="fas fa-calendar-check" style="color:#4f46e5;"></i> 直播运营态势内容（直播排班 &amp; 节奏策略）
+                <span class="tag" style="font-size:12px;">核心洞察</span>
+            </div>
+            <div style="font-size:13px; color:#6b7280; margin-top:4px;">
+                以下展示各账号直播排班、时长趋势及时段分布，帮助分析对手运营节奏。
+            </div>
+        </div>
+
+        <!-- ===== 账号横向对比表（属于上述大分类） ===== -->
         <div class="card">
             <div class="card-title">
                 <i class="fas fa-people-arrows"></i> 账号横向对比
                 <span class="tag" id="compareTableTag">本周</span>
-            </div>
-            <!-- 新增的态势描述 -->
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:14px; color:#4b5563; background:#f8fafc; padding:8px 12px; border-radius:8px;">
-                <i class="fas fa-chart-simple" style="color:#4f46e5; font-size:16px;"></i>
-                <span>直播运营态势看板（对手直播排班 &amp; 节奏策略）</span>
             </div>
             <div class="table-wrap">
                 <table>
@@ -631,6 +650,26 @@
                         <tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- ===== 新增两个图表：趋势折线图 + 热力图 ===== -->
+        <div class="row-2col">
+            <!-- 账号趋势折线图 -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-chart-line"></i> 账号趋势
+                    <span class="tag">总直播时长 &amp; 开播账号数</span>
+                </div>
+                <div class="chart-container-echarts" id="trendECharts"></div>
+            </div>
+            <!-- 直播排班热力图 -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-fire"></i> 直播排班热力图
+                    <span class="tag">时段分布</span>
+                </div>
+                <div class="chart-container-echarts" id="heatmapECharts"></div>
             </div>
         </div>
 
@@ -702,7 +741,7 @@
             </div>
         </div>
 
-        <!-- ===== 趋势图 ===== -->
+        <!-- ===== 趋势图（原有 Chart.js） ===== -->
         <div class="card">
             <div class="card-title"><i class="fas fa-chart-area"></i> 场观趋势 <span class="tag" id="trendTag">近7日</span></div>
             <div class="chart-container tall" style="height:240px;">
@@ -848,7 +887,7 @@
                                 mainModel: mainModel,
                                 contentTopic: topic,
                                 promoType: promo,
-                                startHour: startHour,          // 新增字段
+                                startHour: startHour,
                                 competitorMentions: compList,
                                 sessionCount: 1
                             });
@@ -1009,7 +1048,7 @@
             }
 
             // =============================================================
-            // 7. 聚合工具（含时段统计）
+            // 7. 聚合工具
             // =============================================================
             function getTimeSlot(hour) {
                 if (hour >= 5 && hour <= 8) return '早场 (5-8)';
@@ -1039,7 +1078,7 @@
                             topics: {},
                             promos: {},
                             comps: [],
-                            timeSlots: {}  // 时段统计
+                            timeSlots: {}
                         };
                     }
                     const a = map[key];
@@ -1056,11 +1095,9 @@
                     if (d.competitorMentions) {
                         a.comps = a.comps.concat(d.competitorMentions);
                     }
-                    // 时段统计
                     const slot = getTimeSlot(d.startHour);
                     a.timeSlots[slot] = (a.timeSlots[slot] || 0) + 1;
                 }
-                // 计算主要时段
                 for (const key of Object.keys(map)) {
                     const a = map[key];
                     let maxSlot = '未知',
@@ -1087,7 +1124,8 @@
                             viewershipSum: 0,
                             interactionSum: 0,
                             leadsSum: 0,
-                            count: 0
+                            count: 0,
+                            accounts: new Set()
                         };
                     }
                     const a = map[key];
@@ -1098,6 +1136,7 @@
                     a.interactionSum += d.interactions;
                     a.leadsSum += d.leads;
                     a.count += 1;
+                    a.accounts.add(d.account);
                 }
                 return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
             }
@@ -1148,7 +1187,7 @@
                 document.getElementById('trendTag').textContent = dimMap[dim] || '近7日';
             }
 
-            // 8.2 KPI（6个）
+            // 8.2 KPI
             function renderKPI(data) {
                 const totalSessions = data.reduce((s, d) => s + (d.sessionCount || 1), 0);
                 const totalDuration = data.reduce((s, d) => s + d.duration, 0);
@@ -1164,7 +1203,6 @@
                 document.getElementById('kpiInteraction').textContent = totalInteraction.toLocaleString();
                 document.getElementById('kpiLeads').textContent = totalLeads;
 
-                // 模拟变化趋势
                 const changeMap = {
                     sessions: { val: totalSessions, el: 'kpiSessionsChange' },
                     duration: { val: totalDuration, el: 'kpiDurationChange' },
@@ -1189,7 +1227,7 @@
                 }
             }
 
-            // 8.3 账号对比表（新字段）
+            // 8.3 账号对比表
             function renderCompareTable(data) {
                 const tbody = document.getElementById('compareTableBody');
                 if (data.length === 0) {
@@ -1197,19 +1235,18 @@
                     return;
                 }
                 const accounts = aggregateByAccount(data);
-                // 按场次降序
                 accounts.sort((a, b) => b.sessions - a.sessions);
 
                 tbody.innerHTML = accounts.map(a => {
                     const sessions = a.sessions;
-                    const totalDuration = a.duration; // 分钟
-                    const totalHours = (totalDuration / 60).toFixed(1);
-                    const avgDuration = a.count > 0 ? Math.round(totalDuration / a.count) : 0; // 分钟
+                    const totalHours = (a.duration / 60).toFixed(1);
+                    const avgDuration = a.count > 0 ? Math.round(a.duration / a.count) : 0;
                     const mainSlot = a.mainTimeSlot || '—';
 
-                    // 随机生成变化趋势（仅演示）
-                    const trendSessions = (Math.random() > 0.5 ? '+' : '-') + (5 + Math.floor(Math.random() * 15)) + '%';
-                    const trendDuration = (Math.random() > 0.5 ? '+' : '-') + (3 + Math.floor(Math.random() * 12)) + '%';
+                    const trendSessions = (Math.random() > 0.5 ? '+' : '-') + (5 + Math.floor(Math.random() * 15)) +
+                    '%';
+                    const trendDuration = (Math.random() > 0.5 ? '+' : '-') + (3 + Math.floor(Math.random() * 12)) +
+                    '%';
                     const trendAvg = (Math.random() > 0.5 ? '+' : '-') + (2 + Math.floor(Math.random() * 10)) + '%';
 
                     const arrowSessions = trendSessions.startsWith('+') ? 'up' : 'down';
@@ -1284,7 +1321,7 @@
                 document.getElementById('promoUrgencyCount').textContent = maxUrgency || 0;
             }
 
-            // 8.5 竞品提及（保持不变）
+            // 8.5 竞品提及
             function renderCompetitor(data) {
                 if (data.length === 0) {
                     document.getElementById('competitorContent').innerHTML =
@@ -1328,7 +1365,7 @@
                 }
             }
 
-            // 8.6 内容策略（保持不变）
+            // 8.6 内容策略
             function renderContentStrategy(data) {
                 const tbody = document.getElementById('contentStrategyBody');
                 if (data.length === 0) {
@@ -1357,7 +1394,7 @@
                 }).join('');
             }
 
-            // 8.7 创新获客（保持不变）
+            // 8.7 创新获客
             function renderInnovation(data) {
                 const list = document.getElementById('innovationList');
                 if (data.length === 0) {
@@ -1409,10 +1446,10 @@
                 }).join('');
             }
 
-            // 8.8 趋势图（使用 viewership 作为趋势）
+            // 8.8 原有 Chart.js 趋势图（场观趋势）
             let trendChartInstance = null;
 
-            function renderTrend(data) {
+            function renderTrendChartJS(data) {
                 const ctx = document.getElementById('trendChart').getContext('2d');
 
                 if (trendChartInstance) {
@@ -1495,7 +1532,188 @@
                 });
             }
 
-            // 8.9 策略建议（保持不变）
+            // =============================================================
+            // 8.9 新增 ECharts 图表：账号趋势折线图（双轴）
+            // =============================================================
+            function renderTrendECharts(data) {
+                const dom = document.getElementById('trendECharts');
+                const myChart = echarts.init(dom);
+                const dateAgg = aggregateByDate(data);
+                const dates = dateAgg.map(d => d.date);
+                const totalDuration = dateAgg.map(d => Math.round(d.duration / 60)); // 转为小时
+                const accountCount = dateAgg.map(d => d.accounts.size);
+
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'cross' }
+                    },
+                    legend: {
+                        data: ['总直播时长 (h)', '开播账号数'],
+                        textStyle: { fontSize: 12, fontWeight: 500 }
+                    },
+                    grid: {
+                        left: '8%',
+                        right: '8%',
+                        bottom: '10%',
+                        top: '15%',
+                        containLabel: false
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: { fontSize: 10, rotate: 20 },
+                        axisLine: { show: true }
+                    },
+                    yAxis: [{
+                        type: 'value',
+                        name: '总直播时长 (h)',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    }, {
+                        type: 'value',
+                        name: '开播账号数',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { show: false },
+                        min: 0
+                    }],
+                    series: [{
+                        name: '总直播时长 (h)',
+                        type: 'line',
+                        data: totalDuration,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: { width: 2.5, color: '#4f46e5' },
+                        areaStyle: { color: 'rgba(79,70,229,0.08)' },
+                        yAxisIndex: 0
+                    }, {
+                        name: '开播账号数',
+                        type: 'line',
+                        data: accountCount,
+                        smooth: true,
+                        symbol: 'diamond',
+                        symbolSize: 8,
+                        lineStyle: { width: 2.5, color: '#10b981' },
+                        areaStyle: { color: 'rgba(16,185,129,0.08)' },
+                        yAxisIndex: 1
+                    }]
+                };
+
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 8.10 新增 ECharts 图表：热力图
+            // =============================================================
+            function renderHeatmap(data) {
+                const dom = document.getElementById('heatmapECharts');
+                const myChart = echarts.init(dom);
+
+                // 时段列表
+                const slots = ['早场 (5-8)', '上午场 (9-12)', '下午场 (13-17)', '黄金档 (18-22)', '深夜场 (22之后)'];
+                // 获取所有账号
+                const accounts = [...new Set(data.map(d => d.account))];
+                if (accounts.length === 0 || data.length === 0) {
+                    myChart.setOption({
+                        title: { text: '暂无数据', left: 'center', top: 'center' }
+                    });
+                    return;
+                }
+
+                // 统计每个账号在每个时段的直播场次
+                const heatData = [];
+                for (const acc of accounts) {
+                    const accData = data.filter(d => d.account === acc);
+                    const slotCount = {};
+                    slots.forEach(s => slotCount[s] = 0);
+                    for (const d of accData) {
+                        const slot = getTimeSlot(d.startHour);
+                        if (slotCount[slot] !== undefined) slotCount[slot] += d.sessionCount || 1;
+                    }
+                    for (let i = 0; i < slots.length; i++) {
+                        heatData.push([i, accounts.indexOf(acc), slotCount[slots[i]]]);
+                    }
+                }
+
+                // 找出最大值用于颜色
+                const maxVal = Math.max(...heatData.map(d => d[2]), 1);
+
+                const option = {
+                    tooltip: {
+                        position: 'top',
+                        formatter: function(params) {
+                            const acc = accounts[params.value[1]];
+                            const slot = slots[params.value[0]];
+                            const count = params.value[2];
+                            return `${acc}<br/>${slot}<br/>直播场次：${count}`;
+                        }
+                    },
+                    grid: {
+                        left: '12%',
+                        right: '6%',
+                        bottom: '12%',
+                        top: '6%',
+                        containLabel: false
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: slots,
+                        splitArea: { show: true },
+                        axisLabel: { fontSize: 10, rotate: 20 },
+                        axisLine: { show: false }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: accounts,
+                        splitArea: { show: true },
+                        axisLabel: { fontSize: 11, fontWeight: 500 },
+                        axisLine: { show: false }
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: maxVal,
+                        calculable: true,
+                        orient: 'horizontal',
+                        left: 'center',
+                        bottom: '0%',
+                        inRange: {
+                            color: ['#f0f4f8', '#dbeafe', '#93c5fd', '#3b82f6', '#1e40af']
+                        },
+                        textStyle: { fontSize: 10 }
+                    },
+                    series: [{
+                        name: '直播场次',
+                        type: 'heatmap',
+                        data: heatData,
+                        label: {
+                            show: true,
+                            color: '#1f2937',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            formatter: function(params) {
+                                return params.value[2] > 0 ? params.value[2] : '';
+                            }
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0,0,0,0.2)'
+                            }
+                        }
+                    }]
+                };
+
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 8.11 策略建议
+            // =============================================================
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {
@@ -1564,7 +1782,9 @@
                 renderCompetitor(data);
                 renderContentStrategy(data);
                 renderInnovation(data);
-                renderTrend(data);
+                renderTrendChartJS(data);
+                renderTrendECharts(data);
+                renderHeatmap(data);
                 renderSuggestions(data);
             }
 

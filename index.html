@@ -97,7 +97,7 @@
             gap: 4px;
             min-width: 120px;
             flex: 1 0 auto;
-            max-width: 180px;
+            max-width: 190px;
         }
         .filter-group label {
             font-size: 11px;
@@ -125,8 +125,9 @@
             border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10);
         }
-        .filter-group input[type="week"]::-webkit-datetime-edit {
-            color: #1f2937;
+        /* 账号下拉与经销商保持一致 */
+        .filter-group select {
+            appearance: auto;
         }
 
         .filter-actions {
@@ -176,12 +177,6 @@
             color: #4f46e5;
         }
 
-        .date-format-hint {
-            font-size: 11px;
-            color: #9ca3af;
-            padding: 2px 0 0 4px;
-        }
-
         /* ===== KPI 卡片 ===== */
         .kpi-grid {
             display: grid;
@@ -195,7 +190,7 @@
             border-radius: 16px;
             padding: 18px 20px 16px;
             border: 1px solid #f0f2f5;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             transition: 0.2s;
         }
         .kpi-card:hover {
@@ -498,7 +493,7 @@
         <!-- ===== 顶部栏 ===== -->
         <div class="topbar">
             <div class="topbar-left">
-                <h1>📊 直播情报周报 <span id="periodLabel">· 2026-07-21 ~ 2026-07-27</span></h1>
+                <h1>📊 直播情报周报 <span id="periodLabel">· 加载中...</span></h1>
             </div>
             <div class="topbar-right">
                 <span class="badge"><i class="far fa-calendar-alt"></i> 数据更新: 今日 18:00</span>
@@ -522,7 +517,6 @@
             <div class="filter-group">
                 <label><i class="far fa-calendar-alt"></i> 日期</label>
                 <input type="week" id="datePicker" value="2026-W30" />
-                <span class="date-format-hint" id="dateFormatHint">格式：2026-W30（第30周）</span>
             </div>
             <!-- 品牌 -->
             <div class="filter-group">
@@ -727,11 +721,53 @@
 
             const TOPICS = ['参数讲解', '试驾体验', '价格对比', '车主分享', '车型推荐', '促销活动', '品牌故事', '技术解析'];
             const PROMO_TYPES = ['现金直降', '综合优惠', '金融贴息', '置换补贴', '赠品', '送保养', '抵用券'];
-            const COMP_BRANDS = ['奥迪', '沃尔沃', '凯迪拉克', '保时捷', '路虎', '捷豹', '雷克萨斯', '宝马', '奔驰'];
+            const COMP_BRANDS = ['奥迪', '沃尔沃', '凯迪拉克', '保时捷', '路虎', '捷豹'];
             const COMP_DIMS = ['续航', '价格', '空间', '配置', '性能', '智能驾驶', '安全性', '外观', '内饰', '售后服务'];
+            const SENTIMENTS = ['正面', '中性', '负面'];
 
             // =============================================================
-            // 2. 生成模拟数据
+            // 2. 工具函数
+            // =============================================================
+            function getWeekNumber(d) {
+                const date = new Date(d);
+                date.setHours(0, 0, 0, 0);
+                date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+                const week1 = new Date(date.getFullYear(), 0, 4);
+                return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+            }
+
+            function getStartOfWeek(year, weekNum) {
+                const jan4 = new Date(year, 0, 4);
+                const dayOfYear = jan4.getDay();
+                const start = new Date(jan4);
+                start.setDate(jan4.getDate() - dayOfYear + (weekNum - 1) * 7);
+                return start;
+            }
+
+            function getEndOfWeek(year, weekNum) {
+                const start = getStartOfWeek(year, weekNum);
+                const end = new Date(start);
+                end.setDate(end.getDate() + 6);
+                return end;
+            }
+
+            function formatDate(d) {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return y + '-' + m + '-' + day;
+            }
+
+            function parseWeekValue(val) {
+                const parts = val.split('-W');
+                if (parts.length === 2) {
+                    return { year: parseInt(parts[0]), week: parseInt(parts[1]) };
+                }
+                return null;
+            }
+
+            // =============================================================
+            // 3. 生成模拟数据（2026年全年）
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -740,15 +776,14 @@
                 let current = new Date(startDate);
 
                 while (current <= endDate) {
-                    const dateStr = current.toISOString().split('T')[0];
+                    const dateStr = formatDate(current);
                     for (const brand of ALL_BRANDS) {
                         const info = BRAND_DATA[brand];
                         const store = info.store;
                         const account = info.account;
                         const models = info.models;
 
-                        // 85% 的天数有直播
-                        const hasLive = Math.random() < 0.85;
+                        const hasLive = Math.random() < 0.82;
                         if (!hasLive) continue;
 
                         const sessionCount = 1 + Math.floor(Math.random() * 2);
@@ -756,18 +791,17 @@
                             const mainModel = models[Math.floor(Math.random() * models.length)];
                             const topic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
                             const promo = PROMO_TYPES[Math.floor(Math.random() * PROMO_TYPES.length)];
-                            const duration = 60 + Math.floor(Math.random() * 120);
-                            const peak = 150 + Math.floor(Math.random() * 900);
-                            const interactions = 300 + Math.floor(Math.random() * 2200);
+                            const duration = 45 + Math.floor(Math.random() * 135);
+                            const peak = 120 + Math.floor(Math.random() * 880);
+                            const interactions = 200 + Math.floor(Math.random() * 2300);
                             const leads = 1 + Math.floor(Math.random() * 7);
 
-                            // 竞品提及
                             const compCount = Math.floor(Math.random() * 3);
                             const compList = [];
                             const availableComp = COMP_BRANDS.filter(b => b !== brand);
                             for (let c = 0; c < compCount; c++) {
                                 const cb = availableComp[Math.floor(Math.random() * availableComp.length)];
-                                const sentiment = ['正面', '中性', '负面'][Math.floor(Math.random() * 3)];
+                                const sentiment = SENTIMENTS[Math.floor(Math.random() * SENTIMENTS.length)];
                                 const dim = COMP_DIMS[Math.floor(Math.random() * COMP_DIMS.length)];
                                 compList.push({ brand: cb, sentiment, dimension: dim });
                             }
@@ -797,16 +831,14 @@
             const rawData = generateMockData();
 
             // =============================================================
-            // 3. 筛选器联动
+            // 4. 筛选器联动
             // =============================================================
             const brandFilter = document.getElementById('brandFilter');
             const storeFilter = document.getElementById('storeFilter');
             const accountFilter = document.getElementById('accountFilter');
             const timeDimension = document.getElementById('timeDimension');
             const datePicker = document.getElementById('datePicker');
-            const dateFormatHint = document.getElementById('dateFormatHint');
 
-            // 更新经销商选项
             function populateStoreOptions(selectedBrand) {
                 storeFilter.innerHTML = '<option value="all">全部经销商</option>';
                 let stores = [];
@@ -822,11 +854,9 @@
                     opt.textContent = s;
                     storeFilter.appendChild(opt);
                 }
-                // 触发账号更新
                 populateAccountOptions(storeFilter.value);
             }
 
-            // 更新账号选项
             function populateAccountOptions(selectedStore) {
                 accountFilter.innerHTML = '<option value="all">全部账号</option>';
                 let accounts = [];
@@ -848,12 +878,10 @@
                 }
             }
 
-            // 监听品牌变化
             brandFilter.addEventListener('change', function() {
                 populateStoreOptions(this.value);
             });
 
-            // 监听经销商变化
             storeFilter.addEventListener('change', function() {
                 populateAccountOptions(this.value);
             });
@@ -862,51 +890,47 @@
             populateStoreOptions('all');
 
             // =============================================================
-            // 4. 日期选择器动态变化
+            // 5. 日期选择器动态变化
             // =============================================================
             function updateDatePicker() {
                 const dim = timeDimension.value;
                 const picker = datePicker;
-                const hint = dateFormatHint;
-
-                // 重置属性
-                picker.type = 'text';
-                picker.min = '';
-                picker.max = '';
-                picker.step = '';
+                const currentVal = picker.value;
 
                 if (dim === 'day') {
                     picker.type = 'date';
-                    picker.value = '2026-07-27';
-                    hint.textContent = '格式：2026-07-27';
+                    if (!currentVal || currentVal.includes('-W') || currentVal.length < 4) {
+                        picker.value = '2026-07-27';
+                    }
                 } else if (dim === 'week') {
                     picker.type = 'week';
-                    picker.value = '2026-W30';
-                    hint.textContent = '格式：2026-W30（第30周）';
+                    if (!currentVal || currentVal.includes('-') && currentVal.length === 10) {
+                        picker.value = '2026-W30';
+                    }
                 } else if (dim === 'month') {
                     picker.type = 'month';
-                    picker.value = '2026-07';
-                    hint.textContent = '格式：2026-07';
+                    if (!currentVal || currentVal.includes('-W') || currentVal.length < 4) {
+                        picker.value = '2026-07';
+                    }
                 } else if (dim === 'year') {
                     picker.type = 'number';
-                    picker.value = '2026';
                     picker.min = '2020';
                     picker.max = '2030';
-                    hint.textContent = '格式：2026';
+                    if (!currentVal || currentVal.includes('-') || currentVal.length < 4) {
+                        picker.value = '2026';
+                    }
                 }
             }
 
             timeDimension.addEventListener('change', function() {
                 updateDatePicker();
-                // 自动刷新数据（可选）
-                // updateDashboard();
             });
 
             // 初始化日期选择器
             updateDatePicker();
 
             // =============================================================
-            // 5. 数据过滤核心
+            // 6. 数据过滤核心
             // =============================================================
             function getFilters() {
                 const brand = brandFilter.value;
@@ -917,39 +941,19 @@
                 return { brand, store, account, timeDim, dateVal };
             }
 
-            function getStartOfWeek(year, weekNum) {
-                const jan4 = new Date(year, 0, 4);
-                const dayOfYear = jan4.getDay();
-                const start = new Date(jan4);
-                start.setDate(jan4.getDate() - dayOfYear + (weekNum - 1) * 7);
-                return start.toISOString().split('T')[0];
-            }
-
-            function getEndOfWeek(year, weekNum) {
-                const start = new Date(getStartOfWeek(year, weekNum));
-                start.setDate(start.getDate() + 6);
-                return start.toISOString().split('T')[0];
-            }
-
             function filterData(filters) {
                 let data = rawData;
 
-                // 品牌过滤
                 if (filters.brand !== 'all') {
                     data = data.filter(d => d.brand === filters.brand);
                 }
-
-                // 经销商过滤
                 if (filters.store !== 'all') {
                     data = data.filter(d => d.store === filters.store);
                 }
-
-                // 账号过滤
                 if (filters.account !== 'all') {
                     data = data.filter(d => d.account === filters.account);
                 }
 
-                // 日期过滤
                 if (filters.dateVal) {
                     const dim = filters.timeDim;
                     const val = filters.dateVal;
@@ -957,14 +961,13 @@
                     if (dim === 'day') {
                         data = data.filter(d => d.date === val);
                     } else if (dim === 'week') {
-                        // 解析周数
-                        const parts = val.split('-W');
-                        if (parts.length === 2) {
-                            const year = parseInt(parts[0]);
-                            const week = parseInt(parts[1]);
-                            const start = getStartOfWeek(year, week);
-                            const end = getEndOfWeek(year, week);
-                            data = data.filter(d => d.date >= start && d.date <= end);
+                        const parsed = parseWeekValue(val);
+                        if (parsed) {
+                            const start = getStartOfWeek(parsed.year, parsed.week);
+                            const end = getEndOfWeek(parsed.year, parsed.week);
+                            const startStr = formatDate(start);
+                            const endStr = formatDate(end);
+                            data = data.filter(d => d.date >= startStr && d.date <= endStr);
                         }
                     } else if (dim === 'month') {
                         data = data.filter(d => d.date.startsWith(val));
@@ -977,7 +980,7 @@
             }
 
             // =============================================================
-            // 6. 聚合工具
+            // 7. 聚合工具
             // =============================================================
             function aggregateByAccount(data) {
                 const map = {};
@@ -1054,30 +1057,33 @@
             }
 
             // =============================================================
-            // 7. 渲染函数
+            // 8. 渲染函数
             // =============================================================
 
-            // 7.1 更新顶部标签
-            function updateLabels(filterResult) {
-                const dim = timeDimension.value;
-                const val = datePicker.value;
+            // 8.1 更新顶部标签
+            function updateLabels(filterResult, filters) {
+                const dim = filters.timeDim;
+                const val = filters.dateVal;
                 let displayLabel = '';
 
-                if (dim === 'day') displayLabel = `· ${val}`;
-                else if (dim === 'week') {
-                    const parts = val.split('-W');
-                    if (parts.length === 2) {
-                        const year = parseInt(parts[0]);
-                        const week = parseInt(parts[1]);
-                        const start = getStartOfWeek(year, week);
-                        const end = getEndOfWeek(year, week);
-                        displayLabel = `· ${start} ~ ${end}`;
+                if (dim === 'day') {
+                    displayLabel = `· ${val}`;
+                } else if (dim === 'week') {
+                    const parsed = parseWeekValue(val);
+                    if (parsed) {
+                        const start = getStartOfWeek(parsed.year, parsed.week);
+                        const end = getEndOfWeek(parsed.year, parsed.week);
+                        displayLabel = `· ${formatDate(start)} ~ ${formatDate(end)}`;
                     } else {
                         displayLabel = `· ${val}`;
                     }
-                } else if (dim === 'month') displayLabel = `· ${val}`;
-                else if (dim === 'year') displayLabel = `· ${val}`;
-                else displayLabel = `· ${val}`;
+                } else if (dim === 'month') {
+                    displayLabel = `· ${val}`;
+                } else if (dim === 'year') {
+                    displayLabel = `· ${val}`;
+                } else {
+                    displayLabel = `· ${val}`;
+                }
 
                 document.getElementById('periodLabel').textContent = displayLabel;
 
@@ -1091,7 +1097,7 @@
                     `<i class="far fa-building"></i> 覆盖 ${accounts.size} 个账号`;
             }
 
-            // 7.2 KPI
+            // 8.2 KPI
             function renderKPI(data) {
                 const totalSessions = data.reduce((s, d) => s + (d.sessionCount || 1), 0);
                 const totalDuration = data.reduce((s, d) => s + d.duration, 0);
@@ -1126,7 +1132,7 @@
                 }
             }
 
-            // 7.3 账号对比表
+            // 8.3 账号对比表
             function renderCompareTable(data) {
                 const tbody = document.getElementById('compareTableBody');
                 if (data.length === 0) {
@@ -1162,7 +1168,7 @@
                 }).join('');
             }
 
-            // 7.4 促销策略
+            // 8.4 促销策略
             function renderPromo(data) {
                 if (data.length === 0) {
                     document.getElementById('promoContent').innerHTML = '<div class="empty-state"><i class="fas fa-gift"></i><p>暂无促销数据</p></div>';
@@ -1172,13 +1178,11 @@
                 for (const d of data) {
                     promoMap[d.promoType] = (promoMap[d.promoType] || 0) + 1;
                 }
-                const sorted = Object.entries(promoMap).sort((a, b) => b[1] - a[1]);
 
                 const accMap = {};
                 for (const d of data) {
-                    if (!accMap[d.account]) accMap[d.account] = { count: 0, promos: [] };
+                    if (!accMap[d.account]) accMap[d.account] = { count: 0 };
                     accMap[d.account].count += 1;
-                    accMap[d.account].promos.push(d.promoType);
                 }
                 let maxAccount = '—',
                     maxCount = 0;
@@ -1198,7 +1202,6 @@
                         maxUrgencyAcc = acc; }
                 }
 
-                const topPromo = sorted.length > 0 ? sorted[0] : ['现金直降', 0];
                 document.getElementById('promoHighlightAccount').textContent = maxAccount;
                 document.getElementById('promoHighlightDate').textContent = '本周内';
 
@@ -1212,11 +1215,11 @@
                 document.getElementById('promoUrgencyCount').textContent = maxUrgency || 0;
             }
 
-            // 7.5 竞品提及
+            // 8.5 竞品提及
             function renderCompetitor(data) {
                 if (data.length === 0) {
                     document.getElementById('competitorContent').innerHTML =
-                    '<div class="empty-state"><i class="fas fa-crosshairs"></i><p>暂无竞品数据</p></div>';
+                        '<div class="empty-state"><i class="fas fa-crosshairs"></i><p>暂无竞品数据</p></div>';
                     return;
                 }
                 let allComps = [];
@@ -1256,12 +1259,12 @@
                 }
             }
 
-            // 7.6 内容策略
+            // 8.6 内容策略
             function renderContentStrategy(data) {
                 const tbody = document.getElementById('contentStrategyBody');
                 if (data.length === 0) {
                     tbody.innerHTML =
-                    `<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px 0;">暂无数据</td></tr>`;
+                        `<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px 0;">暂无数据</td></tr>`;
                     return;
                 }
                 const accounts = aggregateByAccount(data);
@@ -1269,7 +1272,6 @@
 
                 tbody.innerHTML = accounts.map(a => {
                     const mainModel = getTopItem(a.mainModels) || '—';
-                    const topic = getTopItem(a.topics) || '—';
                     const changes = ['参数讲解 → 试驾体验', '价格对比 → 车主分享', '持续价格对比', '新增车主真实分享', '促销活动 → 品牌故事',
                         '技术解析 → 试驾体验'
                     ];
@@ -1286,7 +1288,7 @@
                 }).join('');
             }
 
-            // 7.7 创新获客
+            // 8.7 创新获客
             function renderInnovation(data) {
                 const list = document.getElementById('innovationList');
                 if (data.length === 0) {
@@ -1338,7 +1340,7 @@
                 }).join('');
             }
 
-            // 7.8 趋势图
+            // 8.8 趋势图
             let trendChartInstance = null;
 
             function renderTrend(data) {
@@ -1424,12 +1426,12 @@
                 });
             }
 
-            // 7.9 策略建议
+            // 8.9 策略建议
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {
                     list.innerHTML =
-                    '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据可生成建议</li>';
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据可生成建议</li>';
                     return;
                 }
                 const accounts = aggregateByAccount(data);
@@ -1462,7 +1464,7 @@
                 const topSuggestions = suggestions.slice(0, 4);
                 if (topSuggestions.length === 0) {
                     list.innerHTML =
-                    '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">所有账号表现良好，继续保持</li>';
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">所有账号表现良好，继续保持</li>';
                     return;
                 }
 
@@ -1480,13 +1482,13 @@
             }
 
             // =============================================================
-            // 8. 主更新函数
+            // 9. 主更新函数（点击应用时调用）
             // =============================================================
             function updateDashboard() {
                 const filters = getFilters();
                 const data = filterData(filters);
 
-                updateLabels(data);
+                updateLabels(data, filters);
                 renderKPI(data);
                 renderCompareTable(data);
                 renderPromo(data);
@@ -1498,10 +1500,13 @@
             }
 
             // =============================================================
-            // 9. 事件绑定 & 初始化
+            // 10. 事件绑定
             // =============================================================
+
+            // 点击"应用"按钮刷新数据
             document.getElementById('applyFilters').addEventListener('click', updateDashboard);
 
+            // 重置按钮
             document.getElementById('resetFilters').addEventListener('click', function() {
                 brandFilter.value = 'all';
                 populateStoreOptions('all');
@@ -1511,13 +1516,17 @@
                 updateDashboard();
             });
 
-            // 维度变化时自动刷新（可选）
-            timeDimension.addEventListener('change', updateDashboard);
-            datePicker.addEventListener('change', updateDashboard);
+            // 时间维度变化时更新日期选择器（但不刷新数据）
+            timeDimension.addEventListener('change', function() {
+                updateDatePicker();
+            });
 
-            // 初始化
+            // =============================================================
+            // 11. 初始化
+            // =============================================================
             window.addEventListener('load', function() {
                 updateDatePicker();
+                // 默认加载数据
                 updateDashboard();
             });
 

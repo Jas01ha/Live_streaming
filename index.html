@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js">
     </script>
     <style>
-        /* ===== 全局样式 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -590,7 +589,7 @@
             </div>
         </div>
 
-        <!-- ===== 场观趋势（Chart.js） ===== -->
+        <!-- ===== 场观趋势 ===== -->
         <div class="card">
             <div class="card-title"><i class="fas fa-chart-area"></i> 场观趋势 <span class="tag" id="trendTag">近7日</span></div>
             <div class="chart-container tall" style="height:240px;">
@@ -647,11 +646,6 @@
                 const m = String(d.getMonth() + 1).padStart(2, '0');
                 const day = String(d.getDate()).padStart(2, '0');
                 return y + '-' + m + '-' + day;
-            }
-
-            function formatDateTime(dateStr, hour) {
-                const hh = String(hour).padStart(2, '0');
-                return dateStr + ' ' + hh + ':00:00';
             }
 
             function formatDateTimeFromDate(dateObj) {
@@ -1312,7 +1306,7 @@
                 }).join('');
             }
 
-            // 8.8 原有 Chart.js 趋势图
+            // 8.8 Chart.js 场观趋势
             let trendChartInstance = null;
 
             function renderTrendChartJS(data) {
@@ -1398,9 +1392,7 @@
                 });
             }
 
-            // =============================================================
-            // 8.9 ECharts：账号趋势折线图
-            // =============================================================
+            // 8.9 账号趋势折线图
             function renderTrendECharts(data) {
                 const dom = document.getElementById('trendECharts');
                 const myChart = echarts.init(dom);
@@ -1472,9 +1464,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
             // 8.10 热力图
-            // =============================================================
             function renderHeatmap(data) {
                 const dom = document.getElementById('heatmapECharts');
                 const myChart = echarts.init(dom);
@@ -1573,9 +1563,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 8.11 流量来源结构图（新配色：#002060 #0051BC #00B0F0 #7ADBFF）
-            // =============================================================
+            // 8.11 流量来源结构图
             function renderTrafficChart(data) {
                 const dom = document.getElementById('trafficChart');
                 const myChart = echarts.init(dom);
@@ -1600,7 +1588,6 @@
                     percent: ((value / total) * 100).toFixed(1)
                 }));
 
-                // 新配色方案
                 const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF'];
                 const option = {
                     tooltip: {
@@ -1646,9 +1633,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 8.12 直播形式结构图（同款新配色）
-            // =============================================================
+            // 8.12 直播形式结构图（6种颜色，无重复）
             function renderFormatChart(data) {
                 const dom = document.getElementById('formatChart');
                 const myChart = echarts.init(dom);
@@ -1673,8 +1658,8 @@
                     percent: ((value / total) * 100).toFixed(1)
                 }));
 
-                // 同款新配色（按需循环，如果分类多于4个则循环使用）
-                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF'];
+                // 6种互不重复的蓝灰色系
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8'];
                 const option = {
                     tooltip: {
                         trigger: 'item',
@@ -1719,9 +1704,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 8.13 TOP10 直播明细列表（时间格式 yyyy-mm-dd hh:mm:ss）
-            // =============================================================
+            // 8.13 TOP10 直播明细列表
             function renderTop10Table(data) {
                 const tbody = document.getElementById('top10TableBody');
                 if (data.length === 0) {
@@ -1734,9 +1717,7 @@
                 const top10 = sorted.slice(0, 10);
 
                 tbody.innerHTML = top10.map(d => {
-                    // 开播时间：yyyy-mm-dd hh:00:00
                     const startDateTime = d.date + ' ' + String(d.startHour).padStart(2, '0') + ':00:00';
-                    // 下播时间：开播时间 + duration 分钟
                     const startDateObj = new Date(d.date + 'T' + String(d.startHour).padStart(2, '0') + ':00:00');
                     const endDateObj = new Date(startDateObj.getTime() + d.duration * 60000);
                     const endDateTime = formatDateTimeFromDate(endDateObj);
@@ -1767,9 +1748,7 @@
                 }).join('');
             }
 
-            // =============================================================
             // 8.14 策略建议
-            // =============================================================
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {

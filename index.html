@@ -266,7 +266,6 @@
         }
         .chart-container { position: relative; height: 220px; }
         .chart-container.tall { height: 260px; }
-        /* 增高图表容器，解决X轴文字被遮挡 */
         .chart-container-echarts { width: 100%; height: 380px; }
         .chart-container-echarts-pie { width: 100%; height: 260px; }
 
@@ -607,7 +606,7 @@
                 </div>
                 <div class="chart-container-echarts" id="interactTrendECharts"></div>
             </div>
-            <!-- 互动结构（全部账号 + 大盘平均） -->
+            <!-- 互动结构（全部账号） -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-bar"></i> 互动结构
@@ -2079,7 +2078,7 @@
             }
 
             // =============================================================
-            // 8.16 互动结构（全部账号 + 大盘平均）
+            // 8.16 互动结构（全部账号，去掉大盘平均，增大底部边距）
             // =============================================================
             function renderStructure(data) {
                 const dom = document.getElementById('structureECharts');
@@ -2115,27 +2114,15 @@
                 // 按总互动量排序
                 const sorted = allAccounts.sort((a, b) => accMap[b].total - accMap[a].total);
 
-                // 计算大盘平均
-                const avgLikes = Math.round(allAccounts.reduce((sum, acc) => sum + accMap[acc].likes, 0) / allAccounts
-                .length);
-                const avgComments = Math.round(allAccounts.reduce((sum, acc) => sum + accMap[acc].comments, 0) /
-                    allAccounts.length);
-                const avgShares = Math.round(allAccounts.reduce((sum, acc) => sum + accMap[acc].shares, 0) / allAccounts
-                    .length);
+                const xLabels = sorted;
+                const likesData = sorted.map(acc => accMap[acc].likes);
+                const commentsData = sorted.map(acc => accMap[acc].comments);
+                const sharesData = sorted.map(acc => accMap[acc].shares);
 
-                // 构建X轴标签：大盘平均 + 所有账号
-                const xLabels = ['大盘平均', ...sorted];
-                // 构建数据：大盘平均放在第一位
-                const likesData = [avgLikes, ...sorted.map(acc => accMap[acc].likes)];
-                const commentsData = [avgComments, ...sorted.map(acc => accMap[acc].comments)];
-                const sharesData = [avgShares, ...sorted.map(acc => accMap[acc].shares)];
-
-                // 颜色方案：大盘平均边框用 #002060，评论用 #0051BC，点赞用 #00B0F0，分享用 #7ADBFF
                 const colors = {
                     comment: '#0051BC',
                     like: '#00B0F0',
-                    share: '#7ADBFF',
-                    avgBorder: '#002060'
+                    share: '#7ADBFF'
                 };
 
                 const option = {
@@ -2162,7 +2149,7 @@
                     grid: {
                         left: '8%',
                         right: '4%',
-                        bottom: '8%',
+                        bottom: '12%',   // 增大底部边距，防止X轴标签被遮挡
                         top: '15%',
                         containLabel: false
                     },
@@ -2172,13 +2159,7 @@
                         axisLabel: {
                             fontSize: 10,
                             rotate: 25,
-                            interval: 0,
-                            fontWeight: function(value) {
-                                return value === '大盘平均' ? 'bold' : 'normal';
-                            },
-                            color: function(value) {
-                                return value === '大盘平均' ? '#002060' : '#374151';
-                            }
+                            interval: 0
                         },
                         axisLine: { show: true },
                         splitLine: { show: false }
@@ -2194,58 +2175,21 @@
                         name: '评论',
                         type: 'bar',
                         stack: 'total',
-                        data: commentsData.map((val, idx) => {
-                            // 大盘平均加边框
-                            if (idx === 0) {
-                                return {
-                                    value: val,
-                                    itemStyle: {
-                                        borderColor: colors.avgBorder,
-                                        borderWidth: 3,
-                                        borderType: 'solid'
-                                    }
-                                };
-                            }
-                            return val;
-                        }),
+                        data: commentsData,
                         color: colors.comment,
                         barWidth: '35%'
                     }, {
                         name: '点赞',
                         type: 'bar',
                         stack: 'total',
-                        data: likesData.map((val, idx) => {
-                            if (idx === 0) {
-                                return {
-                                    value: val,
-                                    itemStyle: {
-                                        borderColor: colors.avgBorder,
-                                        borderWidth: 3,
-                                        borderType: 'solid'
-                                    }
-                                };
-                            }
-                            return val;
-                        }),
+                        data: likesData,
                         color: colors.like,
                         barWidth: '35%'
                     }, {
                         name: '分享',
                         type: 'bar',
                         stack: 'total',
-                        data: sharesData.map((val, idx) => {
-                            if (idx === 0) {
-                                return {
-                                    value: val,
-                                    itemStyle: {
-                                        borderColor: colors.avgBorder,
-                                        borderWidth: 3,
-                                        borderType: 'solid'
-                                    }
-                                };
-                            }
-                            return val;
-                        }),
+                        data: sharesData,
                         color: colors.share,
                         barWidth: '35%'
                     }]

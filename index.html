@@ -247,6 +247,7 @@
         .badge-time { background: #fef9e7; color: #b7950b; }
         .badge-audience-yes { background: #ecfdf5; color: #059669; }
         .badge-audience-no { background: #f3f4f6; color: #6b7280; }
+        .badge-video { background: #fef3c7; color: #d97706; }
 
         .trend-indicator { font-size: 12px; font-weight: 500; margin-left: 6px; display: inline-block; }
         .trend-indicator.up { color: #059669; }
@@ -635,7 +636,8 @@
             const COMP_BRANDS = ['奥迪', '沃尔沃', '凯迪拉克', '保时捷', '路虎', '捷豹'];
             const COMP_DIMS = ['续航', '价格', '空间', '配置', '性能', '智能驾驶', '安全性', '外观', '内饰', '售后服务'];
             const SENTIMENTS = ['正面', '中性', '负面'];
-            const TRAFFIC_SOURCES = ['自然推荐', '付费投流', '同城页', '其他'];
+            // 流量来源：关注页、同城、视频推荐、其它
+            const TRAFFIC_SOURCES = ['关注页', '同城', '视频推荐', '其它'];
             const LIVE_FORMATS = ['展厅直播', '户外路试', '访谈式', '发布会', '绿幕虚拟', '其他'];
 
             // =============================================================
@@ -1633,7 +1635,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 8.12 直播形式结构图（6种颜色，无重复）
+            // 8.12 直播形式结构图
             function renderFormatChart(data) {
                 const dom = document.getElementById('formatChart');
                 const myChart = echarts.init(dom);
@@ -1658,7 +1660,6 @@
                     percent: ((value / total) * 100).toFixed(1)
                 }));
 
-                // 6种互不重复的蓝灰色系
                 const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8'];
                 const option = {
                     tooltip: {
@@ -1704,7 +1705,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 8.13 TOP10 直播明细列表
+            // 8.13 TOP10 直播明细列表（视频推荐高亮显示）
             function renderTop10Table(data) {
                 const tbody = document.getElementById('top10TableBody');
                 if (data.length === 0) {
@@ -1725,6 +1726,12 @@
                     const durationHours = (d.duration / 60).toFixed(1);
                     const hasAudience = d.hasLiveAudience === 1;
 
+                    // 流量来源徽章：视频推荐用橙色高亮
+                    let trafficBadge = `<span class="badge badge-gray">${d.trafficSource || '—'}</span>`;
+                    if (d.trafficSource === '视频推荐') {
+                        trafficBadge = `<span class="badge badge-video">视频推荐</span>`;
+                    }
+
                     return `<tr>
                                 <td><strong>${d.account}</strong></td>
                                 <td>${d.store}</td>
@@ -1737,7 +1744,7 @@
                                 <td>${Math.floor(d.interactions * 0.4).toLocaleString()}</td>
                                 <td>${Math.floor(d.interactions * 0.3).toLocaleString()}</td>
                                 <td>${Math.floor(d.interactions * 0.3).toLocaleString()}</td>
-                                <td><span class="badge badge-gray">${d.trafficSource || '—'}</span></td>
+                                <td>${trafficBadge}</td>
                                 <td><span class="badge badge-blue">${d.liveFormat || '—'}</span></td>
                                 <td>
                                     <span class="badge ${hasAudience ? 'badge-audience-yes' : 'badge-audience-no'}">

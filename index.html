@@ -176,7 +176,7 @@
             color: #4f46e5;
         }
 
-        /* ===== KPI 卡片（6个） ===== */
+        /* ===== KPI 卡片 ===== */
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -284,6 +284,7 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.3px;
+            white-space: nowrap;
         }
 
         table tbody td {
@@ -338,6 +339,27 @@
         .badge-purple {
             background: #f5f3ff;
             color: #7c3aed;
+        }
+        .badge-time {
+            background: #fef9e7;
+            color: #b7950b;
+        }
+
+        /* 表格内变化箭头 */
+        .trend-indicator {
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 6px;
+            display: inline-block;
+        }
+        .trend-indicator.up {
+            color: #059669;
+        }
+        .trend-indicator.down {
+            color: #dc2626;
+        }
+        .trend-indicator.neutral {
+            color: #6b7280;
         }
 
         /* ===== 双栏 ===== */
@@ -496,11 +518,10 @@
             </div>
             <div class="topbar-right">
                 <span class="badge"><i class="far fa-calendar-alt"></i> 数据更新: 今日 18:00</span>
-                <!-- 已删除“覆盖 X 个账号” -->
             </div>
         </div>
 
-        <!-- ===== 筛选器栏（保留，后续调整） ===== -->
+        <!-- ===== 筛选器栏 ===== -->
         <div class="filters-bar" id="filterArea">
             <div class="filter-group">
                 <label><i class="far fa-calendar"></i> 时间维度</label>
@@ -548,8 +569,8 @@
             </div>
         </div>
 
-        <!-- ===== KPI 卡片（6个） ===== -->
-        <div class="kpi-grid" id="kpiGrid">
+        <!-- ===== KPI 卡片 ===== -->
+        <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="label"><i class="fas fa-video"></i> 监测场次</div>
                 <div class="value" id="kpiSessions">--</div>
@@ -582,11 +603,16 @@
             </div>
         </div>
 
-        <!-- ===== 账号对比表（保留，后续调整） ===== -->
+        <!-- ===== 账号对比表 ===== -->
         <div class="card">
             <div class="card-title">
                 <i class="fas fa-people-arrows"></i> 账号横向对比
                 <span class="tag" id="compareTableTag">本周</span>
+            </div>
+            <!-- 新增的态势描述 -->
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:14px; color:#4b5563; background:#f8fafc; padding:8px 12px; border-radius:8px;">
+                <i class="fas fa-chart-simple" style="color:#4f46e5; font-size:16px;"></i>
+                <span>直播运营态势看板（对手直播排班 &amp; 节奏策略）</span>
             </div>
             <div class="table-wrap">
                 <table>
@@ -595,16 +621,14 @@
                             <th>账号</th>
                             <th>品牌</th>
                             <th>经销商</th>
-                            <th>场次</th>
-                            <th>总时长</th>
-                            <th>场均峰值</th>
-                            <th>总互动</th>
-                            <th>场均留资</th>
-                            <th>变化趋势</th>
+                            <th>监测场次</th>
+                            <th>总直播时长</th>
+                            <th>场均时长</th>
+                            <th>主要开播时段</th>
                         </tr>
                     </thead>
                     <tbody id="compareTableBody">
-                        <tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
+                        <tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -709,7 +733,7 @@
             'use strict';
 
             // =============================================================
-            // 1. 数据定义（包含 viewership 字段）
+            // 1. 数据定义
             // =============================================================
             const BRAND_DATA = {
                 '雷克萨斯': { store: '上海东昌', account: '上海东昌_001', models: ['ES', 'NX', 'RX', 'LM'] },
@@ -768,7 +792,7 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据（包含 viewership）
+            // 3. 生成模拟数据（含 startHour）
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -794,9 +818,12 @@
                             const promo = PROMO_TYPES[Math.floor(Math.random() * PROMO_TYPES.length)];
                             const duration = 45 + Math.floor(Math.random() * 135);
                             const peak = 120 + Math.floor(Math.random() * 880);
-                            const viewership = Math.floor(peak * (5 + Math.random() * 15)); // 模拟累计观看人次
+                            const viewership = Math.floor(peak * (5 + Math.random() * 15));
                             const interactions = 200 + Math.floor(Math.random() * 2300);
                             const leads = 1 + Math.floor(Math.random() * 7);
+
+                            // 随机生成开播小时 (0-23)
+                            const startHour = Math.floor(Math.random() * 24);
 
                             const compCount = Math.floor(Math.random() * 3);
                             const compList = [];
@@ -815,12 +842,13 @@
                                 brand: brand,
                                 duration: duration,
                                 peakViewers: peak,
-                                viewership: viewership,   // 新增字段
+                                viewership: viewership,
                                 interactions: interactions,
                                 leads: leads,
                                 mainModel: mainModel,
                                 contentTopic: topic,
                                 promoType: promo,
+                                startHour: startHour,          // 新增字段
                                 competitorMentions: compList,
                                 sessionCount: 1
                             });
@@ -834,7 +862,7 @@
             const rawData = generateMockData();
 
             // =============================================================
-            // 4. 筛选器联动（保持原样）
+            // 4. 筛选器联动
             // =============================================================
             const brandFilter = document.getElementById('brandFilter');
             const storeFilter = document.getElementById('storeFilter');
@@ -892,7 +920,7 @@
             populateStoreOptions('all');
 
             // =============================================================
-            // 5. 日期选择器动态变化（保持不变）
+            // 5. 日期选择器动态变化
             // =============================================================
             function updateDatePicker() {
                 const dim = timeDimension.value;
@@ -981,8 +1009,16 @@
             }
 
             // =============================================================
-            // 7. 聚合工具
+            // 7. 聚合工具（含时段统计）
             // =============================================================
+            function getTimeSlot(hour) {
+                if (hour >= 5 && hour <= 8) return '早场 (5-8)';
+                if (hour >= 9 && hour <= 12) return '上午场 (9-12)';
+                if (hour >= 13 && hour <= 17) return '下午场 (13-17)';
+                if (hour >= 18 && hour <= 22) return '黄金档 (18-22)';
+                return '深夜场 (22之后)';
+            }
+
             function aggregateByAccount(data) {
                 const map = {};
                 for (const d of data) {
@@ -1002,7 +1038,8 @@
                             mainModels: {},
                             topics: {},
                             promos: {},
-                            comps: []
+                            comps: [],
+                            timeSlots: {}  // 时段统计
                         };
                     }
                     const a = map[key];
@@ -1019,6 +1056,20 @@
                     if (d.competitorMentions) {
                         a.comps = a.comps.concat(d.competitorMentions);
                     }
+                    // 时段统计
+                    const slot = getTimeSlot(d.startHour);
+                    a.timeSlots[slot] = (a.timeSlots[slot] || 0) + 1;
+                }
+                // 计算主要时段
+                for (const key of Object.keys(map)) {
+                    const a = map[key];
+                    let maxSlot = '未知',
+                        maxCount = 0;
+                    for (const [slot, count] of Object.entries(a.timeSlots)) {
+                        if (count > maxCount) { maxCount = count;
+                            maxSlot = slot; }
+                    }
+                    a.mainTimeSlot = maxSlot;
                 }
                 return Object.values(map);
             }
@@ -1113,7 +1164,7 @@
                 document.getElementById('kpiInteraction').textContent = totalInteraction.toLocaleString();
                 document.getElementById('kpiLeads').textContent = totalLeads;
 
-                // 模拟变化趋势（简化）
+                // 模拟变化趋势
                 const changeMap = {
                     sessions: { val: totalSessions, el: 'kpiSessionsChange' },
                     duration: { val: totalDuration, el: 'kpiDurationChange' },
@@ -1138,8 +1189,366 @@
                 }
             }
 
-            // 其余渲染函数（对比表、促销、竞品、内容策略、创新、趋势、建议）与之前保持一致，此处省略重复代码...
-            // 为节省篇幅，仅保留关键修改部分，实际使用时需确保所有函数完整。
+            // 8.3 账号对比表（新字段）
+            function renderCompareTable(data) {
+                const tbody = document.getElementById('compareTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                // 按场次降序
+                accounts.sort((a, b) => b.sessions - a.sessions);
+
+                tbody.innerHTML = accounts.map(a => {
+                    const sessions = a.sessions;
+                    const totalDuration = a.duration; // 分钟
+                    const totalHours = (totalDuration / 60).toFixed(1);
+                    const avgDuration = a.count > 0 ? Math.round(totalDuration / a.count) : 0; // 分钟
+                    const mainSlot = a.mainTimeSlot || '—';
+
+                    // 随机生成变化趋势（仅演示）
+                    const trendSessions = (Math.random() > 0.5 ? '+' : '-') + (5 + Math.floor(Math.random() * 15)) + '%';
+                    const trendDuration = (Math.random() > 0.5 ? '+' : '-') + (3 + Math.floor(Math.random() * 12)) + '%';
+                    const trendAvg = (Math.random() > 0.5 ? '+' : '-') + (2 + Math.floor(Math.random() * 10)) + '%';
+
+                    const arrowSessions = trendSessions.startsWith('+') ? 'up' : 'down';
+                    const arrowDuration = trendDuration.startsWith('+') ? 'up' : 'down';
+                    const arrowAvg = trendAvg.startsWith('+') ? 'up' : 'down';
+
+                    return `<tr>
+                                <td><strong>${a.account}</strong></td>
+                                <td><span class="badge badge-blue">${a.brand}</span></td>
+                                <td>${a.store}</td>
+                                <td>
+                                    ${sessions}
+                                    <span class="trend-indicator ${arrowSessions}">${trendSessions}</span>
+                                </td>
+                                <td>
+                                    ${totalHours}h
+                                    <span class="trend-indicator ${arrowDuration}">${trendDuration}</span>
+                                </td>
+                                <td>
+                                    ${avgDuration}min
+                                    <span class="trend-indicator ${arrowAvg}">${trendAvg}</span>
+                                </td>
+                                <td><span class="badge badge-time">${mainSlot}</span></td>
+                            </tr>`;
+                }).join('');
+            }
+
+            // 8.4 促销策略（保持不变）
+            function renderPromo(data) {
+                if (data.length === 0) {
+                    document.getElementById('promoContent').innerHTML = '<div class="empty-state"><i class="fas fa-gift"></i><p>暂无促销数据</p></div>';
+                    return;
+                }
+                const promoMap = {};
+                for (const d of data) {
+                    promoMap[d.promoType] = (promoMap[d.promoType] || 0) + 1;
+                }
+
+                const accMap = {};
+                for (const d of data) {
+                    if (!accMap[d.account]) accMap[d.account] = { count: 0 };
+                    accMap[d.account].count += 1;
+                }
+                let maxAccount = '—',
+                    maxCount = 0;
+                for (const [acc, val] of Object.entries(accMap)) {
+                    if (val.count > maxCount) { maxCount = val.count;
+                        maxAccount = acc; }
+                }
+
+                const urgencyMap = {};
+                for (const d of data) {
+                    urgencyMap[d.account] = (urgencyMap[d.account] || 0) + Math.floor(Math.random() * 5) + 2;
+                }
+                let maxUrgencyAcc = '—',
+                    maxUrgency = 0;
+                for (const [acc, val] of Object.entries(urgencyMap)) {
+                    if (val > maxUrgency) { maxUrgency = val;
+                        maxUrgencyAcc = acc; }
+                }
+
+                document.getElementById('promoHighlightAccount').textContent = maxAccount;
+                document.getElementById('promoHighlightDate').textContent = '本周内';
+
+                const types = ['现金直降', '综合优惠', '金融贴息'];
+                for (let i = 0; i < 3; i++) {
+                    const el = document.getElementById('promoType' + (i + 1));
+                    const type = types[i] || '—';
+                    el.textContent = promoMap[type] || 0;
+                }
+                document.getElementById('promoUrgencyAccount').textContent = maxUrgencyAcc;
+                document.getElementById('promoUrgencyCount').textContent = maxUrgency || 0;
+            }
+
+            // 8.5 竞品提及（保持不变）
+            function renderCompetitor(data) {
+                if (data.length === 0) {
+                    document.getElementById('competitorContent').innerHTML =
+                        '<div class="empty-state"><i class="fas fa-crosshairs"></i><p>暂无竞品数据</p></div>';
+                    return;
+                }
+                let allComps = [];
+                for (const d of data) {
+                    if (d.competitorMentions) allComps = allComps.concat(d.competitorMentions);
+                }
+                const total = allComps.length;
+                const positive = allComps.filter(c => c.sentiment === '正面').length;
+                const neutral = allComps.filter(c => c.sentiment === '中性').length;
+                const negative = allComps.filter(c => c.sentiment === '负面').length;
+
+                const dimMap = {};
+                for (const c of allComps) {
+                    if (c.dimension) dimMap[c.dimension] = (dimMap[c.dimension] || 0) + 1;
+                }
+                const dimSorted = Object.entries(dimMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+                const dimStr = dimSorted.map(([d, v]) => `${d} (${v})`).join(' · ');
+
+                document.getElementById('compTotalCount').innerHTML =
+                    `${total} <span style="font-size:16px;font-weight:400;color:#6b7280;">次</span>`;
+                document.getElementById('compPositive').textContent = positive;
+                document.getElementById('compNeutral').textContent = neutral;
+                document.getElementById('compNegative').textContent = negative;
+                document.getElementById('compDimensions').textContent = dimStr ? `主要对比维度：${dimStr}` : '暂无对比维度数据';
+
+                const change = Math.round((Math.random() * 60) - 10);
+                const trendEl = document.getElementById('compTrend');
+                if (change > 10) {
+                    trendEl.className = 'trend-up';
+                    trendEl.innerHTML = `<i class="fas fa-arrow-up"></i> +${change}%`;
+                } else if (change < -10) {
+                    trendEl.className = 'trend-down';
+                    trendEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${change}%`;
+                } else {
+                    trendEl.className = 'trend-neutral';
+                    trendEl.textContent = '持平';
+                }
+            }
+
+            // 8.6 内容策略（保持不变）
+            function renderContentStrategy(data) {
+                const tbody = document.getElementById('contentStrategyBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        `<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.sessions - a.sessions);
+
+                tbody.innerHTML = accounts.map(a => {
+                    const mainModel = getTopItem(a.mainModels) || '—';
+                    const changes = ['参数讲解 → 试驾体验', '价格对比 → 车主分享', '持续价格对比', '新增车主真实分享', '促销活动 → 品牌故事',
+                        '技术解析 → 试驾体验'
+                    ];
+                    const change = changes[Math.floor(Math.random() * changes.length)];
+                    const tags = ['深化', '同质化', '创新', '稳定', '调整'];
+                    const tag = tags[Math.floor(Math.random() * tags.length)];
+                    const tagClass = tag === '创新' ? 'badge-green' : tag === '同质化' ? 'badge-yellow' : 'badge-blue';
+                    return `<tr>
+                                <td><strong>${a.account}</strong></td>
+                                <td><span class="badge badge-purple">${mainModel}</span></td>
+                                <td>${change}</td>
+                                <td><span class="badge ${tagClass}">${tag}</span></td>
+                            </tr>`;
+                }).join('');
+            }
+
+            // 8.7 创新获客（保持不变）
+            function renderInnovation(data) {
+                const list = document.getElementById('innovationList');
+                if (data.length === 0) {
+                    list.innerHTML = '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据</li>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.leadsSum - a.leadsSum);
+                const topAccount = accounts.length > 0 ? accounts[0] : null;
+
+                const innovations = [];
+                if (topAccount) {
+                    const methods = ['扫码预约试驾送咖啡券', '企微二维码留资抽奖', '小风车留资送保养', '私信回复送定制礼品', '粉丝群专属福利'];
+                    const method = methods[Math.floor(Math.random() * methods.length)];
+                    const lift = 20 + Math.floor(Math.random() * 50);
+                    innovations.push({
+                        account: topAccount.account,
+                        method: method,
+                        lift: lift,
+                        priority: 'important'
+                    });
+                }
+                if (accounts.length > 1) {
+                    const second = accounts[1];
+                    innovations.push({
+                        account: second.account,
+                        method: '试驾体验内容转化率提升明显',
+                        lift: 15 + Math.floor(Math.random() * 30),
+                        priority: 'normal'
+                    });
+                }
+
+                if (innovations.length === 0) {
+                    list.innerHTML = '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无创新获客手法</li>';
+                    return;
+                }
+
+                list.innerHTML = innovations.map((item, idx) => {
+                    const label = idx === 0 ? '⭐ 亮点' : '📌 可借鉴';
+                    const pClass = idx === 0 ? 'priority important' : 'priority normal';
+                    const liftText = item.lift ? `<br /><span style="font-size:13px;color:#6b7280;">留资量提升 ${item.lift}%</span>` :
+                        '';
+                    return `<li>
+                                <span class="${pClass}">${label}</span>
+                                <div>
+                                    <strong>${item.account}</strong> ${item.method}${liftText}
+                                </div>
+                            </li>`;
+                }).join('');
+            }
+
+            // 8.8 趋势图（使用 viewership 作为趋势）
+            let trendChartInstance = null;
+
+            function renderTrend(data) {
+                const ctx = document.getElementById('trendChart').getContext('2d');
+
+                if (trendChartInstance) {
+                    trendChartInstance.destroy();
+                }
+
+                if (data.length === 0) {
+                    trendChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['无数据'],
+                            datasets: [{ label: '暂无数据', data: [0], borderColor: '#9ca3af',
+                                backgroundColor: 'rgba(156,163,175,0.1)', fill: true }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                    return;
+                }
+
+                const dateAgg = aggregateByDate(data);
+                const labels = dateAgg.map(d => d.date);
+
+                const accMap = {};
+                for (const d of data) {
+                    if (!accMap[d.account]) accMap[d.account] = {};
+                    accMap[d.account][d.date] = (accMap[d.account][d.date] || 0) + (d.viewership || 0);
+                }
+
+                const accounts = Object.keys(accMap);
+                const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+                const datasets = accounts.map((acc, idx) => {
+                    const vals = labels.map(date => accMap[acc][date] || 0);
+                    return {
+                        label: acc,
+                        data: vals,
+                        borderColor: colors[idx % colors.length],
+                        backgroundColor: colors[idx % colors.length] + '18',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointBackgroundColor: colors[idx % colors.length],
+                    };
+                });
+
+                trendChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 16,
+                                    font: { size: 11, weight: '500' },
+                                    boxWidth: 12,
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#f3f4f6' },
+                                ticks: { font: { size: 10 } },
+                                title: { display: true, text: '观看人次', font: { size: 11 } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 }, maxTicksLimit: 15 }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+            }
+
+            // 8.9 策略建议（保持不变）
+            function renderSuggestions(data) {
+                const list = document.getElementById('suggestList');
+                if (data.length === 0) {
+                    list.innerHTML =
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据可生成建议</li>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.sessions - a.sessions);
+
+                const suggestions = [];
+                for (const a of accounts) {
+                    const mainModel = getTopItem(a.mainModels) || '主力车型';
+                    if (a.sessions > 5 && a.leadsSum / a.sessions < 3) {
+                        suggestions.push({
+                            account: a.account,
+                            priority: 'urgent',
+                            text: `建议优化留资引导话术，当前场均留资 ${(a.leadsSum/a.sessions).toFixed(1)} 单`
+                        });
+                    } else if (a.sessions > 3 && a.interactionSum / a.sessions < 500) {
+                        suggestions.push({
+                            account: a.account,
+                            priority: 'important',
+                            text: `互动率偏低，建议增加互动环节，当前场均互动 ${Math.round(a.interactionSum/a.sessions)}`
+                        });
+                    } else if (a.sessions > 2) {
+                        suggestions.push({
+                            account: a.account,
+                            priority: 'normal',
+                            text: `主推 ${mainModel} 表现稳定，可尝试增加竞品对比内容`
+                        });
+                    }
+                }
+
+                const topSuggestions = suggestions.slice(0, 4);
+                if (topSuggestions.length === 0) {
+                    list.innerHTML =
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">所有账号表现良好，继续保持</li>';
+                    return;
+                }
+
+                const priorityMap = {
+                    urgent: '🔴 紧急',
+                    important: '🟡 重要',
+                    normal: '🟢 常规'
+                };
+                list.innerHTML = topSuggestions.map(s => `
+                            <li>
+                                <span class="priority ${s.priority}">${priorityMap[s.priority] || '📌'}</span>
+                                <div><strong>${s.account}</strong> ${s.text}</div>
+                            </li>
+                        `).join('');
+            }
 
             // =============================================================
             // 9. 主更新函数
@@ -1150,9 +1559,6 @@
 
                 updateLabels(data, filters);
                 renderKPI(data);
-                // 其他渲染函数（此处应包含 renderCompareTable, renderPromo, renderCompetitor, renderContentStrategy, renderInnovation, renderTrend, renderSuggestions）
-                // 由于篇幅限制，在此仅示意，实际使用时需补全所有函数调用。
-                // 实际代码中，以下函数均已定义，此处仅保留调用以保持完整性。
                 renderCompareTable(data);
                 renderPromo(data);
                 renderCompetitor(data);
@@ -1188,10 +1594,6 @@
                 updateDashboard();
             });
 
-            // =============================================================
-            // 注意：以下函数（renderCompareTable, renderPromo, ...）因篇幅省略，实际运行时需包含完整实现。
-            // 本示例已包含全部实现，此处仅为示意。
-            // =============================================================
         })();
     </script>
 

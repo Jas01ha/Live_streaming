@@ -4,10 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>直播情报 · 周报</title>
-    <!-- 字体与图标库 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
     </script>
     <style>
@@ -127,9 +125,8 @@
             border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10);
         }
-        .filter-group select[multiple] {
-            min-height: 40px;
-            padding: 4px 8px;
+        .filter-group input[type="week"]::-webkit-datetime-edit {
+            color: #1f2937;
         }
 
         .filter-actions {
@@ -177,6 +174,12 @@
         .btn-reset:hover {
             border-color: #4f46e5;
             color: #4f46e5;
+        }
+
+        .date-format-hint {
+            font-size: 11px;
+            color: #9ca3af;
+            padding: 2px 0 0 4px;
         }
 
         /* ===== KPI 卡片 ===== */
@@ -341,18 +344,6 @@
         .badge-purple {
             background: #f5f3ff;
             color: #7c3aed;
-        }
-        .badge-lexus {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        .badge-bmw {
-            background: #e3f2fd;
-            color: #0d47a1;
-        }
-        .badge-benz {
-            background: #fff3e0;
-            color: #e65100;
         }
 
         /* ===== 双栏 ===== */
@@ -527,10 +518,11 @@
                     <option value="year">年</option>
                 </select>
             </div>
-            <!-- 日期选择 -->
+            <!-- 日期选择器（动态） -->
             <div class="filter-group">
                 <label><i class="far fa-calendar-alt"></i> 日期</label>
-                <input type="date" id="datePicker" value="2026-07-27" />
+                <input type="week" id="datePicker" value="2026-W30" />
+                <span class="date-format-hint" id="dateFormatHint">格式：2026-W30（第30周）</span>
             </div>
             <!-- 品牌 -->
             <div class="filter-group">
@@ -555,8 +547,8 @@
             <!-- 账号 -->
             <div class="filter-group">
                 <label><i class="fas fa-user-circle"></i> 账号</label>
-                <select id="accountFilter" multiple>
-                    <option value="all" selected>全部账号</option>
+                <select id="accountFilter">
+                    <option value="all">全部账号</option>
                     <option value="上海东昌_001">上海东昌_001</option>
                     <option value="上海宝诚_001">上海宝诚_001</option>
                     <option value="上海利星_001">上海利星_001</option>
@@ -722,55 +714,45 @@
             'use strict';
 
             // =============================================================
-            // 1. 数据定义（3个品牌 × 1个门店 × 1个账号）
+            // 1. 数据定义
             // =============================================================
-            const BRAND_STORE_ACCOUNT = {
-                '雷克萨斯': { store: '上海东昌', account: '上海东昌_001' },
-                '宝马': { store: '上海宝诚', account: '上海宝诚_001' },
-                '奔驰': { store: '上海利星', account: '上海利星_001' }
+            const BRAND_DATA = {
+                '雷克萨斯': { store: '上海东昌', account: '上海东昌_001', models: ['ES', 'NX', 'RX', 'LM'] },
+                '宝马': { store: '上海宝诚', account: '上海宝诚_001', models: ['3系', '5系', 'X3', 'X5', 'iX3'] },
+                '奔驰': { store: '上海利星', account: '上海利星_001', models: ['C级', 'E级', 'GLC', 'GLE'] }
             };
+            const ALL_BRANDS = Object.keys(BRAND_DATA);
+            const ALL_STORES = ALL_BRANDS.map(b => BRAND_DATA[b].store);
+            const ALL_ACCOUNTS = ALL_BRANDS.map(b => BRAND_DATA[b].account);
 
-            const STORES = Object.values(BRAND_STORE_ACCOUNT).map(item => item.store);
-            const ACCOUNT_MAP = {};
-            for (const [brand, info] of Object.entries(BRAND_STORE_ACCOUNT)) {
-                ACCOUNT_MAP[info.store] = info.account;
-            }
-
-            const MODELS_BY_BRAND = {
-                '雷克萨斯': ['ES', 'NX', 'RX', 'LM'],
-                '宝马': ['3系', '5系', 'X3', 'X5', 'iX3'],
-                '奔驰': ['C级', 'E级', 'GLC', 'GLE']
-            };
             const TOPICS = ['参数讲解', '试驾体验', '价格对比', '车主分享', '车型推荐', '促销活动', '品牌故事', '技术解析'];
             const PROMO_TYPES = ['现金直降', '综合优惠', '金融贴息', '置换补贴', '赠品', '送保养', '抵用券'];
             const COMP_BRANDS = ['奥迪', '沃尔沃', '凯迪拉克', '保时捷', '路虎', '捷豹', '雷克萨斯', '宝马', '奔驰'];
             const COMP_DIMS = ['续航', '价格', '空间', '配置', '性能', '智能驾驶', '安全性', '外观', '内饰', '售后服务'];
 
             // =============================================================
-            // 2. 生成模拟数据（3个账号，每天1-2场，覆盖30天）
+            // 2. 生成模拟数据
             // =============================================================
             function generateMockData() {
                 const records = [];
-                const startDate = new Date('2026-06-28');
-                const endDate = new Date('2026-07-27');
+                const startDate = new Date('2026-01-01');
+                const endDate = new Date('2026-12-31');
                 let current = new Date(startDate);
-
-                const allStores = Object.keys(ACCOUNT_MAP);
 
                 while (current <= endDate) {
                     const dateStr = current.toISOString().split('T')[0];
-                    for (const store of allStores) {
-                        const account = ACCOUNT_MAP[store];
-                        const brand = Object.keys(BRAND_STORE_ACCOUNT).find(
-                            b => BRAND_STORE_ACCOUNT[b].store === store
-                        );
+                    for (const brand of ALL_BRANDS) {
+                        const info = BRAND_DATA[brand];
+                        const store = info.store;
+                        const account = info.account;
+                        const models = info.models;
+
                         // 85% 的天数有直播
                         const hasLive = Math.random() < 0.85;
                         if (!hasLive) continue;
 
                         const sessionCount = 1 + Math.floor(Math.random() * 2);
                         for (let s = 0; s < sessionCount; s++) {
-                            const models = MODELS_BY_BRAND[brand] || ['ES', '3系', 'C级'];
                             const mainModel = models[Math.floor(Math.random() * models.length)];
                             const topic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
                             const promo = PROMO_TYPES[Math.floor(Math.random() * PROMO_TYPES.length)];
@@ -779,7 +761,7 @@
                             const interactions = 300 + Math.floor(Math.random() * 2200);
                             const leads = 1 + Math.floor(Math.random() * 7);
 
-                            // 竞品提及 (每个账号每个品牌有不同的倾向)
+                            // 竞品提及
                             const compCount = Math.floor(Math.random() * 3);
                             const compList = [];
                             const availableComp = COMP_BRANDS.filter(b => b !== brand);
@@ -815,22 +797,23 @@
             const rawData = generateMockData();
 
             // =============================================================
-            // 3. 筛选器联动 & 数据过滤
+            // 3. 筛选器联动
             // =============================================================
             const brandFilter = document.getElementById('brandFilter');
             const storeFilter = document.getElementById('storeFilter');
             const accountFilter = document.getElementById('accountFilter');
             const timeDimension = document.getElementById('timeDimension');
             const datePicker = document.getElementById('datePicker');
+            const dateFormatHint = document.getElementById('dateFormatHint');
 
-            // 初始化经销商选项
+            // 更新经销商选项
             function populateStoreOptions(selectedBrand) {
                 storeFilter.innerHTML = '<option value="all">全部经销商</option>';
                 let stores = [];
                 if (selectedBrand === 'all') {
-                    stores = Object.keys(ACCOUNT_MAP);
+                    stores = ALL_STORES;
                 } else {
-                    const info = BRAND_STORE_ACCOUNT[selectedBrand];
+                    const info = BRAND_DATA[selectedBrand];
                     if (info) stores = [info.store];
                 }
                 for (const s of stores) {
@@ -839,17 +822,23 @@
                     opt.textContent = s;
                     storeFilter.appendChild(opt);
                 }
+                // 触发账号更新
                 populateAccountOptions(storeFilter.value);
             }
 
+            // 更新账号选项
             function populateAccountOptions(selectedStore) {
-                accountFilter.innerHTML = '<option value="all" selected>全部账号</option>';
+                accountFilter.innerHTML = '<option value="all">全部账号</option>';
                 let accounts = [];
                 if (selectedStore === 'all') {
-                    accounts = Object.values(ACCOUNT_MAP);
+                    accounts = ALL_ACCOUNTS;
                 } else {
-                    const acc = ACCOUNT_MAP[selectedStore];
-                    if (acc) accounts = [acc];
+                    for (const brand of ALL_BRANDS) {
+                        if (BRAND_DATA[brand].store === selectedStore) {
+                            accounts.push(BRAND_DATA[brand].account);
+                            break;
+                        }
+                    }
                 }
                 for (const a of accounts) {
                     const opt = document.createElement('option');
@@ -857,75 +846,683 @@
                     opt.textContent = a;
                     accountFilter.appendChild(opt);
                 }
-                const allOpt = accountFilter.querySelector('option[value="all"]');
-                if (allOpt) allOpt.selected = true;
             }
 
+            // 监听品牌变化
             brandFilter.addEventListener('change', function() {
                 populateStoreOptions(this.value);
             });
 
+            // 监听经销商变化
             storeFilter.addEventListener('change', function() {
                 populateAccountOptions(this.value);
             });
 
+            // 初始化
             populateStoreOptions('all');
 
+            // =============================================================
+            // 4. 日期选择器动态变化
+            // =============================================================
+            function updateDatePicker() {
+                const dim = timeDimension.value;
+                const picker = datePicker;
+                const hint = dateFormatHint;
+
+                // 重置属性
+                picker.type = 'text';
+                picker.min = '';
+                picker.max = '';
+                picker.step = '';
+
+                if (dim === 'day') {
+                    picker.type = 'date';
+                    picker.value = '2026-07-27';
+                    hint.textContent = '格式：2026-07-27';
+                } else if (dim === 'week') {
+                    picker.type = 'week';
+                    picker.value = '2026-W30';
+                    hint.textContent = '格式：2026-W30（第30周）';
+                } else if (dim === 'month') {
+                    picker.type = 'month';
+                    picker.value = '2026-07';
+                    hint.textContent = '格式：2026-07';
+                } else if (dim === 'year') {
+                    picker.type = 'number';
+                    picker.value = '2026';
+                    picker.min = '2020';
+                    picker.max = '2030';
+                    hint.textContent = '格式：2026';
+                }
+            }
+
+            timeDimension.addEventListener('change', function() {
+                updateDatePicker();
+                // 自动刷新数据（可选）
+                // updateDashboard();
+            });
+
+            // 初始化日期选择器
+            updateDatePicker();
+
+            // =============================================================
+            // 5. 数据过滤核心
+            // =============================================================
             function getFilters() {
                 const brand = brandFilter.value;
                 const store = storeFilter.value;
-                const accountEl = accountFilter;
-                const selectedAccounts = Array.from(accountEl.selectedOptions).map(o => o.value);
+                const account = accountFilter.value;
                 const timeDim = timeDimension.value;
                 const dateVal = datePicker.value;
-                return { brand, store, selectedAccounts, timeDim, dateVal };
+                return { brand, store, account, timeDim, dateVal };
+            }
+
+            function getStartOfWeek(year, weekNum) {
+                const jan4 = new Date(year, 0, 4);
+                const dayOfYear = jan4.getDay();
+                const start = new Date(jan4);
+                start.setDate(jan4.getDate() - dayOfYear + (weekNum - 1) * 7);
+                return start.toISOString().split('T')[0];
+            }
+
+            function getEndOfWeek(year, weekNum) {
+                const start = new Date(getStartOfWeek(year, weekNum));
+                start.setDate(start.getDate() + 6);
+                return start.toISOString().split('T')[0];
             }
 
             function filterData(filters) {
                 let data = rawData;
 
+                // 品牌过滤
                 if (filters.brand !== 'all') {
                     data = data.filter(d => d.brand === filters.brand);
                 }
 
+                // 经销商过滤
                 if (filters.store !== 'all') {
                     data = data.filter(d => d.store === filters.store);
                 }
 
-                if (!filters.selectedAccounts.includes('all')) {
-                    data = data.filter(d => filters.selectedAccounts.includes(d.account));
+                // 账号过滤
+                if (filters.account !== 'all') {
+                    data = data.filter(d => d.account === filters.account);
                 }
 
+                // 日期过滤
                 if (filters.dateVal) {
-                    const pickDate = new Date(filters.dateVal);
-                    let start = new Date(pickDate);
-                    let end = new Date(pickDate);
-                    let label = '';
+                    const dim = filters.timeDim;
+                    const val = filters.dateVal;
 
-                    switch (filters.timeDim) {
-                        case 'day':
-                            start.setHours(0, 0, 0, 0);
-                            end.setHours(23, 59, 59, 999);
-                            label = pickDate.toISOString().split('T')[0];
-                            break;
-                        case 'week':
-                            start.setDate(pickDate.getDate() - 6);
-                            start.setHours(0, 0, 0, 0);
-                            end.setHours(23, 59, 59, 999);
-                            label = `${start.toISOString().split('T')[0]} ~ ${end.toISOString().split('T')[0]}`;
-                            break;
-                        case 'month':
-                            start.setDate(pickDate.getDate() - 29);
-                            start.setHours(0, 0, 0, 0);
-                            end.setHours(23, 59, 59, 999);
-                            label = `${start.toISOString().split('T')[0]} ~ ${end.toISOString().split('T')[0]}`;
-                            break;
-                        case 'year':
-                            start.setDate(pickDate.getDate() - 364);
-                            start.setHours(0, 0, 0, 0);
-                            end.setHours(23, 59, 59, 999);
-                            label = `${start.toISOString().split('T')[0]} ~ ${end.toISOString().split('T')[0]}`;
-                            break;
-                        default:
-                            start.setDate(pickDate.getDate() - 6);
-                            start.set
+                    if (dim === 'day') {
+                        data = data.filter(d => d.date === val);
+                    } else if (dim === 'week') {
+                        // 解析周数
+                        const parts = val.split('-W');
+                        if (parts.length === 2) {
+                            const year = parseInt(parts[0]);
+                            const week = parseInt(parts[1]);
+                            const start = getStartOfWeek(year, week);
+                            const end = getEndOfWeek(year, week);
+                            data = data.filter(d => d.date >= start && d.date <= end);
+                        }
+                    } else if (dim === 'month') {
+                        data = data.filter(d => d.date.startsWith(val));
+                    } else if (dim === 'year') {
+                        data = data.filter(d => d.date.startsWith(val + '-'));
+                    }
+                }
+
+                return data;
+            }
+
+            // =============================================================
+            // 6. 聚合工具
+            // =============================================================
+            function aggregateByAccount(data) {
+                const map = {};
+                for (const d of data) {
+                    const key = d.account;
+                    if (!map[key]) {
+                        map[key] = {
+                            account: d.account,
+                            store: d.store,
+                            brand: d.brand,
+                            sessions: 0,
+                            duration: 0,
+                            peakSum: 0,
+                            interactionSum: 0,
+                            leadsSum: 0,
+                            count: 0,
+                            mainModels: {},
+                            topics: {},
+                            promos: {},
+                            comps: []
+                        };
+                    }
+                    const a = map[key];
+                    a.sessions += d.sessionCount || 1;
+                    a.duration += d.duration;
+                    a.peakSum += d.peakViewers;
+                    a.interactionSum += d.interactions;
+                    a.leadsSum += d.leads;
+                    a.count += 1;
+                    a.mainModels[d.mainModel] = (a.mainModels[d.mainModel] || 0) + 1;
+                    a.topics[d.contentTopic] = (a.topics[d.contentTopic] || 0) + 1;
+                    a.promos[d.promoType] = (a.promos[d.promoType] || 0) + 1;
+                    if (d.competitorMentions) {
+                        a.comps = a.comps.concat(d.competitorMentions);
+                    }
+                }
+                return Object.values(map);
+            }
+
+            function aggregateByDate(data) {
+                const map = {};
+                for (const d of data) {
+                    const key = d.date;
+                    if (!map[key]) {
+                        map[key] = {
+                            date: d.date,
+                            sessions: 0,
+                            duration: 0,
+                            peakSum: 0,
+                            interactionSum: 0,
+                            leadsSum: 0,
+                            count: 0
+                        };
+                    }
+                    const a = map[key];
+                    a.sessions += d.sessionCount || 1;
+                    a.duration += d.duration;
+                    a.peakSum += d.peakViewers;
+                    a.interactionSum += d.interactions;
+                    a.leadsSum += d.leads;
+                    a.count += 1;
+                }
+                return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+            }
+
+            function getTopItem(map) {
+                let maxKey = null,
+                    maxVal = 0;
+                for (const [k, v] of Object.entries(map)) {
+                    if (v > maxVal) { maxVal = v;
+                        maxKey = k; }
+                }
+                return maxKey;
+            }
+
+            // =============================================================
+            // 7. 渲染函数
+            // =============================================================
+
+            // 7.1 更新顶部标签
+            function updateLabels(filterResult) {
+                const dim = timeDimension.value;
+                const val = datePicker.value;
+                let displayLabel = '';
+
+                if (dim === 'day') displayLabel = `· ${val}`;
+                else if (dim === 'week') {
+                    const parts = val.split('-W');
+                    if (parts.length === 2) {
+                        const year = parseInt(parts[0]);
+                        const week = parseInt(parts[1]);
+                        const start = getStartOfWeek(year, week);
+                        const end = getEndOfWeek(year, week);
+                        displayLabel = `· ${start} ~ ${end}`;
+                    } else {
+                        displayLabel = `· ${val}`;
+                    }
+                } else if (dim === 'month') displayLabel = `· ${val}`;
+                else if (dim === 'year') displayLabel = `· ${val}`;
+                else displayLabel = `· ${val}`;
+
+                document.getElementById('periodLabel').textContent = displayLabel;
+
+                const dimMap = { day: '当日', week: '本周', month: '本月', year: '本年' };
+                document.getElementById('compareTableTag').textContent = dimMap[dim] || '本周';
+                document.getElementById('trendTag').textContent = dimMap[dim] || '近7日';
+
+                const accounts = new Set();
+                filterResult.forEach(d => accounts.add(d.account));
+                document.getElementById('accountCountBadge').innerHTML =
+                    `<i class="far fa-building"></i> 覆盖 ${accounts.size} 个账号`;
+            }
+
+            // 7.2 KPI
+            function renderKPI(data) {
+                const totalSessions = data.reduce((s, d) => s + (d.sessionCount || 1), 0);
+                const totalDuration = data.reduce((s, d) => s + d.duration, 0);
+                const totalInteraction = data.reduce((s, d) => s + d.interactions, 0);
+                const totalLeads = data.reduce((s, d) => s + d.leads, 0);
+
+                document.getElementById('kpiSessions').textContent = totalSessions;
+                document.getElementById('kpiDuration').textContent = (totalDuration / 60).toFixed(1) + 'h';
+                document.getElementById('kpiInteraction').textContent = totalInteraction.toLocaleString();
+                document.getElementById('kpiLeads').textContent = totalLeads;
+
+                // 模拟变化趋势
+                const changeMap = {
+                    sessions: { val: totalSessions, el: 'kpiSessionsChange' },
+                    duration: { val: totalDuration, el: 'kpiDurationChange' },
+                    interaction: { val: totalInteraction, el: 'kpiInteractionChange' },
+                    leads: { val: totalLeads, el: 'kpiLeadsChange' }
+                };
+                for (const [key, obj] of Object.entries(changeMap)) {
+                    const el = document.getElementById(obj.el);
+                    const change = Math.round((Math.random() * 20) - 5);
+                    if (change > 5) {
+                        el.className = 'change up';
+                        el.innerHTML = `<i class="fas fa-arrow-up"></i> +${change}%`;
+                    } else if (change < -5) {
+                        el.className = 'change down';
+                        el.innerHTML = `<i class="fas fa-arrow-down"></i> ${change}%`;
+                    } else {
+                        el.className = 'change neutral';
+                        el.textContent = '持平';
+                    }
+                }
+            }
+
+            // 7.3 账号对比表
+            function renderCompareTable(data) {
+                const tbody = document.getElementById('compareTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.interactionSum - a.interactionSum);
+
+                tbody.innerHTML = accounts.map(a => {
+                    const avgPeak = a.count > 0 ? Math.round(a.peakSum / a.count) : 0;
+                    const avgLeads = a.count > 0 ? (a.leadsSum / a.count).toFixed(1) : 0;
+                    const change = Math.round((Math.random() * 20) - 5);
+                    let trendHtml = '';
+                    if (change > 5) {
+                        trendHtml = `<span class="trend-up"><i class="fas fa-arrow-up"></i> +${change}%</span>`;
+                    } else if (change < -5) {
+                        trendHtml = `<span class="trend-down"><i class="fas fa-arrow-down"></i> ${change}%</span>`;
+                    } else {
+                        trendHtml = `<span class="trend-neutral">持平</span>`;
+                    }
+                    return `<tr>
+                                <td><strong>${a.account}</strong></td>
+                                <td><span class="badge badge-blue">${a.brand}</span></td>
+                                <td>${a.store}</td>
+                                <td>${a.sessions}</td>
+                                <td>${(a.duration / 60).toFixed(1)}h</td>
+                                <td>${avgPeak.toLocaleString()}</td>
+                                <td>${a.interactionSum.toLocaleString()}</td>
+                                <td>${avgLeads}</td>
+                                <td>${trendHtml}</td>
+                            </tr>`;
+                }).join('');
+            }
+
+            // 7.4 促销策略
+            function renderPromo(data) {
+                if (data.length === 0) {
+                    document.getElementById('promoContent').innerHTML = '<div class="empty-state"><i class="fas fa-gift"></i><p>暂无促销数据</p></div>';
+                    return;
+                }
+                const promoMap = {};
+                for (const d of data) {
+                    promoMap[d.promoType] = (promoMap[d.promoType] || 0) + 1;
+                }
+                const sorted = Object.entries(promoMap).sort((a, b) => b[1] - a[1]);
+
+                const accMap = {};
+                for (const d of data) {
+                    if (!accMap[d.account]) accMap[d.account] = { count: 0, promos: [] };
+                    accMap[d.account].count += 1;
+                    accMap[d.account].promos.push(d.promoType);
+                }
+                let maxAccount = '—',
+                    maxCount = 0;
+                for (const [acc, val] of Object.entries(accMap)) {
+                    if (val.count > maxCount) { maxCount = val.count;
+                        maxAccount = acc; }
+                }
+
+                const urgencyMap = {};
+                for (const d of data) {
+                    urgencyMap[d.account] = (urgencyMap[d.account] || 0) + Math.floor(Math.random() * 5) + 2;
+                }
+                let maxUrgencyAcc = '—',
+                    maxUrgency = 0;
+                for (const [acc, val] of Object.entries(urgencyMap)) {
+                    if (val > maxUrgency) { maxUrgency = val;
+                        maxUrgencyAcc = acc; }
+                }
+
+                const topPromo = sorted.length > 0 ? sorted[0] : ['现金直降', 0];
+                document.getElementById('promoHighlightAccount').textContent = maxAccount;
+                document.getElementById('promoHighlightDate').textContent = '本周内';
+
+                const types = ['现金直降', '综合优惠', '金融贴息'];
+                for (let i = 0; i < 3; i++) {
+                    const el = document.getElementById('promoType' + (i + 1));
+                    const type = types[i] || '—';
+                    el.textContent = promoMap[type] || 0;
+                }
+                document.getElementById('promoUrgencyAccount').textContent = maxUrgencyAcc;
+                document.getElementById('promoUrgencyCount').textContent = maxUrgency || 0;
+            }
+
+            // 7.5 竞品提及
+            function renderCompetitor(data) {
+                if (data.length === 0) {
+                    document.getElementById('competitorContent').innerHTML =
+                    '<div class="empty-state"><i class="fas fa-crosshairs"></i><p>暂无竞品数据</p></div>';
+                    return;
+                }
+                let allComps = [];
+                for (const d of data) {
+                    if (d.competitorMentions) allComps = allComps.concat(d.competitorMentions);
+                }
+                const total = allComps.length;
+                const positive = allComps.filter(c => c.sentiment === '正面').length;
+                const neutral = allComps.filter(c => c.sentiment === '中性').length;
+                const negative = allComps.filter(c => c.sentiment === '负面').length;
+
+                const dimMap = {};
+                for (const c of allComps) {
+                    if (c.dimension) dimMap[c.dimension] = (dimMap[c.dimension] || 0) + 1;
+                }
+                const dimSorted = Object.entries(dimMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+                const dimStr = dimSorted.map(([d, v]) => `${d} (${v})`).join(' · ');
+
+                document.getElementById('compTotalCount').innerHTML =
+                    `${total} <span style="font-size:16px;font-weight:400;color:#6b7280;">次</span>`;
+                document.getElementById('compPositive').textContent = positive;
+                document.getElementById('compNeutral').textContent = neutral;
+                document.getElementById('compNegative').textContent = negative;
+                document.getElementById('compDimensions').textContent = dimStr ? `主要对比维度：${dimStr}` : '暂无对比维度数据';
+
+                const change = Math.round((Math.random() * 60) - 10);
+                const trendEl = document.getElementById('compTrend');
+                if (change > 10) {
+                    trendEl.className = 'trend-up';
+                    trendEl.innerHTML = `<i class="fas fa-arrow-up"></i> +${change}%`;
+                } else if (change < -10) {
+                    trendEl.className = 'trend-down';
+                    trendEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${change}%`;
+                } else {
+                    trendEl.className = 'trend-neutral';
+                    trendEl.textContent = '持平';
+                }
+            }
+
+            // 7.6 内容策略
+            function renderContentStrategy(data) {
+                const tbody = document.getElementById('contentStrategyBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                    `<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.sessions - a.sessions);
+
+                tbody.innerHTML = accounts.map(a => {
+                    const mainModel = getTopItem(a.mainModels) || '—';
+                    const topic = getTopItem(a.topics) || '—';
+                    const changes = ['参数讲解 → 试驾体验', '价格对比 → 车主分享', '持续价格对比', '新增车主真实分享', '促销活动 → 品牌故事',
+                        '技术解析 → 试驾体验'
+                    ];
+                    const change = changes[Math.floor(Math.random() * changes.length)];
+                    const tags = ['深化', '同质化', '创新', '稳定', '调整'];
+                    const tag = tags[Math.floor(Math.random() * tags.length)];
+                    const tagClass = tag === '创新' ? 'badge-green' : tag === '同质化' ? 'badge-yellow' : 'badge-blue';
+                    return `<tr>
+                                <td><strong>${a.account}</strong></td>
+                                <td><span class="badge badge-purple">${mainModel}</span></td>
+                                <td>${change}</td>
+                                <td><span class="badge ${tagClass}">${tag}</span></td>
+                            </tr>`;
+                }).join('');
+            }
+
+            // 7.7 创新获客
+            function renderInnovation(data) {
+                const list = document.getElementById('innovationList');
+                if (data.length === 0) {
+                    list.innerHTML = '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据</li>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.leadsSum - a.leadsSum);
+                const topAccount = accounts.length > 0 ? accounts[0] : null;
+
+                const innovations = [];
+                if (topAccount) {
+                    const methods = ['扫码预约试驾送咖啡券', '企微二维码留资抽奖', '小风车留资送保养', '私信回复送定制礼品', '粉丝群专属福利'];
+                    const method = methods[Math.floor(Math.random() * methods.length)];
+                    const lift = 20 + Math.floor(Math.random() * 50);
+                    innovations.push({
+                        account: topAccount.account,
+                        method: method,
+                        lift: lift,
+                        priority: 'important'
+                    });
+                }
+                if (accounts.length > 1) {
+                    const second = accounts[1];
+                    innovations.push({
+                        account: second.account,
+                        method: '试驾体验内容转化率提升明显',
+                        lift: 15 + Math.floor(Math.random() * 30),
+                        priority: 'normal'
+                    });
+                }
+
+                if (innovations.length === 0) {
+                    list.innerHTML = '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无创新获客手法</li>';
+                    return;
+                }
+
+                list.innerHTML = innovations.map((item, idx) => {
+                    const label = idx === 0 ? '⭐ 亮点' : '📌 可借鉴';
+                    const pClass = idx === 0 ? 'priority important' : 'priority normal';
+                    const liftText = item.lift ? `<br /><span style="font-size:13px;color:#6b7280;">留资量提升 ${item.lift}%</span>` :
+                        '';
+                    return `<li>
+                                <span class="${pClass}">${label}</span>
+                                <div>
+                                    <strong>${item.account}</strong> ${item.method}${liftText}
+                                </div>
+                            </li>`;
+                }).join('');
+            }
+
+            // 7.8 趋势图
+            let trendChartInstance = null;
+
+            function renderTrend(data) {
+                const ctx = document.getElementById('trendChart').getContext('2d');
+
+                if (trendChartInstance) {
+                    trendChartInstance.destroy();
+                }
+
+                if (data.length === 0) {
+                    trendChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['无数据'],
+                            datasets: [{ label: '暂无数据', data: [0], borderColor: '#9ca3af',
+                                backgroundColor: 'rgba(156,163,175,0.1)', fill: true }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                    return;
+                }
+
+                const dateAgg = aggregateByDate(data);
+                const labels = dateAgg.map(d => d.date);
+
+                const accMap = {};
+                for (const d of data) {
+                    if (!accMap[d.account]) accMap[d.account] = {};
+                    accMap[d.account][d.date] = (accMap[d.account][d.date] || 0) + (d.sessionCount || 1);
+                }
+
+                const accounts = Object.keys(accMap);
+                const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+                const datasets = accounts.map((acc, idx) => {
+                    const vals = labels.map(date => accMap[acc][date] || 0);
+                    return {
+                        label: acc,
+                        data: vals,
+                        borderColor: colors[idx % colors.length],
+                        backgroundColor: colors[idx % colors.length] + '18',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointBackgroundColor: colors[idx % colors.length],
+                    };
+                });
+
+                trendChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 16,
+                                    font: { size: 11, weight: '500' },
+                                    boxWidth: 12,
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#f3f4f6' },
+                                ticks: { font: { size: 10 } },
+                                title: { display: true, text: '场次', font: { size: 11 } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 }, maxTicksLimit: 15 }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+            }
+
+            // 7.9 策略建议
+            function renderSuggestions(data) {
+                const list = document.getElementById('suggestList');
+                if (data.length === 0) {
+                    list.innerHTML =
+                    '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据可生成建议</li>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.sessions - a.sessions);
+
+                const suggestions = [];
+                for (const a of accounts) {
+                    const mainModel = getTopItem(a.mainModels) || '主力车型';
+                    if (a.sessions > 5 && a.leadsSum / a.sessions < 3) {
+                        suggestions.push({
+                            account: a.account,
+                            priority: 'urgent',
+                            text: `建议优化留资引导话术，当前场均留资 ${(a.leadsSum/a.sessions).toFixed(1)} 单`
+                        });
+                    } else if (a.sessions > 3 && a.interactionSum / a.sessions < 500) {
+                        suggestions.push({
+                            account: a.account,
+                            priority: 'important',
+                            text: `互动率偏低，建议增加互动环节，当前场均互动 ${Math.round(a.interactionSum/a.sessions)}`
+                        });
+                    } else if (a.sessions > 2) {
+                        suggestions.push({
+                            account: a.account,
+                            priority: 'normal',
+                            text: `主推 ${mainModel} 表现稳定，可尝试增加竞品对比内容`
+                        });
+                    }
+                }
+
+                const topSuggestions = suggestions.slice(0, 4);
+                if (topSuggestions.length === 0) {
+                    list.innerHTML =
+                    '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">所有账号表现良好，继续保持</li>';
+                    return;
+                }
+
+                const priorityMap = {
+                    urgent: '🔴 紧急',
+                    important: '🟡 重要',
+                    normal: '🟢 常规'
+                };
+                list.innerHTML = topSuggestions.map(s => `
+                            <li>
+                                <span class="priority ${s.priority}">${priorityMap[s.priority] || '📌'}</span>
+                                <div><strong>${s.account}</strong> ${s.text}</div>
+                            </li>
+                        `).join('');
+            }
+
+            // =============================================================
+            // 8. 主更新函数
+            // =============================================================
+            function updateDashboard() {
+                const filters = getFilters();
+                const data = filterData(filters);
+
+                updateLabels(data);
+                renderKPI(data);
+                renderCompareTable(data);
+                renderPromo(data);
+                renderCompetitor(data);
+                renderContentStrategy(data);
+                renderInnovation(data);
+                renderTrend(data);
+                renderSuggestions(data);
+            }
+
+            // =============================================================
+            // 9. 事件绑定 & 初始化
+            // =============================================================
+            document.getElementById('applyFilters').addEventListener('click', updateDashboard);
+
+            document.getElementById('resetFilters').addEventListener('click', function() {
+                brandFilter.value = 'all';
+                populateStoreOptions('all');
+                accountFilter.value = 'all';
+                timeDimension.value = 'week';
+                updateDatePicker();
+                updateDashboard();
+            });
+
+            // 维度变化时自动刷新（可选）
+            timeDimension.addEventListener('change', updateDashboard);
+            datePicker.addEventListener('change', updateDashboard);
+
+            // 初始化
+            window.addEventListener('load', function() {
+                updateDatePicker();
+                updateDashboard();
+            });
+
+        })();
+    </script>
+
+</body>
+</html>

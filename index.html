@@ -471,53 +471,6 @@
             font-weight: 700;
         }
 
-        /* 图表内部筛选器 */
-        .chart-filter-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-        .chart-filter-row label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #4b5563;
-        }
-        .chart-filter-row select {
-            padding: 4px 8px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 12px;
-            font-family: 'Inter', sans-serif;
-            background: #fafcff;
-            min-width: 120px;
-        }
-        .chart-filter-row select[multiple] {
-            min-height: 32px;
-            padding: 2px 4px;
-        }
-        .chart-filter-row select[multiple] option {
-            padding: 2px 6px;
-            font-size: 12px;
-        }
-        .chart-filter-row .btn-sm {
-            background: #4f46e5;
-            color: #fff;
-            border: none;
-            padding: 4px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: 0.2s;
-            height: 30px;
-        }
-        .chart-filter-row .btn-sm:hover {
-            background: #4338ca;
-        }
-
         @media (max-width: 1024px) {
             .row-2col {
                 grid-template-columns: 1fr;
@@ -597,14 +550,6 @@
             }
             .chart-container-echarts-pie {
                 height: 200px;
-            }
-            .chart-filter-row {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 8px;
-            }
-            .chart-filter-row select[multiple] {
-                min-height: 60px;
             }
         }
     </style>
@@ -854,7 +799,7 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- 新增：账号互动趋势 + 互动结构（双栏）                       -->
+        <!-- 账号互动趋势 + 互动结构（双栏）                              -->
         <!-- ============================================================ -->
         <div class="row-2col">
             <!-- 账号互动趋势 -->
@@ -865,19 +810,11 @@
                 </div>
                 <div class="chart-container-echarts" id="interactTrendECharts"></div>
             </div>
-            <!-- 互动结构 -->
+            <!-- 互动结构（仅展示TOP5） -->
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-chart-bar"></i> 互动结构
+                    <i class="fas fa-chart-bar"></i> 互动结构 TOP5
                     <span class="tag">评论 · 点赞 · 分享</span>
-                </div>
-                <div class="chart-filter-row">
-                    <label><i class="fas fa-user-circle"></i> 选择账号：</label>
-                    <select id="structureAccountSelect" multiple>
-                        <!-- 由 JS 动态填充 -->
-                    </select>
-                    <button class="btn-sm" id="structureApplyBtn"><i class="fas fa-sync-alt"></i> 更新</button>
-                    <button class="btn-sm" id="structureResetBtn" style="background:#e5e7eb;color:#374151;">重置 TOP5</button>
                 </div>
                 <div class="chart-container-echarts" id="structureECharts"></div>
             </div>
@@ -1046,7 +983,7 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据（含 likes, comments, shares 独立字段）
+            // 3. 生成模拟数据
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -1398,7 +1335,7 @@
             }
 
             // =============================================================
-            // 8. 渲染函数（原有 + 新增）
+            // 8. 渲染函数
             // =============================================================
 
             // 8.1 顶部标签
@@ -1817,7 +1754,7 @@
                     grid: {
                         left: '8%',
                         right: '8%',
-                        bottom: '12%',
+                        bottom: '8%',
                         top: '15%',
                         containLabel: false
                     },
@@ -1917,7 +1854,7 @@
                     grid: {
                         left: '12%',
                         right: '15%',
-                        bottom: '12%',
+                        bottom: '8%',
                         top: '6%',
                         containLabel: false
                     },
@@ -2163,9 +2100,7 @@
                 }).join('');
             }
 
-            // =============================================================
             // 8.14 账号横向对比（互动版 + 互动指数）
-            // =============================================================
             function renderInteractionTable(data) {
                 const tbody = document.getElementById('interactionTableBody');
                 if (data.length === 0) {
@@ -2255,7 +2190,7 @@
             }
 
             // =============================================================
-            // 8.15 新增：账号互动趋势（最近7天）
+            // 8.15 新增：账号互动趋势（最近7天，只显示过滤后账号）
             // =============================================================
             function renderInteractTrend(data) {
                 const dom = document.getElementById('interactTrendECharts');
@@ -2276,7 +2211,7 @@
 
                 const dates = dateAgg.map(d => d.date);
 
-                // 按账号和日期聚合互动量
+                // 按账号和日期聚合互动量（只从过滤后的data中提取）
                 const accMap = {};
                 for (const d of data) {
                     if (!accMap[d.account]) accMap[d.account] = {};
@@ -2317,7 +2252,7 @@
                     grid: {
                         left: '8%',
                         right: '8%',
-                        bottom: '12%',
+                        bottom: '6%',
                         top: '15%',
                         containLabel: false
                     },
@@ -2331,7 +2266,8 @@
                                 return value.slice(5);
                             }
                         },
-                        axisLine: { show: true }
+                        axisLine: { show: true },
+                        axisTick: { alignWithLabel: true }
                     },
                     yAxis: {
                         type: 'value',
@@ -2349,16 +2285,20 @@
             }
 
             // =============================================================
-            // 8.16 新增：互动结构（堆叠柱状图，支持多选）
+            // 8.16 新增：互动结构（仅展示TOP5账号，无内部筛选器）
             // =============================================================
-            let structureChartInstance = null;
-            let structureSelectedAccounts = [];
-
             function renderStructure(data) {
                 const dom = document.getElementById('structureECharts');
                 const myChart = echarts.init(dom);
 
-                // 获取所有账号及其互动明细
+                if (data.length === 0) {
+                    myChart.setOption({
+                        title: { text: '暂无数据', left: 'center', top: 'center' }
+                    });
+                    return;
+                }
+
+                // 按账号聚合互动明细
                 const accMap = {};
                 for (const d of data) {
                     if (!accMap[d.account]) {
@@ -2370,41 +2310,20 @@
                     accMap[d.account].total += d.interactions || 0;
                 }
 
-                const allAccounts = Object.keys(accMap);
-                // 按总互动量排序，取TOP5作为默认
-                const sorted = allAccounts.sort((a, b) => accMap[b].total - accMap[a].total);
+                // 按总互动量排序，取TOP5
+                const sorted = Object.keys(accMap).sort((a, b) => accMap[b].total - accMap[a].total);
+                const top5 = sorted.slice(0, 5);
 
-                // 确定要显示的账号
-                let displayAccounts = [];
-                const selectEl = document.getElementById('structureAccountSelect');
-                const selectedVals = Array.from(selectEl.selectedOptions).map(o => o.value);
-
-                if (selectedVals.length > 0 && !selectedVals.includes('all')) {
-                    displayAccounts = selectedVals;
-                } else {
-                    // 默认 TOP5
-                    displayAccounts = sorted.slice(0, 5);
-                    // 同步更新下拉框选中状态
-                    for (const opt of selectEl.options) {
-                        if (displayAccounts.includes(opt.value)) {
-                            opt.selected = true;
-                        } else {
-                            opt.selected = false;
-                        }
-                    }
-                }
-
-                if (displayAccounts.length === 0 || data.length === 0) {
+                if (top5.length === 0) {
                     myChart.setOption({
                         title: { text: '暂无数据', left: 'center', top: 'center' }
                     });
-                    structureChartInstance = myChart;
                     return;
                 }
 
-                const likesData = displayAccounts.map(acc => accMap[acc].likes);
-                const commentsData = displayAccounts.map(acc => accMap[acc].comments);
-                const sharesData = displayAccounts.map(acc => accMap[acc].shares);
+                const likesData = top5.map(acc => accMap[acc].likes);
+                const commentsData = top5.map(acc => accMap[acc].comments);
+                const sharesData = top5.map(acc => accMap[acc].shares);
 
                 const option = {
                     tooltip: {
@@ -2430,13 +2349,13 @@
                     grid: {
                         left: '8%',
                         right: '4%',
-                        bottom: '12%',
+                        bottom: '8%',
                         top: '15%',
                         containLabel: false
                     },
                     xAxis: {
                         type: 'category',
-                        data: displayAccounts,
+                        data: top5,
                         axisLabel: {
                             fontSize: 10,
                             rotate: 20,
@@ -2476,33 +2395,10 @@
                 };
 
                 myChart.setOption(option);
-                structureChartInstance = myChart;
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 8.17 初始化互动结构的多选下拉框
-            // =============================================================
-            function initStructureSelect(data) {
-                const selectEl = document.getElementById('structureAccountSelect');
-                const accSet = new Set();
-                for (const d of data) {
-                    accSet.add(d.account);
-                }
-                const accounts = Array.from(accSet).sort();
-
-                // 保留"全部"选项，但实际功能中不选中"全部"时显示TOP5
-                selectEl.innerHTML = '<option value="all">全部（显示TOP5）</option>';
-                for (const acc of accounts) {
-                    const opt = document.createElement('option');
-                    opt.value = acc;
-                    opt.textContent = acc;
-                    selectEl.appendChild(opt);
-                }
-                // 默认选中TOP5（在renderStructure中处理）
-            }
-
-            // 8.18 策略建议
+            // 8.17 策略建议
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {
@@ -2578,10 +2474,7 @@
                 renderFormatChart(data);
                 renderTop10Table(data);
                 renderInteractionTable(data);
-                // 新增两个图表
                 renderInteractTrend(data);
-                // 初始化下拉框（首次或数据变化时更新选项）
-                initStructureSelect(data);
                 renderStructure(data);
                 renderSuggestions(data);
             }
@@ -2604,22 +2497,6 @@
 
             timeDimension.addEventListener('change', function() {
                 updateDatePicker();
-            });
-
-            // 互动结构图表的多选筛选事件
-            document.getElementById('structureApplyBtn').addEventListener('click', function() {
-                const data = filterData(getFilters());
-                renderStructure(data);
-            });
-
-            document.getElementById('structureResetBtn').addEventListener('click', function() {
-                const selectEl = document.getElementById('structureAccountSelect');
-                // 取消所有选中
-                for (const opt of selectEl.options) {
-                    opt.selected = false;
-                }
-                const data = filterData(getFilters());
-                renderStructure(data);
             });
 
             // =============================================================

@@ -249,6 +249,9 @@
         .badge-audience-yes { background: #ecfdf5; color: #059669; }
         .badge-audience-no { background: #f3f4f6; color: #6b7280; }
         .badge-video { background: #fef3c7; color: #d97706; }
+        .badge-like { background: #fee2e2; color: #dc2626; }
+        .badge-comment { background: #dbeafe; color: #2563eb; }
+        .badge-share { background: #d1fae5; color: #059669; }
 
         .trend-indicator { font-size: 12px; font-weight: 500; margin-left: 6px; display: inline-block; }
         .trend-indicator.up { color: #059669; }
@@ -292,6 +295,26 @@
         .empty-state { text-align: center; padding: 30px 20px; color: #9ca3af; }
         .empty-state i { font-size: 36px; margin-bottom: 10px; display: block; opacity: 0.5; }
         .empty-state p { font-size: 14px; }
+
+        /* 区域标题卡片（大分类） */
+        .section-header {
+            margin-bottom: 12px;
+        }
+        .section-header .card-title {
+            font-size: 18px;
+            margin-bottom: 0;
+        }
+        .section-header .card-title i {
+            color: #4f46e5;
+        }
+        .section-header .card-title .tag {
+            font-size: 12px;
+        }
+        .section-header .sub-desc {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
 
         @media (max-width: 1024px) {
             .row-2col { grid-template-columns: 1fr; }
@@ -417,18 +440,20 @@
             </div>
         </div>
 
-        <!-- ===== 直播运营态势内容 ===== -->
-        <div class="card" style="margin-bottom:12px;">
-            <div class="card-title" style="font-size:18px; margin-bottom:0;">
-                <i class="fas fa-calendar-check" style="color:#4f46e5;"></i> 直播运营态势内容（直播排班 &amp; 节奏策略）
-                <span class="tag" style="font-size:12px;">核心洞察</span>
+        <!-- ============================================================ -->
+        <!-- 区域一：直播运营态势内容（直播排班 & 节奏策略）              -->
+        <!-- ============================================================ -->
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-calendar-check"></i> 直播运营态势内容（直播排班 &amp; 节奏策略）
+                <span class="tag">核心洞察</span>
             </div>
-            <div style="font-size:13px; color:#6b7280; margin-top:4px;">
+            <div class="sub-desc">
                 以下展示各账号直播排班、时长趋势及时段分布，帮助分析对手运营节奏。
             </div>
         </div>
 
-        <!-- ===== 账号横向对比 ===== -->
+        <!-- ===== 账号横向对比（排班版） ===== -->
         <div class="card">
             <div class="card-title">
                 <i class="fas fa-people-arrows"></i> 账号横向对比
@@ -518,6 +543,45 @@
                     </thead>
                     <tbody id="top10TableBody">
                         <tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 区域二：直播互动内容（直播热度 & 用户反馈）                   -->
+        <!-- ============================================================ -->
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-comment-dots"></i> 直播互动内容（直播热度 &amp; 用户反馈）
+                <span class="tag">互动分析</span>
+            </div>
+            <div class="sub-desc">
+                以下展示各账号直播互动表现及用户反馈热度，帮助分析内容吸引力。
+            </div>
+        </div>
+
+        <!-- ===== 账号横向对比（互动版） ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-people-arrows"></i> 账号横向对比
+                <span class="tag" id="interactionTableTag">互动表现</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>账号</th>
+                            <th>品牌</th>
+                            <th>经销商</th>
+                            <th>直播场次</th>
+                            <th>总互动量</th>
+                            <th>场均互动量</th>
+                            <th>主要互动构成</th>
+                        </tr>
+                    </thead>
+                    <tbody id="interactionTableBody">
+                        <tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -684,7 +748,7 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据
+            // 3. 生成模拟数据（含 likes, comments, shares 独立字段）
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -711,9 +775,18 @@
                             const duration = 45 + Math.floor(Math.random() * 135);
                             const peak = 120 + Math.floor(Math.random() * 880);
                             const viewership = Math.floor(peak * (5 + Math.random() * 15));
-                            const interactions = 200 + Math.floor(Math.random() * 2300);
                             const leads = 1 + Math.floor(Math.random() * 7);
                             const startHour = Math.floor(Math.random() * 24);
+
+                            // 生成独立的点赞、评论、分享数据
+                            const totalInteractions = 200 + Math.floor(Math.random() * 2300);
+                            // 随机分配占比：点赞 30%-70%，评论 10%-40%，分享 5%-30%
+                            const likeRatio = 0.3 + Math.random() * 0.4;
+                            const commentRatio = 0.1 + Math.random() * 0.3;
+                            const shareRatio = 1 - likeRatio - commentRatio;
+                            const likes = Math.floor(totalInteractions * likeRatio);
+                            const comments = Math.floor(totalInteractions * commentRatio);
+                            const shares = totalInteractions - likes - comments;
 
                             const trafficSource = TRAFFIC_SOURCES[Math.floor(Math.random() * TRAFFIC_SOURCES.length)];
                             const liveFormat = LIVE_FORMATS[Math.floor(Math.random() * LIVE_FORMATS.length)];
@@ -737,7 +810,10 @@
                                 duration: duration,
                                 peakViewers: peak,
                                 viewership: viewership,
-                                interactions: interactions,
+                                likes: likes,
+                                comments: comments,
+                                shares: shares,
+                                interactions: totalInteractions,
                                 leads: leads,
                                 mainModel: mainModel,
                                 contentTopic: topic,
@@ -929,6 +1005,9 @@
                             duration: 0,
                             peakSum: 0,
                             viewershipSum: 0,
+                            likesSum: 0,
+                            commentsSum: 0,
+                            sharesSum: 0,
                             interactionSum: 0,
                             leadsSum: 0,
                             count: 0,
@@ -946,8 +1025,11 @@
                     a.duration += d.duration;
                     a.peakSum += d.peakViewers;
                     a.viewershipSum += d.viewership || 0;
-                    a.interactionSum += d.interactions;
-                    a.leadsSum += d.leads;
+                    a.likesSum += d.likes || 0;
+                    a.commentsSum += d.comments || 0;
+                    a.sharesSum += d.shares || 0;
+                    a.interactionSum += d.interactions || 0;
+                    a.leadsSum += d.leads || 0;
                     a.count += 1;
                     a.mainModels[d.mainModel] = (a.mainModels[d.mainModel] || 0) + 1;
                     a.topics[d.contentTopic] = (a.topics[d.contentTopic] || 0) + 1;
@@ -995,7 +1077,7 @@
                     a.duration += d.duration;
                     a.peakSum += d.peakViewers;
                     a.viewershipSum += d.viewership || 0;
-                    a.interactionSum += d.interactions;
+                    a.interactionSum += d.interactions || 0;
                     a.leadsSum += d.leads;
                     a.count += 1;
                     a.accounts.add(d.account);
@@ -1047,6 +1129,7 @@
                 const dimMap = { day: '当日', week: '本周', month: '本月', year: '本年' };
                 document.getElementById('compareTableTag').textContent = dimMap[dim] || '本周';
                 document.getElementById('trendTag').textContent = dimMap[dim] || '近7日';
+                document.getElementById('interactionTableTag').textContent = dimMap[dim] || '互动表现';
             }
 
             // 8.2 KPI
@@ -1055,7 +1138,7 @@
                 const totalDuration = data.reduce((s, d) => s + d.duration, 0);
                 const totalViewership = data.reduce((s, d) => s + (d.viewership || 0), 0);
                 const maxPeak = data.reduce((max, d) => Math.max(max, d.peakViewers || 0), 0);
-                const totalInteraction = data.reduce((s, d) => s + d.interactions, 0);
+                const totalInteraction = data.reduce((s, d) => s + (d.interactions || 0), 0);
                 const totalLeads = data.reduce((s, d) => s + d.leads, 0);
 
                 document.getElementById('kpiSessions').textContent = totalSessions;
@@ -1089,7 +1172,7 @@
                 }
             }
 
-            // 8.3 账号对比表
+            // 8.3 账号对比表（排班版）
             function renderCompareTable(data) {
                 const tbody = document.getElementById('compareTableBody');
                 if (data.length === 0) {
@@ -1394,17 +1477,12 @@
                 });
             }
 
-            // =============================================================
             // 8.9 账号开播趋势（只展示最近7天）
-            // =============================================================
             function renderTrendECharts(data) {
                 const dom = document.getElementById('trendECharts');
                 const myChart = echarts.init(dom);
 
-                // 按日期聚合
                 let dateAgg = aggregateByDate(data);
-
-                // 只取最近7天（如果数据少于7天则显示全部）
                 if (dateAgg.length > 7) {
                     dateAgg = dateAgg.slice(dateAgg.length - 7);
                 }
@@ -1443,7 +1521,6 @@
                             fontSize: 10,
                             rotate: 25,
                             formatter: function(value) {
-                                // 只显示月-日，更简洁
                                 return value.slice(5);
                             }
                         },
@@ -1764,9 +1841,9 @@
                                 <td>${Math.floor(d.viewership * 0.7).toLocaleString()}</td>
                                 <td>${d.viewership.toLocaleString()}</td>
                                 <td>${d.peakViewers.toLocaleString()}</td>
-                                <td>${Math.floor(d.interactions * 0.4).toLocaleString()}</td>
-                                <td>${Math.floor(d.interactions * 0.3).toLocaleString()}</td>
-                                <td>${Math.floor(d.interactions * 0.3).toLocaleString()}</td>
+                                <td>${d.likes.toLocaleString()}</td>
+                                <td>${d.comments.toLocaleString()}</td>
+                                <td>${d.shares.toLocaleString()}</td>
                                 <td>${trafficBadge}</td>
                                 <td><span class="badge badge-blue">${d.liveFormat || '—'}</span></td>
                                 <td>
@@ -1778,7 +1855,56 @@
                 }).join('');
             }
 
-            // 8.14 策略建议
+            // =============================================================
+            // 8.14 账号横向对比（互动版）- 新增
+            // =============================================================
+            function renderInteractionTable(data) {
+                const tbody = document.getElementById('interactionTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                    `<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.interactionSum - a.interactionSum);
+
+                tbody.innerHTML = accounts.map(a => {
+                    const sessions = a.sessions;
+                    const totalInteraction = a.interactionSum;
+                    const avgInteraction = a.count > 0 ? Math.round(a.interactionSum / a.count) : 0;
+
+                    // 判断主要互动构成
+                    const likePct = a.interactionSum > 0 ? Math.round((a.likesSum / a.interactionSum) * 100) : 0;
+                    const commentPct = a.interactionSum > 0 ? Math.round((a.commentsSum / a.interactionSum) * 100) :
+                        0;
+                    const sharePct = a.interactionSum > 0 ? Math.round((a.sharesSum / a.interactionSum) * 100) : 0;
+
+                    let mainType = '—';
+                    let mainBadge = '';
+                    if (likePct >= commentPct && likePct >= sharePct) {
+                        mainType = `👍 点赞 ${likePct}%`;
+                        mainBadge = 'badge-like';
+                    } else if (commentPct >= likePct && commentPct >= sharePct) {
+                        mainType = `💬 评论 ${commentPct}%`;
+                        mainBadge = 'badge-comment';
+                    } else if (sharePct > 0) {
+                        mainType = `↗️ 分享 ${sharePct}%`;
+                        mainBadge = 'badge-share';
+                    }
+
+                    return `<tr>
+                                <td><strong>${a.account}</strong></td>
+                                <td><span class="badge badge-blue">${a.brand}</span></td>
+                                <td>${a.store}</td>
+                                <td>${sessions}</td>
+                                <td>${totalInteraction.toLocaleString()}</td>
+                                <td>${avgInteraction.toLocaleString()}</td>
+                                <td><span class="badge ${mainBadge}">${mainType}</span></td>
+                            </tr>`;
+                }).join('');
+            }
+
+            // 8.15 策略建议
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {
@@ -1853,6 +1979,7 @@
                 renderTrafficChart(data);
                 renderFormatChart(data);
                 renderTop10Table(data);
+                renderInteractionTable(data);  // 新增互动版表格
                 renderSuggestions(data);
             }
 

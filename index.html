@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2/dist/echarts-wordcloud.min.js">
     </script>
     <style>
-        /* ===== 全局样式（与之前相同） ===== */
+        /* ===== 全局样式（与之前相同，略） ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -690,6 +690,39 @@
             <div class="chart-container-echarts" id="mainModelTrendChart"></div>
         </div>
 
+        <!-- ===== 新增：主推车型 TOP10 排行 + 内容与车型策略（双栏） ===== -->
+        <div class="row-2col">
+            <!-- 主推车型 TOP10 排行 -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-trophy"></i> 主推车型 TOP10 排行
+                    <span class="tag">提及次数</span>
+                </div>
+                <div class="chart-container-echarts" id="topModelsChart"></div>
+            </div>
+            <!-- 内容与车型策略（表格） -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-pen-fancy"></i> 内容与车型策略
+                    <span class="tag">策略变化</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>账号</th>
+                                <th>本周主推</th>
+                                <th>策略变化</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contentStrategyBody">
+                            <tr><td colspan="3" style="text-align:center;color:#9ca3af;padding:20px 0;">加载数据中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== 车型价格区间 & 内容主题结构（双栏） ===== -->
         <div class="row-2col">
             <!-- 价格区间 -->
@@ -700,7 +733,7 @@
                 </div>
                 <div class="chart-container-echarts" id="priceRangeChart"></div>
             </div>
-            <!-- 主题结构（居中） -->
+            <!-- 主题结构（图例底部） -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-pie"></i> 直播间内容主题结构分布
@@ -711,10 +744,10 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- 新增：库存状态结构（居中） + 品牌×库存状态提及频次（颜色统一）-->
+        <!-- 新增：库存状态结构（图例底部） + 品牌×库存状态提及频次       -->
         <!-- ============================================================ -->
         <div class="row-2col">
-            <!-- 库存状态结构（居中） -->
+            <!-- 库存状态结构（图例底部） -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-boxes"></i> 库存状态结构
@@ -722,7 +755,7 @@
                 </div>
                 <div class="chart-container-echarts-pie" id="inventoryPieChart"></div>
             </div>
-            <!-- 品牌 × 库存状态提及频次（颜色统一） -->
+            <!-- 品牌 × 库存状态提及频次 -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-bar"></i> 品牌 × 库存状态提及频次
@@ -773,32 +806,20 @@
             </div>
         </div>
 
-        <!-- ===== 内容策略 + 创新获客 ===== -->
-        <div class="row-2col">
-            <div class="card">
-                <div class="card-title"><i class="fas fa-pen-fancy"></i> 内容与车型策略</div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>账号</th>
-                                <th>本周主推</th>
-                                <th>内容主题变化</th>
-                                <th>策略点评</th>
-                            </tr>
-                        </thead>
-                        <tbody id="contentStrategyBody">
-                            <tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px 0;">加载数据中...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <!-- ===== 原来的内容与车型策略表格已移动，此处不再重复 ===== -->
 
+        <!-- ===== 创新获客（保留） ===== -->
+        <div class="row-2col">
             <div class="card">
                 <div class="card-title"><i class="fas fa-rocket"></i> 创新获客手法</div>
                 <ul class="suggest-list" id="innovationList">
                     <li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">加载数据中...</li>
                 </ul>
+            </div>
+            <!-- 空出一列，或放置其他内容 -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-simple"></i> 额外洞察</div>
+                <div style="color:#9ca3af;padding:20px 0;text-align:center;">——</div>
             </div>
         </div>
 
@@ -835,7 +856,6 @@
             const ALL_STORES = ALL_BRANDS.map(b => BRAND_DATA[b].store);
             const ALL_ACCOUNTS = ALL_BRANDS.map(b => BRAND_DATA[b].account);
 
-            // 价格区间（新分组）
             const PRICE_GROUPS = ['0-10万', '10-20万', '20-30万', '30-50万', '50-70万', '70-100万', '100万以上'];
             const MODEL_PRICE = {
                 'ES': '20-30万',
@@ -869,7 +889,6 @@
                 '推背感', '路感', '隔音', '制冷', '制热', '座椅加热', '座椅通风', '按摩', '记忆', '电动'
             ];
 
-            // 库存状态及其固定颜色映射（统一）
             const INVENTORY_STATUSES = ['现车充足', '在途', '需预定', '库存紧张'];
             const INVENTORY_COLORS = {
                 '现车充足': '#1e3a8a',
@@ -930,13 +949,46 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据
+            // 3. 生成模拟数据（新增 trimLevel, color）
             // =============================================================
             function generateMockData() {
                 const records = [];
                 const startDate = new Date('2026-01-01');
                 const endDate = new Date('2026-12-31');
                 let current = new Date(startDate);
+
+                // 各车型对应的配置和颜色候选
+                const MODEL_TRIM = {
+                    'ES': ['卓越版', '运动版', '豪华版', '尊贵版'],
+                    'NX': ['卓越版', '运动版', '豪华版', 'F SPORT'],
+                    'RX': ['精英版', '舒适版', '豪华版', '典雅版'],
+                    'LM': ['七座版', '四座版'],
+                    '3系': ['运动套装', 'M运动套装', '豪华套装', '曜夜版'],
+                    '5系': ['运动套装', '豪华套装', 'M运动套装'],
+                    'X3': ['M运动套装', '豪华套装', '曜夜版'],
+                    'X5': ['运动套装', '豪华套装', '尊享型'],
+                    'iX3': ['领先型', '创领型'],
+                    'C级': ['时尚型', '豪华型', '运动型'],
+                    'E级': ['时尚型', '豪华型', '尊贵型'],
+                    'GLC': ['动感型', '豪华型', 'AMG Line'],
+                    'GLE': ['时尚型', '豪华型', '尊贵型']
+                };
+                const MODEL_COLOR = {
+                    'ES': ['超音速白', '超音速银', '凌波绿', '至臻黑', '宝石蓝'],
+                    'NX': ['超音速白', '超音速银', '凌波绿', '至臻黑', '宝石蓝'],
+                    'RX': ['超音速白', '超音速银', '凌波绿', '至臻黑', '宝石蓝'],
+                    'LM': ['超音速白', '超音速银', '至臻黑'],
+                    '3系': ['矿石白', '炭黑', '波尔蒂芒蓝', '雪山白', '宝石青', '摩天灰'],
+                    '5系': ['矿石白', '炭黑', '宝石青', '雪山白', '摩天灰'],
+                    'X3': ['矿石白', '炭黑', '波尔蒂芒蓝', '宝石青', '摩天灰'],
+                    'X5': ['矿石白', '炭黑', '宝石青', '摩天灰'],
+                    'iX3': ['矿石白', '炭黑', '摩天灰', '雪山白'],
+                    'C级': ['北极白', '曜岩黑', '皓沙银', '祖母石绿', '海夜蓝', '锆石英红'],
+                    'E级': ['北极白', '曜岩黑', '皓沙银', '祖母石绿', '海夜蓝'],
+                    'GLC': ['北极白', '曜岩黑', '皓沙银', '祖母石绿', '海夜蓝'],
+                    'GLE': ['北极白', '曜岩黑', '皓沙银', '祖母石绿']
+                };
+
                 while (current <= endDate) {
                     const dateStr = formatDate(current);
                     for (const brand of ALL_BRANDS) {
@@ -993,6 +1045,12 @@
                             const inventoryStatus = INVENTORY_STATUSES[Math.floor(Math.random() * INVENTORY_STATUSES
                             .length)];
 
+                            // 配置和颜色
+                            const trimList = MODEL_TRIM[mainModel] || ['标准版'];
+                            const colorList = MODEL_COLOR[mainModel] || ['白色', '黑色', '灰色'];
+                            const trimLevel = trimList[Math.floor(Math.random() * trimList.length)];
+                            const color = colorList[Math.floor(Math.random() * colorList.length)];
+
                             records.push({
                                 date: dateStr,
                                 account: account,
@@ -1021,7 +1079,9 @@
                                 commentKeywords: commentKeywords,
                                 positiveComments: positiveComments,
                                 neutralComments: neutralComments,
-                                negativeComments: negativeComments
+                                negativeComments: negativeComments,
+                                trimLevel: trimLevel,
+                                color: color
                             });
                         }
                     }
@@ -1151,7 +1211,7 @@
             }
 
             // =============================================================
-            // 7. 聚合工具（含库存统计）
+            // 7. 聚合工具
             // =============================================================
             function aggregateByAccount(data) {
                 const map = {};
@@ -1183,7 +1243,9 @@
                             neutralCommentsSum: 0,
                             negativeCommentsSum: 0,
                             allKeywords: [],
-                            inventoryStatusCount: {}
+                            inventoryStatusCount: {},
+                            // 用于策略变化
+                            mainModelHistory: []
                         };
                     }
                     const a = map[key];
@@ -1213,6 +1275,8 @@
                     }
                     const inv = d.inventoryStatus || '未知';
                     a.inventoryStatusCount[inv] = (a.inventoryStatusCount[inv] || 0) + 1;
+                    // 记录主推车型历史（用于策略变化）
+                    a.mainModelHistory.push(d.mainModel);
                 }
                 for (const key of Object.keys(map)) {
                     const a = map[key];
@@ -1493,36 +1557,61 @@
                 }
             }
 
-            // 9.6 内容策略
+            // 9.6 内容与车型策略（移动后的新函数）
             function renderContentStrategy(data) {
                 const tbody = document.getElementById('contentStrategyBody');
                 if (data.length === 0) {
                     tbody.innerHTML =
-                        `<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px 0;">暂无数据</td></tr>`;
+                        `<tr><td colspan="3" style="text-align:center;color:#9ca3af;padding:20px 0;">暂无数据</td></tr>`;
                     return;
                 }
                 const accounts = aggregateByAccount(data);
                 accounts.sort((a, b) => b.sessions - a.sessions);
+                // 为每个账号生成策略变化
+                const strategyChanges = {
+                    '内容方向转变': 'content_shift',
+                    '主推车型切换': 'model_switch',
+                    '促销策略调整': 'promotion_adjust',
+                    '形式创新': 'format_innovation',
+                    '留资方式转变': 'lead_method_change',
+                    '钩子话术变化': 'hook_change'
+                };
+                const changeKeys = Object.keys(strategyChanges);
+
                 tbody.innerHTML = accounts.map(a => {
                     const mainModel = getTopItem(a.mainModels) || '—';
-                    const changes = ['参数讲解 → 试驾体验', '价格对比 → 车主分享', '持续价格对比', '新增车主真实分享',
-                        '促销活动 → 品牌故事', '技术解析 → 试驾体验'
-                    ];
-                    const change = changes[Math.floor(Math.random() * changes.length)];
+                    // 根据主推车型历史生成策略变化
+                    let changeText = '稳定';
+                    if (a.mainModelHistory.length > 1) {
+                        const first = a.mainModelHistory[0];
+                        const last = a.mainModelHistory[a.mainModelHistory.length - 1];
+                        if (first !== last) {
+                            changeText = `主推车型切换 (${first} → ${last})`;
+                        } else {
+                            // 随机选一个变化
+                            const rand = changeKeys[Math.floor(Math.random() * changeKeys.length)];
+                            changeText = rand;
+                            // 附加一些具体描述
+                            if (rand === '内容方向转变') changeText += ' (参数讲解→试驾体验)';
+                            else if (rand === '促销策略调整') changeText += ' (力度加大)';
+                            else if (rand === '形式创新') changeText += ' (新增车主分享)';
+                            else if (rand === '留资方式转变') changeText += ' (增加扫码留资)';
+                            else if (rand === '钩子话术变化') changeText += ' (转向痛点钩子)';
+                        }
+                    }
+                    // 随机添加标签
                     const tags = ['深化', '同质化', '创新', '稳定', '调整'];
                     const tag = tags[Math.floor(Math.random() * tags.length)];
-                    const tagClass = tag === '创新' ? 'badge-green' : tag === '同质化' ? 'badge-yellow' :
-                        'badge-blue';
+                    const tagClass = tag === '创新' ? 'badge-green' : tag === '同质化' ? 'badge-yellow' : 'badge-blue';
                     return `<tr>
                                 <td><strong>${a.account}</strong></td>
                                 <td><span class="badge badge-purple">${mainModel}</span></td>
-                                <td>${change}</td>
-                                <td><span class="badge ${tagClass}">${tag}</span></td>
+                                <td><span class="badge ${tagClass}">${changeText}</span></td>
                             </tr>`;
                 }).join('');
             }
 
-            // 9.7 创新获客
+            // 9.7 创新获客（保留）
             function renderInnovation(data) {
                 const list = document.getElementById('innovationList');
                 if (data.length === 0) {
@@ -2617,8 +2706,7 @@
                     brandPriceMap[brand][price] += d.sessionCount || 1;
                 }
 
-                // 强制使用所有价格区间，即使无数据
-                const allPrices = PRICE_GROUPS; // 不过滤
+                const allPrices = PRICE_GROUPS;
 
                 const seriesData = allBrands.map(brand => {
                     return {
@@ -2682,7 +2770,7 @@
             }
 
             // =============================================================
-            // 9.23 直播间内容主题结构分布（环形图 - 居中）
+            // 9.23 直播间内容主题结构分布（环形图 - 图例底部）
             // =============================================================
             function renderTopicPie(data) {
                 const dom = document.getElementById('topicPieChart');
@@ -2718,9 +2806,9 @@
                         }
                     },
                     legend: {
-                        orient: 'vertical',
-                        right: 'right',
-                        top: 'center',
+                        orient: 'horizontal',
+                        bottom: 0,
+                        left: 'center',
                         textStyle: { fontSize: 12 },
                         itemWidth: 12,
                         itemHeight: 12
@@ -2728,7 +2816,7 @@
                     series: [{
                         type: 'pie',
                         radius: ['40%', '70%'],
-                        center: ['50%', '50%'], // 居中
+                        center: ['50%', '50%'],
                         avoidLabelOverlap: true,
                         label: {
                             show: true,
@@ -2750,7 +2838,7 @@
             }
 
             // =============================================================
-            // 9.24 库存状态结构（环形图）- 居中，颜色统一
+            // 9.24 库存状态结构（环形图 - 图例底部）
             // =============================================================
             function renderInventoryPie(data) {
                 const dom = document.getElementById('inventoryPieChart');
@@ -2764,7 +2852,6 @@
                     const status = d.inventoryStatus || '未知';
                     map[status] = (map[status] || 0) + (d.sessionCount || 1);
                 }
-                // 按照 INVENTORY_STATUSES 顺序排列，确保颜色一致
                 const sorted = INVENTORY_STATUSES.filter(s => map[s]).map(s => ({ name: s, value: map[s] }));
                 if (sorted.length === 0) {
                     myChart.setOption({ title: { text: '暂无库存数据', left: 'center', top: 'center' } });
@@ -2785,9 +2872,9 @@
                         }
                     },
                     legend: {
-                        orient: 'vertical',
-                        right: 'right',
-                        top: 'center',
+                        orient: 'horizontal',
+                        bottom: 0,
+                        left: 'center',
                         textStyle: { fontSize: 12 },
                         itemWidth: 12,
                         itemHeight: 12
@@ -2795,7 +2882,7 @@
                     series: [{
                         type: 'pie',
                         radius: ['40%', '70%'],
-                        center: ['50%', '50%'], // 居中
+                        center: ['50%', '50%'],
                         avoidLabelOverlap: true,
                         label: {
                             show: true,
@@ -2817,7 +2904,7 @@
             }
 
             // =============================================================
-            // 9.25 品牌 × 库存状态提及频次（堆叠柱状图）- 颜色统一
+            // 9.25 品牌 × 库存状态提及频次（堆叠柱状图）
             // =============================================================
             function renderBrandInventory(data) {
                 const dom = document.getElementById('brandInventoryChart');
@@ -2836,7 +2923,6 @@
                     brandInvMap[brand][status] += d.sessionCount || 1;
                 }
 
-                // 使用 INVENTORY_STATUSES 顺序
                 const statuses = INVENTORY_STATUSES;
 
                 const seriesData = statuses.map(status => {
@@ -2896,7 +2982,104 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.26 策略建议
+            // =============================================================
+            // 9.26 主推车型 TOP10 排行（条形图）
+            // =============================================================
+            function renderTopModels(data) {
+                const dom = document.getElementById('topModelsChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                // 按车型聚合提及次数、品牌、配置、颜色
+                const modelMap = {};
+                for (const d of data) {
+                    const model = d.mainModel;
+                    if (!modelMap[model]) {
+                        modelMap[model] = {
+                            count: 0,
+                            brand: d.brand,
+                            trim: d.trimLevel,
+                            color: d.color
+                        };
+                    }
+                    modelMap[model].count += d.modelMentionCount || 1;
+                    // 如果配置或颜色不一致，随机保留一个（实际可保留最常见，但简化）
+                    if (Math.random() > 0.5) {
+                        modelMap[model].trim = d.trimLevel;
+                        modelMap[model].color = d.color;
+                    }
+                }
+                const sorted = Object.entries(modelMap).sort((a, b) => b[1].count - a[1].count);
+                const top10 = sorted.slice(0, 10);
+                const names = top10.map(item => item[0]);
+                const counts = top10.map(item => item[1].count);
+                const brands = top10.map(item => item[1].brand);
+                const trims = top10.map(item => item[1].trim || '—');
+                const colors = top10.map(item => item[1].color || '—');
+
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            const idx = params[0].dataIndex;
+                            const name = names[idx];
+                            const count = counts[idx];
+                            const brand = brands[idx];
+                            const trim = trims[idx];
+                            const color = colors[idx];
+                            return `<strong>${name}</strong><br/>品牌：${brand}<br/>配置：${trim}<br/>颜色：${color}<br/>提及次数：${count}`;
+                        }
+                    },
+                    grid: {
+                        left: '12%',
+                        right: '8%',
+                        bottom: '6%',
+                        top: '6%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'value',
+                        name: '提及次数',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: names,
+                        axisLabel: { fontSize: 12, fontWeight: 500 },
+                        axisLine: { show: true }
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: counts.map((val, idx) => ({
+                            value: val,
+                            itemStyle: {
+                                color: ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8', '#dbeafe',
+                                    '#bfdbfe', '#9ca3af', '#6b7280'
+                                ][idx % 10],
+                                borderRadius: [0, 4, 4, 0]
+                            }
+                        })),
+                        barWidth: 20,
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: function(params) { return params.value; },
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#1f2937'
+                        }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.27 策略建议
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {
@@ -2956,13 +3139,14 @@
                 renderCompareTable(data);
                 renderPromo(data);
                 renderCompetitor(data);
-                renderContentStrategy(data);
+                renderContentStrategy(data); // 新位置
                 renderInnovation(data);
                 renderTrendChartJS(data);
                 renderTrendECharts(data);
                 renderHeatmap(data);
                 renderTrafficChart(data);
                 renderFormatChart(data);
+                renderTop10Table(data);
                 renderInteractionTable(data);
                 renderInteractTrend(data);
                 renderStructure(data);
@@ -2970,12 +3154,12 @@
                 renderBrandTimeHeatmap(data);
                 renderWordCloud(data);
                 renderSentimentStack(data);
-                renderTop10Table(data);
                 renderMainModelTrend(data);
                 renderPriceRange(data);
                 renderTopicPie(data);
                 renderInventoryPie(data);
                 renderBrandInventory(data);
+                renderTopModels(data); // 新增
                 renderSuggestions(data);
             }
 

@@ -617,16 +617,16 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- 品牌综合互动指数对比 + 品牌 × 时段互动指数热力图             -->
+        <!-- 品牌 × 账号互动指数热力图 + 品牌 × 时段互动指数热力图        -->
         <!-- ============================================================ -->
         <div class="row-2col">
-            <!-- 品牌综合互动指数对比柱状图（无虚线） -->
+            <!-- 品牌 × 账号互动指数热力图 -->
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-chart-bar"></i> 品牌综合互动指数对比
-                    <span class="tag">汇总得分</span>
+                    <i class="fas fa-th"></i> 品牌 × 账号互动指数
+                    <span class="tag">热力图</span>
                 </div>
-                <div class="chart-container-echarts" id="brandScoreChart"></div>
+                <div class="chart-container-echarts" id="brandAccountHeatmap"></div>
             </div>
             <!-- 品牌 × 时段互动指数热力图 -->
             <div class="card">
@@ -2248,10 +2248,10 @@
             }
 
             // =============================================================
-            // 9.17 品牌综合互动指数对比（无虚线）
+            // 9.17 品牌 × 账号互动指数热力图
             // =============================================================
-            function renderBrandScore(data) {
-                const dom = document.getElementById('brandScoreChart');
+            function renderBrandAccountHeatmap(data) {
+                const dom = document.getElementById('brandAccountHeatmap');
                 const myChart = echarts.init(dom);
 
                 if (data.length === 0) {
@@ -2262,82 +2262,100 @@
                 }
 
                 const scoredData = computeScores([...data]);
-                const brandScores = {};
-                const brandCounts = {};
-                for (const d of scoredData) {
-                    const brand = d.brand;
-                    if (!brandScores[brand]) brandScores[brand] = 0;
-                    if (!brandCounts[brand]) brandCounts[brand] = 0;
-                    brandScores[brand] += d.score;
-                    brandCounts[brand] += 1;
-                }
-
-                const brands = Object.keys(brandScores);
-                if (brands.length === 0) {
+                const brands = [...new Set(scoredData.map(d => d.brand))];
+                const accounts = [...new Set(scoredData.map(d => d.account))];
+                if (brands.length === 0 || accounts.length === 0) {
                     myChart.setOption({
                         title: { text: '暂无数据', left: 'center', top: 'center' }
                     });
                     return;
                 }
 
-                const avgScores = brands.map(b => brandScores[b] / brandCounts[b]);
-                const sorted = brands.map((b, i) => ({ brand: b, score: avgScores[i] }))
-                    .sort((a, b) => b.score - a.score);
+                // 品牌 × 账号平均指数
+                const heatData = [];
+                for (let i = 0; i < accounts.length; i++) {
+                    for (let j = 0; j < brands.length; j++) {
+                        const account = accounts[i];
+                        const brand = brands[j];
+                        const vals = scoredData
+                            .filter(d => d.account === account && d.brand === brand)
+                            .map(d => d.score);
+                        const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+                        // 注意：热力图的坐标 [x, y, value] 这里 x 为账号索引（列），y 为品牌索引（行）
+                        heatData.push([i, j, avg]);
+                    }
+                }
 
-                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7'];
+                const maxVal = Math.max(...heatData.map(d => d[2]), 1);
+
                 const option = {
                     tooltip: {
-                        trigger: 'axis',
+                        position: 'top',
                         formatter: function(params) {
-                            const p = params[0];
-                            return `<strong>${p.name}</strong><br/>综合互动指数：${p.value.toFixed(1)}`;
+                            const account = accounts[params.value[0]];
+                            const brand = brands[params.value[1]];
+                            const val = params.value[2];
+                            return `${brand}<br/>账号：${account}<br/>平均互动指数：${val.toFixed(1)}`;
                         }
                     },
                     grid: {
-                        left: '8%',
-                        right: '8%',
+                        left: '12%',
+                        right: '6%',
                         bottom: '12%',
-                        top: '10%',
+                        top: '6%',
                         containLabel: false
                     },
                     xAxis: {
                         type: 'category',
-                        data: sorted.map(d => d.brand),
+                        data: accounts,
+                        splitArea: { show: true },
                         axisLabel: {
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: '#1f2937'
+                            fontSize: 10,
+                            rotate: 25,
+                            interval: 0
                         },
-                        axisLine: { show: true }
+                        axisLine: { show: false }
                     },
                     yAxis: {
-                        type: 'value',
-                        name: '综合互动指数 (0~100)',
-                        nameTextStyle: { fontSize: 11 },
+                        type: 'category',
+                        data: brands,
+                        splitArea: { show: true },
+                        axisLabel: {
+                            fontSize: 13,
+                            fontWeight: 600
+                        },
+                        axisLine: { show: false }
+                    },
+                    visualMap: {
                         min: 0,
                         max: 100,
-                        axisLabel: { fontSize: 10 },
-                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                        calculable: true,
+                        orient: 'vertical',
+                        right: '2%',
+                        top: 'center',
+                        inRange: {
+                            color: ['#f0f4f8', '#dbeafe', '#93c5fd', '#3b82f6', '#1e40af']
+                        },
+                        textStyle: { fontSize: 10 }
                     },
                     series: [{
-                        type: 'bar',
-                        data: sorted.map((d, idx) => ({
-                            value: d.score.toFixed(1),
-                            itemStyle: {
-                                color: colors[idx % colors.length],
-                                borderRadius: [4, 4, 0, 0]
-                            }
-                        })),
-                        barWidth: '40%',
+                        name: '互动指数',
+                        type: 'heatmap',
+                        data: heatData,
                         label: {
                             show: true,
-                            position: 'top',
+                            color: '#1f2937',
+                            fontSize: 10,
+                            fontWeight: 500,
                             formatter: function(params) {
-                                return params.value;
-                            },
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: '#1f2937'
+                                return params.value[2] > 0 ? params.value[2].toFixed(0) : '';
+                            }
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0,0,0,0.2)'
+                            }
                         }
                     }]
                 };
@@ -2539,7 +2557,7 @@
                 renderInteractionTable(data);
                 renderInteractTrend(data);
                 renderStructure(data);
-                renderBrandScore(data);
+                renderBrandAccountHeatmap(data);
                 renderBrandTimeHeatmap(data);
                 renderSuggestions(data);
             }

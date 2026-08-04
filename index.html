@@ -13,8 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2/dist/echarts-wordcloud.min.js">
     </script>
     <style>
-        /* ===== 全局样式（与之前完全相同，此处略） ===== */
-        /* 为节省篇幅，省略样式，实际代码中会包含全部样式 */
+        /* ===== 全局样式 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -836,7 +835,7 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据（包含评论关键词和情绪）
+            // 3. 生成模拟数据
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -870,12 +869,12 @@
                             const comments = Math.floor(totalInteractions * commentRatio);
                             const shares = totalInteractions - likes - comments;
 
-                            // --- 评论关键词（随机取5~8个） ---
+                            // 评论关键词（5~8个）
                             const shuffled = KEYWORD_POOL.sort(() => 0.5 - Math.random());
-                            const keywordCount = 5 + Math.floor(Math.random() * 4); // 5~8个
+                            const keywordCount = 5 + Math.floor(Math.random() * 4);
                             const commentKeywords = shuffled.slice(0, keywordCount);
 
-                            // --- 评论情绪分布 ---
+                            // 评论情绪
                             const posRatio = 0.3 + Math.random() * 0.4;
                             const negRatio = 0.1 + Math.random() * 0.3;
                             const neuRatio = 1 - posRatio - negRatio;
@@ -1047,7 +1046,7 @@
             }
 
             // =============================================================
-            // 7. 聚合工具（包含情绪和关键词汇总）
+            // 7. 聚合工具
             // =============================================================
             function aggregateByAccount(data) {
                 const map = {};
@@ -1184,7 +1183,7 @@
             }
 
             // =============================================================
-            // 9. 渲染函数（重点修改词云和情绪堆叠）
+            // 9. 渲染函数
             // =============================================================
 
             // 9.1 顶部标签
@@ -1255,13 +1254,979 @@
                 }
             }
 
-            // 9.3-9.16 原有渲染函数（此处省略，实际已包含在完整代码中）
-            // 但为了完整，这里保留函数声明，实际在运行时都会调用
-            // 由于篇幅，只列出关键修改的函数
+            // 9.3 账号横向对比（排班版）
+            function renderCompareTable(data) {
+                const tbody = document.getElementById('compareTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.sessions - a.sessions);
+                tbody.innerHTML = accounts.map(a => {
+                    const sessions = a.sessions;
+                    const totalHours = (a.duration / 60).toFixed(1);
+                    const avgDuration = a.count > 0 ? Math.round(a.duration / a.count) : 0;
+                    const mainSlot = a.mainTimeSlot || '—';
+                    const trendSessions = (Math.random() > 0.5 ? '+' : '-') + (5 + Math.floor(Math.random() *
+                    15)) + '%';
+                    const trendDuration = (Math.random() > 0.5 ? '+' : '-') + (3 + Math.floor(Math.random() *
+                    12)) + '%';
+                    const trendAvg = (Math.random() > 0.5 ? '+' : '-') + (2 + Math.floor(Math.random() * 10)) +
+                        '%';
+                    const arrowSessions = trendSessions.startsWith('+') ? 'up' : 'down';
+                    const arrowDuration = trendDuration.startsWith('+') ? 'up' : 'down';
+                    const arrowAvg = trendAvg.startsWith('+') ? 'up' : 'down';
+                    return `<tr>
+                                <td><strong>${a.account}</strong></td>
+                                <td><span class="badge badge-blue">${a.brand}</span></td>
+                                <td>${a.store}</td>
+                                <td>
+                                    ${sessions}
+                                    <span class="trend-indicator ${arrowSessions}">${trendSessions}</span>
+                                </td>
+                                <td>
+                                    ${totalHours}h
+                                    <span class="trend-indicator ${arrowDuration}">${trendDuration}</span>
+                                </td>
+                                <td>
+                                    ${avgDuration}min
+                                    <span class="trend-indicator ${arrowAvg}">${trendAvg}</span>
+                                </td>
+                                <td><span class="badge badge-time">${mainSlot}</span></td>
+                            </tr>`;
+                }).join('');
+            }
 
-            // =============================================================
-            // 9.17 高频评论关键词词云（蓝色系，颜色深浅表示频次）
-            // =============================================================
+            // 9.4 促销策略
+            function renderPromo(data) {
+                if (data.length === 0) {
+                    document.getElementById('promoContent').innerHTML =
+                        '<div class="empty-state"><i class="fas fa-gift"></i><p>暂无促销数据</p></div>';
+                    return;
+                }
+                const promoMap = {};
+                for (const d of data) {
+                    promoMap[d.promoType] = (promoMap[d.promoType] || 0) + 1;
+                }
+                const accMap = {};
+                for (const d of data) {
+                    if (!accMap[d.account]) accMap[d.account] = { count: 0 };
+                    accMap[d.account].count += 1;
+                }
+                let maxAccount = '—',
+                    maxCount = 0;
+                for (const [acc, val] of Object.entries(accMap)) {
+                    if (val.count > maxCount) { maxCount = val.count;
+                        maxAccount = acc; }
+                }
+                const urgencyMap = {};
+                for (const d of data) {
+                    urgencyMap[d.account] = (urgencyMap[d.account] || 0) + Math.floor(Math.random() * 5) + 2;
+                }
+                let maxUrgencyAcc = '—',
+                    maxUrgency = 0;
+                for (const [acc, val] of Object.entries(urgencyMap)) {
+                    if (val > maxUrgency) { maxUrgency = val;
+                        maxUrgencyAcc = acc; }
+                }
+                document.getElementById('promoHighlightAccount').textContent = maxAccount;
+                document.getElementById('promoHighlightDate').textContent = '本周内';
+                const types = ['现金直降', '综合优惠', '金融贴息'];
+                for (let i = 0; i < 3; i++) {
+                    const el = document.getElementById('promoType' + (i + 1));
+                    const type = types[i] || '—';
+                    el.textContent = promoMap[type] || 0;
+                }
+                document.getElementById('promoUrgencyAccount').textContent = maxUrgencyAcc;
+                document.getElementById('promoUrgencyCount').textContent = maxUrgency || 0;
+            }
+
+            // 9.5 竞品提及
+            function renderCompetitor(data) {
+                if (data.length === 0) {
+                    document.getElementById('competitorContent').innerHTML =
+                        '<div class="empty-state"><i class="fas fa-crosshairs"></i><p>暂无竞品数据</p></div>';
+                    return;
+                }
+                let allComps = [];
+                for (const d of data) {
+                    if (d.competitorMentions) allComps = allComps.concat(d.competitorMentions);
+                }
+                const total = allComps.length;
+                const positive = allComps.filter(c => c.sentiment === '正面').length;
+                const neutral = allComps.filter(c => c.sentiment === '中性').length;
+                const negative = allComps.filter(c => c.sentiment === '负面').length;
+                const dimMap = {};
+                for (const c of allComps) {
+                    if (c.dimension) dimMap[c.dimension] = (dimMap[c.dimension] || 0) + 1;
+                }
+                const dimSorted = Object.entries(dimMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+                const dimStr = dimSorted.map(([d, v]) => `${d} (${v})`).join(' · ');
+                document.getElementById('compTotalCount').innerHTML =
+                    `${total} <span style="font-size:16px;font-weight:400;color:#6b7280;">次</span>`;
+                document.getElementById('compPositive').textContent = positive;
+                document.getElementById('compNeutral').textContent = neutral;
+                document.getElementById('compNegative').textContent = negative;
+                document.getElementById('compDimensions').textContent = dimStr ? `主要对比维度：${dimStr}` :
+                    '暂无对比维度数据';
+                const change = Math.round((Math.random() * 60) - 10);
+                const trendEl = document.getElementById('compTrend');
+                if (change > 10) {
+                    trendEl.className = 'trend-up';
+                    trendEl.innerHTML = `<i class="fas fa-arrow-up"></i> +${change}%`;
+                } else if (change < -10) {
+                    trendEl.className = 'trend-down';
+                    trendEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${change}%`;
+                } else {
+                    trendEl.className = 'trend-neutral';
+                    trendEl.textContent = '持平';
+                }
+            }
+
+            // 9.6 内容策略
+            function renderContentStrategy(data) {
+                const tbody = document.getElementById('contentStrategyBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        `<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.sessions - a.sessions);
+                tbody.innerHTML = accounts.map(a => {
+                    const mainModel = getTopItem(a.mainModels) || '—';
+                    const changes = ['参数讲解 → 试驾体验', '价格对比 → 车主分享', '持续价格对比', '新增车主真实分享',
+                        '促销活动 → 品牌故事', '技术解析 → 试驾体验'
+                    ];
+                    const change = changes[Math.floor(Math.random() * changes.length)];
+                    const tags = ['深化', '同质化', '创新', '稳定', '调整'];
+                    const tag = tags[Math.floor(Math.random() * tags.length)];
+                    const tagClass = tag === '创新' ? 'badge-green' : tag === '同质化' ? 'badge-yellow' :
+                        'badge-blue';
+                    return `<tr>
+                                <td><strong>${a.account}</strong></td>
+                                <td><span class="badge badge-purple">${mainModel}</span></td>
+                                <td>${change}</td>
+                                <td><span class="badge ${tagClass}">${tag}</span></td>
+                            </tr>`;
+                }).join('');
+            }
+
+            // 9.7 创新获客
+            function renderInnovation(data) {
+                const list = document.getElementById('innovationList');
+                if (data.length === 0) {
+                    list.innerHTML = '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据</li>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.leadsSum - a.leadsSum);
+                const topAccount = accounts.length > 0 ? accounts[0] : null;
+                const innovations = [];
+                if (topAccount) {
+                    const methods = ['扫码预约试驾送咖啡券', '企微二维码留资抽奖', '小风车留资送保养', '私信回复送定制礼品', '粉丝群专属福利'];
+                    const method = methods[Math.floor(Math.random() * methods.length)];
+                    const lift = 20 + Math.floor(Math.random() * 50);
+                    innovations.push({
+                        account: topAccount.account,
+                        method: method,
+                        lift: lift,
+                        priority: 'important'
+                    });
+                }
+                if (accounts.length > 1) {
+                    const second = accounts[1];
+                    innovations.push({
+                        account: second.account,
+                        method: '试驾体验内容转化率提升明显',
+                        lift: 15 + Math.floor(Math.random() * 30),
+                        priority: 'normal'
+                    });
+                }
+                if (innovations.length === 0) {
+                    list.innerHTML = '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无创新获客手法</li>';
+                    return;
+                }
+                list.innerHTML = innovations.map((item, idx) => {
+                    const label = idx === 0 ? '⭐ 亮点' : '📌 可借鉴';
+                    const pClass = idx === 0 ? 'priority important' : 'priority normal';
+                    const liftText = item.lift ?
+                        `<br /><span style="font-size:13px;color:#6b7280;">留资量提升 ${item.lift}%</span>` :
+                        '';
+                    return `<li>
+                                <span class="${pClass}">${label}</span>
+                                <div>
+                                    <strong>${item.account}</strong> ${item.method}${liftText}
+                                </div>
+                            </li>`;
+                }).join('');
+            }
+
+            // 9.8 Chart.js 场观趋势
+            let trendChartInstance = null;
+            function renderTrendChartJS(data) {
+                const ctx = document.getElementById('trendChart').getContext('2d');
+                if (trendChartInstance) { trendChartInstance.destroy(); }
+                if (data.length === 0) {
+                    trendChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels: ['无数据'], datasets: [{ label: '暂无数据', data: [0], borderColor: '#9ca3af',
+                                backgroundColor: 'rgba(156,163,175,0.1)', fill: true }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                    return;
+                }
+                const dateAgg = aggregateByDate(data);
+                const labels = dateAgg.map(d => d.date);
+                const accMap = {};
+                for (const d of data) {
+                    if (!accMap[d.account]) accMap[d.account] = {};
+                    accMap[d.account][d.date] = (accMap[d.account][d.date] || 0) + (d.viewership || 0);
+                }
+                const accounts = Object.keys(accMap);
+                const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+                const datasets = accounts.map((acc, idx) => {
+                    const vals = labels.map(date => accMap[acc][date] || 0);
+                    return {
+                        label: acc,
+                        data: vals,
+                        borderColor: colors[idx % colors.length],
+                        backgroundColor: colors[idx % colors.length] + '18',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointBackgroundColor: colors[idx % colors.length],
+                    };
+                });
+                trendChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 16,
+                                    font: { size: 11, weight: '500' },
+                                    boxWidth: 12,
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#f3f4f6' },
+                                ticks: { font: { size: 10 } },
+                                title: { display: true, text: '观看人次', font: { size: 11 } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 }, maxTicksLimit: 15 }
+                            }
+                        },
+                        interaction: { intersect: false, mode: 'index' }
+                    }
+                });
+            }
+
+            // 9.9 账号开播趋势
+            function renderTrendECharts(data) {
+                const dom = document.getElementById('trendECharts');
+                const myChart = echarts.init(dom);
+                let dateAgg = aggregateByDate(data);
+                if (dateAgg.length > 7) { dateAgg = dateAgg.slice(dateAgg.length - 7); }
+                const dates = dateAgg.map(d => d.date);
+                const totalDuration = dateAgg.map(d => Math.round(d.duration / 60));
+                const accountCount = dateAgg.map(d => d.accounts.size);
+                if (dates.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const option = {
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+                    legend: { data: ['总直播时长 (h)', '开播账号数'], textStyle: { fontSize: 12, fontWeight: 500 } },
+                    grid: { left: '8%', right: '8%', bottom: '6%', top: '15%', containLabel: false },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: { fontSize: 10, rotate: 25, formatter: function(value) { return value.slice(5); } },
+                        axisLine: { show: true }
+                    },
+                    yAxis: [{
+                        type: 'value',
+                        name: '总直播时长 (h)',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    }, {
+                        type: 'value',
+                        name: '开播账号数',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { show: false },
+                        min: 0
+                    }],
+                    series: [{
+                        name: '总直播时长 (h)',
+                        type: 'line',
+                        data: totalDuration,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: { width: 2.5, color: '#4f46e5' },
+                        areaStyle: { color: 'rgba(79,70,229,0.08)' },
+                        yAxisIndex: 0
+                    }, {
+                        name: '开播账号数',
+                        type: 'line',
+                        data: accountCount,
+                        smooth: true,
+                        symbol: 'diamond',
+                        symbolSize: 8,
+                        lineStyle: { width: 2.5, color: '#10b981' },
+                        areaStyle: { color: 'rgba(16,185,129,0.08)' },
+                        yAxisIndex: 1
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.10 热力图（排班）
+            function renderHeatmap(data) {
+                const dom = document.getElementById('heatmapECharts');
+                const myChart = echarts.init(dom);
+                const slots = ['早场 (5-8)', '上午场 (9-12)', '下午场 (13-17)', '黄金档 (18-22)', '深夜场 (22之后)'];
+                const accounts = [...new Set(data.map(d => d.account))];
+                if (accounts.length === 0 || data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const heatData = [];
+                for (const acc of accounts) {
+                    const accData = data.filter(d => d.account === acc);
+                    const slotCount = {};
+                    slots.forEach(s => slotCount[s] = 0);
+                    for (const d of accData) {
+                        const slot = getTimeSlot(d.startHour);
+                        if (slotCount[slot] !== undefined) slotCount[slot] += d.sessionCount || 1;
+                    }
+                    for (let i = 0; i < slots.length; i++) {
+                        heatData.push([i, accounts.indexOf(acc), slotCount[slots[i]]]);
+                    }
+                }
+                const maxVal = Math.max(...heatData.map(d => d[2]), 1);
+                const option = {
+                    tooltip: {
+                        position: 'top',
+                        formatter: function(params) {
+                            const acc = accounts[params.value[1]];
+                            const slot = slots[params.value[0]];
+                            const count = params.value[2];
+                            return `${acc}<br/>${slot}<br/>直播场次：${count}`;
+                        }
+                    },
+                    grid: { left: '12%', right: '15%', bottom: '6%', top: '6%', containLabel: false },
+                    xAxis: {
+                        type: 'category',
+                        data: slots,
+                        splitArea: { show: true },
+                        axisLabel: { fontSize: 10, rotate: 20 },
+                        axisLine: { show: false }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: accounts,
+                        splitArea: { show: true },
+                        axisLabel: { fontSize: 11, fontWeight: 500 },
+                        axisLine: { show: false }
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: maxVal,
+                        calculable: true,
+                        orient: 'vertical',
+                        right: '2%',
+                        top: 'center',
+                        inRange: { color: ['#f0f4f8', '#dbeafe', '#93c5fd', '#3b82f6', '#1e40af'] },
+                        textStyle: { fontSize: 10 }
+                    },
+                    series: [{
+                        name: '直播场次',
+                        type: 'heatmap',
+                        data: heatData,
+                        label: {
+                            show: true,
+                            color: '#1f2937',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            formatter: function(params) { return params.value[2] > 0 ? params.value[2] : ''; }
+                        },
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.11 流量来源结构图
+            function renderTrafficChart(data) {
+                const dom = document.getElementById('trafficChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const map = {};
+                for (const d of data) {
+                    if (d.trafficSource) {
+                        map[d.trafficSource] = (map[d.trafficSource] || 0) + (d.sessionCount || 1);
+                    }
+                }
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF'];
+                const option = {
+                    tooltip: { trigger: 'item', formatter: '{b}<br/>场次: {c} ({d}%)' },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        top: 'center',
+                        textStyle: { fontSize: 12 },
+                        itemWidth: 12,
+                        itemHeight: 12
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['60%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: { show: true, formatter: '{d}%', fontSize: 11, fontWeight: 500, color: '#374151' },
+                        labelLine: { show: true },
+                        data: pieData.map((item, idx) => ({
+                            ...item,
+                            itemStyle: { color: colors[idx % colors.length] }
+                        })),
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.12 直播形式结构图
+            function renderFormatChart(data) {
+                const dom = document.getElementById('formatChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const map = {};
+                for (const d of data) {
+                    if (d.liveFormat) {
+                        map[d.liveFormat] = (map[d.liveFormat] || 0) + (d.sessionCount || 1);
+                    }
+                }
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8'];
+                const option = {
+                    tooltip: { trigger: 'item', formatter: '{b}<br/>场次: {c} ({d}%)' },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        top: 'center',
+                        textStyle: { fontSize: 12 },
+                        itemWidth: 12,
+                        itemHeight: 12
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['60%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: { show: true, formatter: '{d}%', fontSize: 11, fontWeight: 500, color: '#374151' },
+                        labelLine: { show: true },
+                        data: pieData.map((item, idx) => ({
+                            ...item,
+                            itemStyle: { color: colors[idx % colors.length] }
+                        })),
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.13 TOP10 直播明细列表
+            function renderTop10Table(data) {
+                const tbody = document.getElementById('top10TableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        `<tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+                const sorted = [...data].sort((a, b) => b.duration - a.duration);
+                const top10 = sorted.slice(0, 10);
+                tbody.innerHTML = top10.map(d => {
+                    const startDateTime = d.date + ' ' + String(d.startHour).padStart(2, '0') + ':00:00';
+                    const startDateObj = new Date(d.date + 'T' + String(d.startHour).padStart(2, '0') +
+                        ':00:00');
+                    const endDateObj = new Date(startDateObj.getTime() + d.duration * 60000);
+                    const endDateTime = formatDateTimeFromDate(endDateObj);
+                    const durationHours = (d.duration / 60).toFixed(1);
+                    const hasAudience = d.hasLiveAudience === 1;
+                    let trafficBadge = `<span class="badge badge-gray">${d.trafficSource || '—'}</span>`;
+                    if (d.trafficSource === '视频推荐') {
+                        trafficBadge = `<span class="badge badge-video">视频推荐</span>`;
+                    }
+                    return `<tr>
+                                <td><strong>${d.account}</strong></td>
+                                <td>${d.store}</td>
+                                <td>${startDateTime}</td>
+                                <td>${endDateTime}</td>
+                                <td>${durationHours}h</td>
+                                <td>${Math.floor(d.viewership * 0.7).toLocaleString()}</td>
+                                <td>${d.viewership.toLocaleString()}</td>
+                                <td>${d.peakViewers.toLocaleString()}</td>
+                                <td>${d.likes.toLocaleString()}</td>
+                                <td>${d.comments.toLocaleString()}</td>
+                                <td>${d.shares.toLocaleString()}</td>
+                                <td>${trafficBadge}</td>
+                                <td><span class="badge badge-blue">${d.liveFormat || '—'}</span></td>
+                                <td>
+                                    <span class="badge ${hasAudience ? 'badge-audience-yes' : 'badge-audience-no'}">
+                                        ${hasAudience ? '✅ 是' : '❌ 否'}
+                                    </span>
+                                </td>
+                            </tr>`;
+                }).join('');
+            }
+
+            // 9.14 账号横向对比（互动版 + 互动指数）
+            function renderInteractionTable(data) {
+                const tbody = document.getElementById('interactionTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        `<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>`;
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.interactionSum - a.interactionSum);
+                const scoredData = computeScores([...data]);
+                const accScoreMap = {};
+                for (const d of scoredData) {
+                    if (!accScoreMap[d.account]) accScoreMap[d.account] = [];
+                    accScoreMap[d.account].push(d.score);
+                }
+                const accAvgScore = {};
+                for (const [acc, scores] of Object.entries(accScoreMap)) {
+                    accAvgScore[acc] = scores.reduce((a, b) => a + b, 0) / scores.length;
+                }
+                const rawScores = accounts.map(a => {
+                    const durationMin = a.duration;
+                    const denom = durationMin > 0 ? durationMin : 1;
+                    const commentDensity = a.commentsSum / denom;
+                    const likeDensity = a.likesSum / denom;
+                    const shareDensity = a.sharesSum / denom;
+                    return commentDensity * 0.5 + likeDensity * 0.3 + shareDensity * 0.2;
+                });
+                const maxRaw = Math.max(...rawScores, 0);
+                const minRaw = Math.min(...rawScores, 0);
+                const range = maxRaw - minRaw;
+                const normalizedScores = rawScores.map(raw => {
+                    if (range === 0) return 50;
+                    return Math.round(((raw - minRaw) / range) * 100);
+                });
+                const rows = accounts.map((a, idx) => {
+                    const sessions = a.sessions;
+                    const totalInteraction = a.interactionSum;
+                    const avgInteraction = a.count > 0 ? Math.round(a.interactionSum / a.count) : 0;
+                    const score = Math.round(accAvgScore[a.account] || 50);
+                    const likePct = a.interactionSum > 0 ? Math.round((a.likesSum / a.interactionSum) * 100) :
+                        0;
+                    const commentPct = a.interactionSum > 0 ? Math.round((a.commentsSum / a.interactionSum) *
+                        100) : 0;
+                    const sharePct = a.interactionSum > 0 ? Math.round((a.sharesSum / a.interactionSum) * 100) :
+                        0;
+                    let mainType = '—';
+                    let mainBadge = '';
+                    if (likePct >= commentPct && likePct >= sharePct) {
+                        mainType = `👍 点赞 ${likePct}%`;
+                        mainBadge = 'badge-like';
+                    } else if (commentPct >= likePct && commentPct >= sharePct) {
+                        mainType = `💬 评论 ${commentPct}%`;
+                        mainBadge = 'badge-comment';
+                    } else if (sharePct > 0) {
+                        mainType = `↗️ 分享 ${sharePct}%`;
+                        mainBadge = 'badge-share';
+                    }
+                    let scoreClass = 'score-mid';
+                    if (score >= 70) scoreClass = 'score-high';
+                    else if (score < 40) scoreClass = 'score-low';
+                    return {
+                        account: a.account,
+                        brand: a.brand,
+                        store: a.store,
+                        sessions: sessions,
+                        score: score,
+                        scoreClass: scoreClass,
+                        totalInteraction: totalInteraction,
+                        avgInteraction: avgInteraction,
+                        mainType: mainType,
+                        mainBadge: mainBadge
+                    };
+                });
+                rows.sort((a, b) => b.totalInteraction - a.totalInteraction);
+                tbody.innerHTML = rows.map(r => `
+                            <tr>
+                                <td><strong>${r.account}</strong></td>
+                                <td><span class="badge badge-blue">${r.brand}</span></td>
+                                <td>${r.store}</td>
+                                <td>${r.sessions}</td>
+                                <td><span class="${r.scoreClass}">${r.score}</span></td>
+                                <td>${r.totalInteraction.toLocaleString()}</td>
+                                <td>${r.avgInteraction.toLocaleString()}</td>
+                                <td><span class="badge ${r.mainBadge}">${r.mainType}</span></td>
+                            </tr>
+                        `).join('');
+            }
+
+            // 9.15 账号互动趋势
+            function renderInteractTrend(data) {
+                const dom = document.getElementById('interactTrendECharts');
+                const myChart = echarts.init(dom);
+                let dateAgg = aggregateByDate(data);
+                if (dateAgg.length > 7) { dateAgg = dateAgg.slice(dateAgg.length - 7); }
+                if (dateAgg.length === 0 || data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const dates = dateAgg.map(d => d.date);
+                const accMap = {};
+                for (const d of data) {
+                    if (!accMap[d.account]) accMap[d.account] = {};
+                    accMap[d.account][d.date] = (accMap[d.account][d.date] || 0) + (d.interactions || 0);
+                }
+                const accounts = Object.keys(accMap);
+                const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
+                    '#6366f1', '#06b6d4'
+                ];
+                const series = accounts.map((acc, idx) => {
+                    const vals = dates.map(date => accMap[acc][date] || 0);
+                    return {
+                        name: acc,
+                        type: 'line',
+                        data: vals,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: { width: 2.5 },
+                        color: colors[idx % colors.length],
+                        areaStyle: { color: colors[idx % colors.length] + '18' }
+                    };
+                });
+                const option = {
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+                    legend: { data: accounts, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
+                    grid: { left: '8%', right: '8%', bottom: '6%', top: '15%', containLabel: false },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: { fontSize: 10, rotate: 25, formatter: function(value) { return value.slice(5); } },
+                        axisLine: { show: true }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '互动量',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    },
+                    series: series,
+                    color: colors
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.16 互动结构
+            function renderStructure(data) {
+                const dom = document.getElementById('structureECharts');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const accMap = {};
+                for (const d of data) {
+                    if (!accMap[d.account]) {
+                        accMap[d.account] = { likes: 0, comments: 0, shares: 0, total: 0 };
+                    }
+                    accMap[d.account].likes += d.likes || 0;
+                    accMap[d.account].comments += d.comments || 0;
+                    accMap[d.account].shares += d.shares || 0;
+                    accMap[d.account].total += d.interactions || 0;
+                }
+                const allAccounts = Object.keys(accMap);
+                if (allAccounts.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const sorted = allAccounts.sort((a, b) => accMap[b].total - accMap[a].total);
+                const xLabels = sorted;
+                const likesData = sorted.map(acc => accMap[acc].likes);
+                const commentsData = sorted.map(acc => accMap[acc].comments);
+                const sharesData = sorted.map(acc => accMap[acc].shares);
+                const colors = { comment: '#0051BC', like: '#00B0F0', share: '#7ADBFF' };
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = `<strong>${params[0].name}</strong><br/>`;
+                            let total = 0;
+                            for (const p of params) {
+                                html += `${p.marker} ${p.seriesName}：${p.value.toLocaleString()}<br/>`;
+                                total += p.value;
+                            }
+                            html += `<span style="font-weight:600;">合计：${total.toLocaleString()}</span>`;
+                            return html;
+                        }
+                    },
+                    legend: { data: ['评论', '点赞', '分享'], top: 0, right: 0, textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
+                    xAxis: {
+                        type: 'category',
+                        data: xLabels,
+                        axisLabel: { fontSize: 10, rotate: 25, interval: 0 },
+                        axisLine: { show: true },
+                        splitLine: { show: false }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '互动量',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    },
+                    series: [{
+                        name: '评论',
+                        type: 'bar',
+                        stack: 'total',
+                        data: commentsData,
+                        color: colors.comment,
+                        barWidth: '35%'
+                    }, {
+                        name: '点赞',
+                        type: 'bar',
+                        stack: 'total',
+                        data: likesData,
+                        color: colors.like,
+                        barWidth: '35%'
+                    }, {
+                        name: '分享',
+                        type: 'bar',
+                        stack: 'total',
+                        data: sharesData,
+                        color: colors.share,
+                        barWidth: '35%'
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.17 品牌互动指数条形图（修正排序和文字遮挡）
+            function renderBrandScore(data) {
+                const dom = document.getElementById('brandScoreChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const scoredData = computeScores([...data]);
+                const brandScores = {};
+                const brandCounts = {};
+                for (const d of scoredData) {
+                    const brand = d.brand;
+                    if (!brandScores[brand]) brandScores[brand] = 0;
+                    if (!brandCounts[brand]) brandCounts[brand] = 0;
+                    brandScores[brand] += d.score;
+                    brandCounts[brand] += 1;
+                }
+                const brands = Object.keys(brandScores);
+                if (brands.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const sorted = brands.map(b => ({ brand: b, score: brandScores[b] / brandCounts[b] }))
+                    .sort((a, b) => b.score - a.score);
+                const brandNames = sorted.map(d => d.brand);
+                const scores = sorted.map(d => d.score);
+
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7'];
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            const p = params[0];
+                            return `<strong>${p.name}</strong><br/>综合互动指数：${p.value.toFixed(1)}`;
+                        }
+                    },
+                    grid: {
+                        left: '18%',
+                        right: '12%',
+                        bottom: '8%',
+                        top: '8%',
+                        containLabel: false
+                    },
+                    xAxis: {
+                        type: 'value',
+                        name: '综合互动指数 (0~100)',
+                        nameLocation: 'middle',
+                        nameGap: 35,
+                        min: 0,
+                        max: 100,
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: brandNames,
+                        axisLabel: {
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: '#1f2937'
+                        },
+                        axisLine: { show: true },
+                        axisTick: { show: false }
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: scores.map((val, idx) => ({
+                            value: val.toFixed(1),
+                            itemStyle: {
+                                color: colors[idx % colors.length],
+                                borderRadius: [0, 4, 4, 0]
+                            }
+                        })),
+                        barWidth: 30,
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: function(params) { return params.value; },
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: '#1f2937'
+                        }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.18 品牌 × 时段互动指数热力图
+            function renderBrandTimeHeatmap(data) {
+                const dom = document.getElementById('brandTimeHeatmap');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const scoredData = computeScores([...data]);
+                const slots = ['早场 (5-8)', '上午场 (9-12)', '下午场 (13-17)', '黄金档 (18-22)', '深夜场 (22之后)'];
+                const brands = [...new Set(scoredData.map(d => d.brand))];
+                if (brands.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const heatData = [];
+                for (let i = 0; i < slots.length; i++) {
+                    for (let j = 0; j < brands.length; j++) {
+                        const brand = brands[j];
+                        const slot = slots[i];
+                        const vals = scoredData
+                            .filter(d => d.brand === brand && getTimeSlot(d.startHour) === slot)
+                            .map(d => d.score);
+                        const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+                        heatData.push([i, j, avg]);
+                    }
+                }
+                const maxVal = Math.max(...heatData.map(d => d[2]), 1);
+                const option = {
+                    tooltip: {
+                        position: 'top',
+                        formatter: function(params) {
+                            const slot = slots[params.value[0]];
+                            const brand = brands[params.value[1]];
+                            const val = params.value[2];
+                            return `${brand}<br/>${slot}<br/>平均互动指数：${val.toFixed(1)}`;
+                        }
+                    },
+                    grid: { left: '12%', right: '6%', bottom: '10%', top: '6%', containLabel: false },
+                    xAxis: {
+                        type: 'category',
+                        data: slots,
+                        splitArea: { show: true },
+                        axisLabel: { fontSize: 10, rotate: 20 },
+                        axisLine: { show: false }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: brands,
+                        splitArea: { show: true },
+                        axisLabel: { fontSize: 13, fontWeight: 600 },
+                        axisLine: { show: false }
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: 100,
+                        calculable: true,
+                        orient: 'vertical',
+                        right: '2%',
+                        top: 'center',
+                        inRange: { color: ['#f0f4f8', '#dbeafe', '#93c5fd', '#3b82f6', '#1e40af'] },
+                        textStyle: { fontSize: 10 }
+                    },
+                    series: [{
+                        name: '互动指数',
+                        type: 'heatmap',
+                        data: heatData,
+                        label: {
+                            show: true,
+                            color: '#1f2937',
+                            fontSize: 10,
+                            fontWeight: 500,
+                            formatter: function(params) { return params.value[2] > 0 ? params.value[2].toFixed(
+                                0) : ''; }
+                        },
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.19 高频评论关键词词云（蓝色系深浅）
             function renderWordCloud(data) {
                 const dom = document.getElementById('wordCloudChart');
                 const myChart = echarts.init(dom);
@@ -1269,7 +2234,6 @@
                     myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
                     return;
                 }
-                // 汇总所有关键词频次
                 const freqMap = {};
                 for (const d of data) {
                     if (d.commentKeywords) {
@@ -1285,22 +2249,13 @@
                 }
                 const wordData = words.map(kw => ({ name: kw, value: freqMap[kw] }));
                 wordData.sort((a, b) => b.value - a.value);
-                const topWords = wordData.slice(0, 50); // 取前50
-
-                // 蓝色系色盘（深蓝到浅蓝）
-                const bluePalette = ['#0a2463', '#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
-                // 根据频次映射颜色深度
+                const topWords = wordData.slice(0, 50);
                 const maxVal = topWords.length > 0 ? topWords[0].value : 1;
                 const minVal = topWords.length > 0 ? topWords[topWords.length - 1].value : 1;
                 const range = maxVal - minVal || 1;
-
+                const bluePalette = ['#0a2463', '#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
                 const option = {
-                    tooltip: {
-                        show: true,
-                        formatter: function(params) {
-                            return `${params.name}：${params.value} 次`;
-                        }
-                    },
+                    tooltip: { show: true, formatter: function(params) { return `${params.name}：${params.value} 次`; } },
                     series: [{
                         type: 'wordCloud',
                         gridSize: 20,
@@ -1312,8 +2267,7 @@
                         textStyle: {
                             color: function(params) {
                                 const val = params.value;
-                                // 归一化到0~1，然后映射到蓝色系
-                                const normalized = (val - minVal) / range; // 0~1
+                                const normalized = (val - minVal) / range;
                                 const idx = Math.floor(normalized * (bluePalette.length - 1));
                                 return bluePalette[Math.min(idx, bluePalette.length - 1)];
                             },
@@ -1326,9 +2280,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 9.18 评论情绪堆叠柱状图（蓝色系）
-            // =============================================================
+            // 9.20 评论情绪堆叠（蓝色系）
             function renderSentimentStack(data) {
                 const dom = document.getElementById('sentimentChart');
                 const myChart = echarts.init(dom);
@@ -1336,7 +2288,6 @@
                     myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
                     return;
                 }
-                // 按品牌聚合情绪
                 const brandMap = {};
                 for (const d of data) {
                     const brand = d.brand;
@@ -1355,8 +2306,6 @@
                 const positiveData = brands.map(b => brandMap[b].positive);
                 const neutralData = brands.map(b => brandMap[b].neutral);
                 const negativeData = brands.map(b => brandMap[b].negative);
-
-                // 蓝色系：正向深蓝，中性中蓝，负向浅蓝
                 const option = {
                     tooltip: {
                         trigger: 'axis',
@@ -1372,19 +2321,9 @@
                             return html;
                         }
                     },
-                    legend: {
-                        data: ['正向', '中性', '负面'],
-                        top: 0,
-                        right: 0,
-                        textStyle: { fontSize: 11, fontWeight: 500 }
-                    },
-                    grid: {
-                        left: '8%',
-                        right: '4%',
-                        bottom: '12%',
-                        top: '15%',
-                        containLabel: false
-                    },
+                    legend: { data: ['正向', '中性', '负面'], top: 0, right: 0, textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
                     xAxis: {
                         type: 'category',
                         data: brands,
@@ -1403,28 +2342,26 @@
                         type: 'bar',
                         stack: 'total',
                         data: positiveData,
-                        color: '#1e3a8a' // 深蓝
+                        color: '#1e3a8a'
                     }, {
                         name: '中性',
                         type: 'bar',
                         stack: 'total',
                         data: neutralData,
-                        color: '#3b82f6' // 中蓝
+                        color: '#3b82f6'
                     }, {
                         name: '负面',
                         type: 'bar',
                         stack: 'total',
                         data: negativeData,
-                        color: '#93c5fd' // 浅蓝
+                        color: '#93c5fd'
                     }]
                 };
                 myChart.setOption(option);
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 9.19 策略建议（略）
-            // =============================================================
+            // 9.21 策略建议
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {
@@ -1473,7 +2410,7 @@
             }
 
             // =============================================================
-            // 10. 主更新函数（调用所有渲染）
+            // 10. 主更新函数
             // =============================================================
             function updateDashboard() {
                 const filters = getFilters();
@@ -1481,13 +2418,25 @@
                 data = computeScores(data);
                 updateLabels(data, filters);
                 renderKPI(data);
-                // 调用其他渲染函数（由于篇幅，实际代码中已包含）
-                // 这里只列出新修改的
+                renderCompareTable(data);
+                renderPromo(data);
+                renderCompetitor(data);
+                renderContentStrategy(data);
+                renderInnovation(data);
+                renderTrendChartJS(data);
+                renderTrendECharts(data);
+                renderHeatmap(data);
+                renderTrafficChart(data);
+                renderFormatChart(data);
+                renderTop10Table(data);
+                renderInteractionTable(data);
+                renderInteractTrend(data);
+                renderStructure(data);
+                renderBrandScore(data);
+                renderBrandTimeHeatmap(data);
                 renderWordCloud(data);
                 renderSentimentStack(data);
                 renderSuggestions(data);
-                // 注意：其他函数（如renderCompareTable等）在实际代码中也会被调用
-                // 此处为了演示省略，但完整代码包含所有。
             }
 
             // =============================================================

@@ -533,39 +533,6 @@
             </div>
         </div>
 
-        <!-- ===== TOP10 直播明细列表 ===== -->
-        <div class="card">
-            <div class="card-title">
-                <i class="fas fa-list"></i> TOP10 直播明细
-                <span class="tag">按直播时长排序</span>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>账号</th>
-                            <th>所属门店</th>
-                            <th>开播时间</th>
-                            <th>下播时间</th>
-                            <th>直播时长</th>
-                            <th>累计观看人数</th>
-                            <th>累计观看人次</th>
-                            <th>峰值在线人数</th>
-                            <th>点赞数</th>
-                            <th>评论数</th>
-                            <th>分享数</th>
-                            <th>流量来源</th>
-                            <th>直播形式</th>
-                            <th>是否现场观众</th>
-                        </tr>
-                    </thead>
-                    <tbody id="top10TableBody">
-                        <tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- ============================================================ -->
         <!-- 区域二：直播互动内容（直播热度 & 用户反馈）                   -->
         <!-- ============================================================ -->
@@ -647,10 +614,9 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- 新增：高频评论关键词词云 + 评论情绪堆叠柱状图                 -->
+        <!-- 高频评论关键词词云 + 评论情绪堆叠（双栏）                    -->
         <!-- ============================================================ -->
         <div class="row-2col">
-            <!-- 词云 -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-cloud"></i> 高频评论关键词词云
@@ -658,13 +624,87 @@
                 </div>
                 <div class="chart-container-echarts-wordcloud" id="wordCloudChart"></div>
             </div>
-            <!-- 评论情绪 -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-face-smile"></i> 评论情绪堆叠
                     <span class="tag">正向 · 中性 · 负面</span>
                 </div>
                 <div class="chart-container-echarts" id="sentimentChart"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 新增大标题：直播内容讲播（车型排布 & 营销话术策略）           -->
+        <!-- ============================================================ -->
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-bullhorn"></i> 直播内容讲播（车型排布 &amp; 营销话术策略）
+                <span class="tag">内容分析</span>
+            </div>
+            <div class="sub-desc">
+                以下展示各品牌主推车型时序、价格区间分布及内容主题结构，帮助分析讲播策略。
+            </div>
+        </div>
+
+        <!-- ===== 新增图表1：各品牌主推车型时序追踪（折线图） ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-line"></i> 各品牌主推车型时序追踪
+                <span class="tag">近7日</span>
+            </div>
+            <div class="chart-container-echarts" id="mainModelTrendChart"></div>
+        </div>
+
+        <!-- ===== 新增图表2：车型价格区间场次分布对比（柱状图） ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-bar"></i> 车型价格区间场次分布对比
+                <span class="tag">按品牌</span>
+            </div>
+            <div class="chart-container-echarts" id="priceRangeChart"></div>
+        </div>
+
+        <!-- ===== 新增图表3：直播间内容主题结构分布（环形图） ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-pie"></i> 直播间内容主题结构分布
+                <span class="tag">场次占比</span>
+            </div>
+            <div class="chart-container-echarts-pie" id="topicPieChart"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TOP10 直播明细（已移动至此处）                              -->
+        <!-- ============================================================ -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-list"></i> TOP10 直播明细
+                <span class="tag">按直播时长排序</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>账号</th>
+                            <th>所属门店</th>
+                            <th>开播时间</th>
+                            <th>下播时间</th>
+                            <th>直播时长</th>
+                            <th>累计观看人数</th>
+                            <th>累计观看人次</th>
+                            <th>峰值在线人数</th>
+                            <th>点赞数</th>
+                            <th>评论数</th>
+                            <th>分享数</th>
+                            <th>流量来源</th>
+                            <th>直播形式</th>
+                            <th>是否现场观众</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top10TableBody">
+                        <tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -771,6 +811,26 @@
             const ALL_STORES = ALL_BRANDS.map(b => BRAND_DATA[b].store);
             const ALL_ACCOUNTS = ALL_BRANDS.map(b => BRAND_DATA[b].account);
 
+            // 车型价格区间映射
+            const MODEL_PRICE = {
+                'ES': '25-30万',
+                'NX': '30-35万',
+                'RX': '40-50万',
+                'LM': '100万以上',
+                '3系': '30-35万',
+                '5系': '40-50万',
+                'X3': '35-40万',
+                'X5': '60-70万',
+                'iX3': '35-40万',
+                'C级': '30-35万',
+                'E级': '40-50万',
+                'GLC': '35-40万',
+                'GLE': '60-70万'
+            };
+
+            // 价格区间分组
+            const PRICE_GROUPS = ['15-20万', '20-25万', '25-30万', '30-35万', '35-40万', '40-50万', '50-60万', '60-70万', '70-80万', '80-100万', '100万以上'];
+
             const TOPICS = ['参数讲解', '试驾体验', '价格对比', '车主分享', '车型推荐', '促销活动', '品牌故事', '技术解析'];
             const PROMO_TYPES = ['现金直降', '综合优惠', '金融贴息', '置换补贴', '赠品', '送保养', '抵用券'];
             const COMP_BRANDS = ['奥迪', '沃尔沃', '凯迪拉克', '保时捷', '路虎', '捷豹'];
@@ -779,7 +839,6 @@
             const TRAFFIC_SOURCES = ['关注页', '同城', '视频推荐', '其它'];
             const LIVE_FORMATS = ['展厅直播', '户外路试', '访谈式', '发布会', '绿幕虚拟', '其他'];
 
-            // 扩充关键词库（50+）
             const KEYWORD_POOL = [
                 '价格', '续航', '空间', '内饰', '动力', '外观', '配置', '性价比', '操控', '舒适',
                 '智能', '安全', '服务', '品牌', '交付', '充电', '油耗', '加速', '静音', '座椅',
@@ -835,7 +894,7 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据
+            // 3. 生成模拟数据（扩充：modelMentionCount, priceRange）
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -869,7 +928,10 @@
                             const comments = Math.floor(totalInteractions * commentRatio);
                             const shares = totalInteractions - likes - comments;
 
-                            // 评论关键词（5~8个）
+                            // 车型提及次数（模拟1-5次）
+                            const modelMentionCount = 1 + Math.floor(Math.random() * 5);
+
+                            // 评论关键词
                             const shuffled = KEYWORD_POOL.sort(() => 0.5 - Math.random());
                             const keywordCount = 5 + Math.floor(Math.random() * 4);
                             const commentKeywords = shuffled.slice(0, keywordCount);
@@ -894,6 +956,10 @@
                                 const dim = COMP_DIMS[Math.floor(Math.random() * COMP_DIMS.length)];
                                 compList.push({ brand: cb, sentiment, dimension: dim });
                             }
+
+                            // 价格区间
+                            const priceRange = MODEL_PRICE[mainModel] || '其他';
+
                             records.push({
                                 date: dateStr,
                                 account: account,
@@ -908,6 +974,8 @@
                                 interactions: totalInteractions,
                                 leads: leads,
                                 mainModel: mainModel,
+                                modelMentionCount: modelMentionCount,
+                                priceRange: priceRange,
                                 contentTopic: topic,
                                 promoType: promo,
                                 startHour: startHour,
@@ -1183,7 +1251,7 @@
             }
 
             // =============================================================
-            // 9. 渲染函数
+            // 9. 渲染函数（完整）
             // =============================================================
 
             // 9.1 顶部标签
@@ -1774,7 +1842,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.13 TOP10 直播明细列表
+            // 9.13 TOP10 直播明细
             function renderTop10Table(data) {
                 const tbody = document.getElementById('top10TableBody');
                 if (data.length === 0) {
@@ -2054,7 +2122,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.17 品牌互动指数条形图（修正排序和文字遮挡）
+            // 9.17 品牌互动指数条形图
             function renderBrandScore(data) {
                 const dom = document.getElementById('brandScoreChart');
                 const myChart = echarts.init(dom);
@@ -2361,7 +2429,299 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.21 策略建议
+            // =============================================================
+            // 9.21 各品牌主推车型时序追踪（折线图）
+            // =============================================================
+            function renderMainModelTrend(data) {
+                const dom = document.getElementById('mainModelTrendChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                // 取最近7天
+                let dateAgg = aggregateByDate(data);
+                if (dateAgg.length > 7) { dateAgg = dateAgg.slice(dateAgg.length - 7); }
+                const dates = dateAgg.map(d => d.date);
+                if (dates.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+
+                // 按品牌分组，每天统计各车型提及次数，取主推车型（提及最多的）及其频次
+                const brandMap = {};
+                for (const brand of ALL_BRANDS) {
+                    brandMap[brand] = {};
+                }
+                // 用data中所有记录（已过滤）统计
+                for (const d of data) {
+                    const brand = d.brand;
+                    const date = d.date;
+                    const model = d.mainModel;
+                    const count = d.modelMentionCount || 1;
+                    if (!brandMap[brand][date]) brandMap[brand][date] = {};
+                    if (!brandMap[brand][date][model]) brandMap[brand][date][model] = 0;
+                    brandMap[brand][date][model] += count;
+                }
+
+                // 对每个品牌，每天找出主推车型及对应频次
+                const seriesData = [];
+                const colors = ['#4f46e5', '#10b981', '#f59e0b'];
+                const brandList = ALL_BRANDS;
+                brandList.forEach((brand, idx) => {
+                    const dailyData = dates.map(date => {
+                        const dateModelMap = brandMap[brand]?.[date] || {};
+                        let maxModel = null,
+                            maxCount = 0;
+                        for (const [model, cnt] of Object.entries(dateModelMap)) {
+                            if (cnt > maxCount) { maxCount = cnt;
+                                maxModel = model; }
+                        }
+                        // 无数据则返回0，但图例显示主推车型名称通过 tooltip 自定义
+                        return maxCount;
+                    });
+                    // 同时记录主推车型名称，用于 tooltip
+                    const modelNames = dates.map(date => {
+                        const dateModelMap = brandMap[brand]?.[date] || {};
+                        let maxModel = null,
+                            maxCount = 0;
+                        for (const [model, cnt] of Object.entries(dateModelMap)) {
+                            if (cnt > maxCount) { maxCount = cnt;
+                                maxModel = model; }
+                        }
+                        return maxModel || '—';
+                    });
+                    seriesData.push({
+                        brand: brand,
+                        data: dailyData,
+                        modelNames: modelNames,
+                        color: colors[idx % colors.length]
+                    });
+                });
+
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function(params) {
+                            let html = `<strong>${params[0].axisValue}</strong><br/>`;
+                            params.forEach(p => {
+                                const brand = p.seriesName;
+                                const idx = seriesData.findIndex(s => s.brand === brand);
+                                if (idx !== -1) {
+                                    const modelName = seriesData[idx].modelNames[p.dataIndex] || '—';
+                                    html += `${p.marker} ${brand}：主推 ${modelName} (${p.value} 次)<br/>`;
+                                } else {
+                                    html += `${p.marker} ${brand}：${p.value}<br/>`;
+                                }
+                            });
+                            return html;
+                        }
+                    },
+                    legend: {
+                        data: brandList,
+                        top: 0,
+                        right: 0,
+                        textStyle: { fontSize: 11, fontWeight: 500 }
+                    },
+                    grid: {
+                        left: '8%',
+                        right: '8%',
+                        bottom: '8%',
+                        top: '15%',
+                        containLabel: false
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: {
+                            fontSize: 10,
+                            rotate: 25,
+                            formatter: function(value) { return value.slice(5); }
+                        },
+                        axisLine: { show: true }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '主推车型提及频次',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    },
+                    series: seriesData.map(s => ({
+                        name: s.brand,
+                        type: 'line',
+                        data: s.data,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: { width: 2.5 },
+                        color: s.color,
+                        areaStyle: { color: s.color + '20' }
+                    }))
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 9.22 车型价格区间场次分布对比（柱状图）
+            // =============================================================
+            function renderPriceRange(data) {
+                const dom = document.getElementById('priceRangeChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                // 按品牌和价格区间分组统计场次
+                const brandPriceMap = {};
+                const allBrands = ALL_BRANDS;
+                allBrands.forEach(b => brandPriceMap[b] = {});
+                const priceSet = new Set();
+                for (const d of data) {
+                    const brand = d.brand;
+                    const price = d.priceRange || '其他';
+                    priceSet.add(price);
+                    if (!brandPriceMap[brand][price]) brandPriceMap[brand][price] = 0;
+                    brandPriceMap[brand][price] += d.sessionCount || 1;
+                }
+                // 将价格区间按预定义顺序排列，并过滤掉空数据
+                const allPrices = PRICE_GROUPS.filter(p => priceSet.has(p) || Object.values(brandPriceMap).some(b => b[p]));
+                if (allPrices.length === 0) {
+                    myChart.setOption({ title: { text: '暂无价格数据', left: 'center', top: 'center' } });
+                    return;
+                }
+
+                const seriesData = allBrands.map(brand => {
+                    return {
+                        name: brand,
+                        type: 'bar',
+                        stack: 'total',
+                        data: allPrices.map(p => brandPriceMap[brand][p] || 0)
+                    };
+                });
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8'];
+                seriesData.forEach((s, idx) => s.color = colors[idx % colors.length]);
+
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = `<strong>${params[0].name}</strong><br/>`;
+                            let total = 0;
+                            for (const p of params) {
+                                html += `${p.marker} ${p.seriesName}：${p.value} 场<br/>`;
+                                total += p.value;
+                            }
+                            html += `<span style="font-weight:600;">合计：${total} 场</span>`;
+                            return html;
+                        }
+                    },
+                    legend: {
+                        data: allBrands,
+                        top: 0,
+                        right: 0,
+                        textStyle: { fontSize: 11, fontWeight: 500 }
+                    },
+                    grid: {
+                        left: '8%',
+                        right: '4%',
+                        bottom: '12%',
+                        top: '15%',
+                        containLabel: false
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: allPrices,
+                        axisLabel: {
+                            fontSize: 10,
+                            rotate: 25
+                        },
+                        axisLine: { show: true }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '直播场次',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    },
+                    series: seriesData
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 9.23 直播间内容主题结构分布（环形图）
+            // =============================================================
+            function renderTopicPie(data) {
+                const dom = document.getElementById('topicPieChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const map = {};
+                for (const d of data) {
+                    const topic = d.contentTopic;
+                    if (topic) {
+                        map[topic] = (map[topic] || 0) + (d.sessionCount || 1);
+                    }
+                }
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                if (sorted.length === 0) {
+                    myChart.setOption({ title: { text: '暂无主题数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8', '#dbeafe', '#bfdbfe'];
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function(params) {
+                            return `${params.name}<br/>场次: ${params.value} (${params.percent}%)`;
+                        }
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        top: 'center',
+                        textStyle: { fontSize: 12 },
+                        itemWidth: 12,
+                        itemHeight: 12
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['60%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: {
+                            show: true,
+                            formatter: '{d}%',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: '#374151'
+                        },
+                        labelLine: { show: true },
+                        data: pieData.map((item, idx) => ({
+                            ...item,
+                            itemStyle: { color: colors[idx % colors.length] }
+                        })),
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.24 策略建议
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {
@@ -2428,7 +2788,6 @@
                 renderHeatmap(data);
                 renderTrafficChart(data);
                 renderFormatChart(data);
-                renderTop10Table(data);
                 renderInteractionTable(data);
                 renderInteractTrend(data);
                 renderStructure(data);
@@ -2436,6 +2795,11 @@
                 renderBrandTimeHeatmap(data);
                 renderWordCloud(data);
                 renderSentimentStack(data);
+                // 新增三个图表
+                renderMainModelTrend(data);
+                renderPriceRange(data);
+                renderTopicPie(data);
+                renderTop10Table(data);
                 renderSuggestions(data);
             }
 

@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2/dist/echarts-wordcloud.min.js">
     </script>
     <style>
-        /* ===== 全局样式 ===== */
+        /* ===== 全局样式（与之前相同） ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -692,6 +692,7 @@
 
         <!-- ===== 车型价格区间 & 内容主题结构（双栏） ===== -->
         <div class="row-2col">
+            <!-- 价格区间 -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-bar"></i> 车型价格区间场次分布对比
@@ -699,6 +700,7 @@
                 </div>
                 <div class="chart-container-echarts" id="priceRangeChart"></div>
             </div>
+            <!-- 主题结构（居中） -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-pie"></i> 直播间内容主题结构分布
@@ -709,9 +711,10 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- 新增：库存状态结构 + 品牌×库存状态提及频次（双栏）           -->
+        <!-- 新增：库存状态结构（居中） + 品牌×库存状态提及频次（颜色统一）-->
         <!-- ============================================================ -->
         <div class="row-2col">
+            <!-- 库存状态结构（居中） -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-boxes"></i> 库存状态结构
@@ -719,6 +722,7 @@
                 </div>
                 <div class="chart-container-echarts-pie" id="inventoryPieChart"></div>
             </div>
+            <!-- 品牌 × 库存状态提及频次（颜色统一） -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-bar"></i> 品牌 × 库存状态提及频次
@@ -831,7 +835,7 @@
             const ALL_STORES = ALL_BRANDS.map(b => BRAND_DATA[b].store);
             const ALL_ACCOUNTS = ALL_BRANDS.map(b => BRAND_DATA[b].account);
 
-            // 价格区间（新）
+            // 价格区间（新分组）
             const PRICE_GROUPS = ['0-10万', '10-20万', '20-30万', '30-50万', '50-70万', '70-100万', '100万以上'];
             const MODEL_PRICE = {
                 'ES': '20-30万',
@@ -865,7 +869,14 @@
                 '推背感', '路感', '隔音', '制冷', '制热', '座椅加热', '座椅通风', '按摩', '记忆', '电动'
             ];
 
+            // 库存状态及其固定颜色映射（统一）
             const INVENTORY_STATUSES = ['现车充足', '在途', '需预定', '库存紧张'];
+            const INVENTORY_COLORS = {
+                '现车充足': '#1e3a8a',
+                '在途': '#3b82f6',
+                '需预定': '#60a5fa',
+                '库存紧张': '#93c5fd'
+            };
 
             // =============================================================
             // 2. 工具函数
@@ -1140,7 +1151,7 @@
             }
 
             // =============================================================
-            // 7. 聚合工具
+            // 7. 聚合工具（含库存统计）
             // =============================================================
             function aggregateByAccount(data) {
                 const map = {};
@@ -2587,7 +2598,7 @@
             }
 
             // =============================================================
-            // 9.22 车型价格区间场次分布对比（柱状图）
+            // 9.22 车型价格区间场次分布对比（柱状图）- 强制显示所有价格带
             // =============================================================
             function renderPriceRange(data) {
                 const dom = document.getElementById('priceRangeChart');
@@ -2599,20 +2610,15 @@
                 const brandPriceMap = {};
                 const allBrands = ALL_BRANDS;
                 allBrands.forEach(b => brandPriceMap[b] = {});
-                const priceSet = new Set();
                 for (const d of data) {
                     const brand = d.brand;
                     const price = d.priceRange || '其他';
-                    priceSet.add(price);
                     if (!brandPriceMap[brand][price]) brandPriceMap[brand][price] = 0;
                     brandPriceMap[brand][price] += d.sessionCount || 1;
                 }
-                // 使用新的价格区间顺序
-                const allPrices = PRICE_GROUPS.filter(p => priceSet.has(p) || Object.values(brandPriceMap).some(b => b[p]));
-                if (allPrices.length === 0) {
-                    myChart.setOption({ title: { text: '暂无价格数据', left: 'center', top: 'center' } });
-                    return;
-                }
+
+                // 强制使用所有价格区间，即使无数据
+                const allPrices = PRICE_GROUPS; // 不过滤
 
                 const seriesData = allBrands.map(brand => {
                     return {
@@ -2676,7 +2682,7 @@
             }
 
             // =============================================================
-            // 9.23 直播间内容主题结构分布（环形图）
+            // 9.23 直播间内容主题结构分布（环形图 - 居中）
             // =============================================================
             function renderTopicPie(data) {
                 const dom = document.getElementById('topicPieChart');
@@ -2713,7 +2719,7 @@
                     },
                     legend: {
                         orient: 'vertical',
-                        left: 'left',
+                        right: 'right',
                         top: 'center',
                         textStyle: { fontSize: 12 },
                         itemWidth: 12,
@@ -2722,7 +2728,7 @@
                     series: [{
                         type: 'pie',
                         radius: ['40%', '70%'],
-                        center: ['60%', '50%'],
+                        center: ['50%', '50%'], // 居中
                         avoidLabelOverlap: true,
                         label: {
                             show: true,
@@ -2744,7 +2750,7 @@
             }
 
             // =============================================================
-            // 9.24 库存状态结构（环形图）- 蓝色系
+            // 9.24 库存状态结构（环形图）- 居中，颜色统一
             // =============================================================
             function renderInventoryPie(data) {
                 const dom = document.getElementById('inventoryPieChart');
@@ -2758,19 +2764,19 @@
                     const status = d.inventoryStatus || '未知';
                     map[status] = (map[status] || 0) + (d.sessionCount || 1);
                 }
-                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                // 按照 INVENTORY_STATUSES 顺序排列，确保颜色一致
+                const sorted = INVENTORY_STATUSES.filter(s => map[s]).map(s => ({ name: s, value: map[s] }));
                 if (sorted.length === 0) {
                     myChart.setOption({ title: { text: '暂无库存数据', left: 'center', top: 'center' } });
                     return;
                 }
-                const total = sorted.reduce((sum, item) => sum + item[1], 0);
-                const pieData = sorted.map(([name, value]) => ({
-                    name: name,
-                    value: value,
-                    percent: ((value / total) * 100).toFixed(1)
+                const total = sorted.reduce((sum, item) => sum + item.value, 0);
+                const pieData = sorted.map(item => ({
+                    name: item.name,
+                    value: item.value,
+                    percent: ((item.value / total) * 100).toFixed(1)
                 }));
-                // 蓝色系
-                const colors = ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd'];
+
                 const option = {
                     tooltip: {
                         trigger: 'item',
@@ -2780,7 +2786,7 @@
                     },
                     legend: {
                         orient: 'vertical',
-                        left: 'left',
+                        right: 'right',
                         top: 'center',
                         textStyle: { fontSize: 12 },
                         itemWidth: 12,
@@ -2789,7 +2795,7 @@
                     series: [{
                         type: 'pie',
                         radius: ['40%', '70%'],
-                        center: ['55%', '50%'], // 稍微左移，给图例留空间
+                        center: ['50%', '50%'], // 居中
                         avoidLabelOverlap: true,
                         label: {
                             show: true,
@@ -2799,9 +2805,9 @@
                             color: '#374151'
                         },
                         labelLine: { show: true },
-                        data: pieData.map((item, idx) => ({
+                        data: pieData.map(item => ({
                             ...item,
-                            itemStyle: { color: colors[idx % colors.length] }
+                            itemStyle: { color: INVENTORY_COLORS[item.name] || '#9ca3af' }
                         })),
                         emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
                     }]
@@ -2811,7 +2817,7 @@
             }
 
             // =============================================================
-            // 9.25 品牌 × 库存状态提及频次（堆叠柱状图）- 蓝色系
+            // 9.25 品牌 × 库存状态提及频次（堆叠柱状图）- 颜色统一
             // =============================================================
             function renderBrandInventory(data) {
                 const dom = document.getElementById('brandInventoryChart');
@@ -2823,31 +2829,25 @@
                 const brandInvMap = {};
                 const allBrands = ALL_BRANDS;
                 allBrands.forEach(b => brandInvMap[b] = {});
-                const statusSet = new Set();
                 for (const d of data) {
                     const brand = d.brand;
                     const status = d.inventoryStatus || '未知';
-                    statusSet.add(status);
                     if (!brandInvMap[brand][status]) brandInvMap[brand][status] = 0;
                     brandInvMap[brand][status] += d.sessionCount || 1;
                 }
-                const statuses = INVENTORY_STATUSES.filter(s => statusSet.has(s) || Object.values(brandInvMap).some(b => b[s]));
-                if (statuses.length === 0) {
-                    myChart.setOption({ title: { text: '暂无库存数据', left: 'center', top: 'center' } });
-                    return;
-                }
+
+                // 使用 INVENTORY_STATUSES 顺序
+                const statuses = INVENTORY_STATUSES;
 
                 const seriesData = statuses.map(status => {
                     return {
                         name: status,
                         type: 'bar',
                         stack: 'total',
-                        data: allBrands.map(b => brandInvMap[b][status] || 0)
+                        data: allBrands.map(b => brandInvMap[b][status] || 0),
+                        itemStyle: { color: INVENTORY_COLORS[status] || '#9ca3af' }
                     };
                 });
-                // 蓝色系
-                const colors = ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd'];
-                seriesData.forEach((s, idx) => s.color = colors[idx % colors.length]);
 
                 const option = {
                     tooltip: {

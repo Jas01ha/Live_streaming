@@ -503,7 +503,7 @@
             </div>
         </div>
 
-        <!-- ===== 场观趋势（移动到这里） ===== -->
+        <!-- ===== 场观趋势 ===== -->
         <div class="card">
             <div class="card-title"><i class="fas fa-chart-area"></i> 场观趋势 <span class="tag" id="trendTag">近7日</span></div>
             <div class="chart-container tall" style="height:240px;">
@@ -625,10 +625,10 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- 品牌互动指数柱状图 + 品牌 × 时段互动指数热力图               -->
+        <!-- 品牌互动指数（条形图） + 品牌 × 时段互动指数热力图            -->
         <!-- ============================================================ -->
         <div class="row-2col">
-            <!-- 品牌互动指数柱状图 -->
+            <!-- 品牌互动指数条形图 -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-bar"></i> 品牌互动指数
@@ -716,7 +716,7 @@
             </div>
         </div>
 
-        <!-- ===== 策略建议（原场观趋势已移走） ===== -->
+        <!-- ===== 策略建议 ===== -->
         <div class="card">
             <div class="card-title"><i class="fas fa-list-check"></i> 策略建议</div>
             <ul class="suggest-list" id="suggestList">
@@ -1475,7 +1475,7 @@
                 }).join('');
             }
 
-            // 9.8 Chart.js 场观趋势（已移动但函数名不变）
+            // 9.8 Chart.js 场观趋势
             let trendChartInstance = null;
 
             function renderTrendChartJS(data) {
@@ -2248,19 +2248,17 @@
             }
 
             // =============================================================
-            // 9.17 品牌互动指数柱状图
+            // 9.17 品牌互动指数条形图（分数从高到低）
             // =============================================================
             function renderBrandScore(data) {
                 const dom = document.getElementById('brandScoreChart');
                 const myChart = echarts.init(dom);
-
                 if (data.length === 0) {
                     myChart.setOption({
                         title: { text: '暂无数据', left: 'center', top: 'center' }
                     });
                     return;
                 }
-
                 const scoredData = computeScores([...data]);
                 const brandScores = {};
                 const brandCounts = {};
@@ -2271,7 +2269,6 @@
                     brandScores[brand] += d.score;
                     brandCounts[brand] += 1;
                 }
-
                 const brands = Object.keys(brandScores);
                 if (brands.length === 0) {
                     myChart.setOption({
@@ -2279,38 +2276,30 @@
                     });
                     return;
                 }
-
-                const avgScores = brands.map(b => brandScores[b] / brandCounts[b]);
-                const sorted = brands.map((b, i) => ({ brand: b, score: avgScores[i] }))
+                // 按得分降序排列
+                const sorted = brands.map(b => ({ brand: b, score: brandScores[b] / brandCounts[b] }))
                     .sort((a, b) => b.score - a.score);
+                const brandNames = sorted.map(d => d.brand);
+                const scores = sorted.map(d => d.score);
 
                 const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7'];
                 const option = {
                     tooltip: {
                         trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
                         formatter: function(params) {
                             const p = params[0];
                             return `<strong>${p.name}</strong><br/>综合互动指数：${p.value.toFixed(1)}`;
                         }
                     },
                     grid: {
-                        left: '8%',
+                        left: '12%',
                         right: '8%',
                         bottom: '12%',
-                        top: '10%',
+                        top: '8%',
                         containLabel: false
                     },
                     xAxis: {
-                        type: 'category',
-                        data: sorted.map(d => d.brand),
-                        axisLabel: {
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: '#1f2937'
-                        },
-                        axisLine: { show: true }
-                    },
-                    yAxis: {
                         type: 'value',
                         name: '综合互动指数 (0~100)',
                         nameTextStyle: { fontSize: 11 },
@@ -2319,19 +2308,30 @@
                         axisLabel: { fontSize: 10 },
                         splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
                     },
+                    yAxis: {
+                        type: 'category',
+                        data: brandNames,
+                        axisLabel: {
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: '#1f2937'
+                        },
+                        axisLine: { show: true },
+                        axisTick: { show: false }
+                    },
                     series: [{
                         type: 'bar',
-                        data: sorted.map((d, idx) => ({
-                            value: d.score.toFixed(1),
+                        data: scores.map((val, idx) => ({
+                            value: val.toFixed(1),
                             itemStyle: {
                                 color: colors[idx % colors.length],
-                                borderRadius: [4, 4, 0, 0]
+                                borderRadius: [0, 4, 4, 0]
                             }
                         })),
-                        barWidth: '40%',
+                        barWidth: 30,
                         label: {
                             show: true,
-                            position: 'top',
+                            position: 'right',
                             formatter: function(params) {
                                 return params.value;
                             },
@@ -2341,7 +2341,6 @@
                         }
                     }]
                 };
-
                 myChart.setOption(option);
                 window.addEventListener('resize', function() { myChart.resize(); });
             }

@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2/dist/echarts-wordcloud.min.js">
     </script>
     <style>
-        /* ===== 全局样式（与之前相同） ===== */
+        /* ===== 全局样式 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -347,6 +347,10 @@
         .badge-share {
             background: #d1fae5;
             color: #059669;
+        }
+        .badge-promo {
+            background: #fce7f3;
+            color: #be185d;
         }
 
         .trend-indicator {
@@ -891,9 +895,7 @@
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- 【调整1】内容与车型策略 → 移到主推车型时序追踪上方            -->
-        <!-- ============================================================ -->
+        <!-- ===== 内容与车型策略 ===== -->
         <div class="card">
             <div class="card-title">
                 <i class="fas fa-pen-fancy"></i> 内容与车型策略
@@ -922,7 +924,7 @@
             </div>
         </div>
 
-        <!-- ===== 各品牌主推车型时序追踪（单独一行） ===== -->
+        <!-- ===== 各品牌主推车型时序追踪 ===== -->
         <div class="card">
             <div class="card-title">
                 <i class="fas fa-chart-line"></i> 各品牌主推车型时序追踪
@@ -931,9 +933,8 @@
             <div class="chart-container-echarts" id="mainModelTrendChart"></div>
         </div>
 
-        <!-- ===== 车型价格区间场次分布对比 + 直播间内容主题结构分布（双栏） ===== -->
+        <!-- ===== 车型价格区间场次分布对比 + 直播间内容主题结构分布 ===== -->
         <div class="row-2col">
-            <!-- 价格区间 -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-bar"></i> 车型价格区间场次分布对比
@@ -941,7 +942,6 @@
                 </div>
                 <div class="chart-container-echarts" id="priceRangeChart"></div>
             </div>
-            <!-- 主题结构（图例底部，增加间距） -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-pie"></i> 直播间内容主题结构分布
@@ -951,11 +951,8 @@
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- 库存状态结构（图例底部，增加间距） + 品牌×库存状态提及频次    -->
-        <!-- ============================================================ -->
+        <!-- ===== 库存状态结构 + 品牌×库存状态提及频次 ===== -->
         <div class="row-2col">
-            <!-- 库存状态结构（图例底部） -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-boxes"></i> 库存状态结构
@@ -963,7 +960,6 @@
                 </div>
                 <div class="chart-container-echarts-pie" id="inventoryPieChart"></div>
             </div>
-            <!-- 品牌 × 库存状态提及频次 -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-chart-bar"></i> 品牌 × 库存状态提及频次
@@ -973,16 +969,53 @@
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- 【调整3】主推车型 TOP10 排行 → 放在品牌×库存状态后面          -->
-        <!-- 并在图表右侧直接显示品牌、配置、颜色                          -->
-        <!-- ============================================================ -->
+        <!-- ===== 主推车型 TOP10 排行 ===== -->
         <div class="card">
             <div class="card-title">
                 <i class="fas fa-trophy"></i> 主推车型 TOP10 排行
                 <span class="tag">提及次数 · 右侧标注品牌/配置/颜色</span>
             </div>
             <div class="chart-container-echarts" id="topModelsChart"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 【新增】直播促销情况（优惠政策 & 价格策略）                   -->
+        <!-- ============================================================ -->
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-tags"></i> 直播促销情况（优惠政策 &amp; 价格策略）
+                <span class="tag">促销分析</span>
+            </div>
+            <div class="sub-desc">
+                以下展示各品牌直播中的优惠力度趋势、优惠形式分布及品牌对比，帮助分析促销策略。
+            </div>
+        </div>
+
+        <!-- ===== 优惠力度时序折线图 ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-line"></i> 主推车型优惠力度时序追踪
+                <span class="tag">现金优惠幅度 (万元)</span>
+            </div>
+            <div class="chart-container-echarts" id="discountTrendChart"></div>
+        </div>
+
+        <!-- ===== 优惠形式环形图 + 品牌×优惠形式堆叠柱状图 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-chart-pie"></i> 优惠形式结构分布
+                    <span class="tag">场次占比</span>
+                </div>
+                <div class="chart-container-echarts-pie" id="promoTypePieChart"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-chart-bar"></i> 品牌 × 优惠形式结构分布
+                    <span class="tag">堆叠</span>
+                </div>
+                <div class="chart-container-echarts" id="brandPromoChart"></div>
+            </div>
         </div>
 
         <!-- ============================================================ -->
@@ -1114,6 +1147,17 @@
                 '库存紧张': '#93c5fd'
             };
 
+            // 优惠形式对应的颜色
+            const PROMO_COLORS = {
+                '现金直降': '#1e3a8a',
+                '综合优惠': '#2563eb',
+                '金融贴息': '#3b82f6',
+                '置换补贴': '#60a5fa',
+                '赠品': '#93c5fd',
+                '送保养': '#bfdbfe',
+                '抵用券': '#dbeafe'
+            };
+
             // =============================================================
             // 2. 工具函数
             // =============================================================
@@ -1176,7 +1220,7 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据（包含 trimLevel, color）
+            // 3. 生成模拟数据（新增 discountAmount）
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -1228,7 +1272,7 @@
                         for (let s = 0; s < sessionCount; s++) {
                             const mainModel = models[Math.floor(Math.random() * models.length)];
                             const topic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
-                            const promo = PROMO_TYPES[Math.floor(Math.random() * PROMO_TYPES.length)];
+                            const promoType = PROMO_TYPES[Math.floor(Math.random() * PROMO_TYPES.length)];
                             const duration = 45 + Math.floor(Math.random() * 135);
                             const peak = 120 + Math.floor(Math.random() * 880);
                             const viewership = Math.floor(peak * (5 + Math.random() * 15));
@@ -1276,6 +1320,36 @@
                             const trimLevel = trimList[Math.floor(Math.random() * trimList.length)];
                             const color = colorList[Math.floor(Math.random() * colorList.length)];
 
+                            // ---- 新增：根据促销类型生成优惠幅度（万元） ----
+                            let discountAmount = 0;
+                            switch (promoType) {
+                                case '现金直降':
+                                    discountAmount = 1 + Math.random() * 4; // 1-5万
+                                    break;
+                                case '综合优惠':
+                                    discountAmount = 0.5 + Math.random() * 2.5; // 0.5-3万
+                                    break;
+                                case '金融贴息':
+                                    discountAmount = 0.2 + Math.random() * 1.8; // 0.2-2万
+                                    break;
+                                case '置换补贴':
+                                    discountAmount = 0.3 + Math.random() * 1.7; // 0.3-2万
+                                    break;
+                                case '赠品':
+                                    discountAmount = 0.1 + Math.random() * 0.9; // 0.1-1万
+                                    break;
+                                case '送保养':
+                                    discountAmount = 0.1 + Math.random() * 0.9; // 0.1-1万
+                                    break;
+                                case '抵用券':
+                                    discountAmount = 0.1 + Math.random() * 0.9; // 0.1-1万
+                                    break;
+                                default:
+                                    discountAmount = 0;
+                            }
+                            // 保留两位小数
+                            discountAmount = Math.round(discountAmount * 100) / 100;
+
                             records.push({
                                 date: dateStr,
                                 account: account,
@@ -1294,7 +1368,8 @@
                                 priceRange: priceRange,
                                 inventoryStatus: inventoryStatus,
                                 contentTopic: topic,
-                                promoType: promo,
+                                promoType: promoType,
+                                discountAmount: discountAmount,
                                 startHour: startHour,
                                 trafficSource: trafficSource,
                                 liveFormat: liveFormat,
@@ -1470,10 +1545,11 @@
                             allKeywords: [],
                             inventoryStatusCount: {},
                             mainModelHistory: [],
-                            // 新增：配置、颜色、价格带统计
                             trimCount: {},
                             colorCount: {},
-                            priceRangeCount: {}
+                            priceRangeCount: {},
+                            discountSum: 0, // 新增：优惠金额累计
+                            promoCount: {} // 新增：各优惠形式场次
                         };
                     }
                     const a = map[key];
@@ -1504,10 +1580,12 @@
                     const inv = d.inventoryStatus || '未知';
                     a.inventoryStatusCount[inv] = (a.inventoryStatusCount[inv] || 0) + 1;
                     a.mainModelHistory.push(d.mainModel);
-                    // 配置、颜色、价格带统计
                     if (d.trimLevel) a.trimCount[d.trimLevel] = (a.trimCount[d.trimLevel] || 0) + 1;
                     if (d.color) a.colorCount[d.color] = (a.colorCount[d.color] || 0) + 1;
                     if (d.priceRange) a.priceRangeCount[d.priceRange] = (a.priceRangeCount[d.priceRange] || 0) + 1;
+                    // 新增优惠聚合
+                    a.discountSum += d.discountAmount || 0;
+                    a.promoCount[d.promoType] = (a.promoCount[d.promoType] || 0) + 1;
                 }
                 for (const key of Object.keys(map)) {
                     const a = map[key];
@@ -1539,7 +1617,9 @@
                             sharesSum: 0,
                             leadsSum: 0,
                             count: 0,
-                            accounts: new Set()
+                            accounts: new Set(),
+                            discountSum: 0, // 新增
+                            promoCount: {} // 新增
                         };
                     }
                     const a = map[key];
@@ -1554,6 +1634,8 @@
                     a.leadsSum += d.leads;
                     a.count += 1;
                     a.accounts.add(d.account);
+                    a.discountSum += d.discountAmount || 0;
+                    a.promoCount[d.promoType] = (a.promoCount[d.promoType] || 0) + 1;
                 }
                 return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
             }
@@ -1577,7 +1659,7 @@
             }
 
             // =============================================================
-            // 9. 渲染函数（完整）
+            // 9. 渲染函数
             // =============================================================
 
             // 9.1 顶部标签
@@ -1653,7 +1735,7 @@
                 const tbody = document.getElementById('compareTableBody');
                 if (data.length === 0) {
                     tbody.innerHTML =
-                    '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>';
+                        '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>';
                     return;
                 }
                 const accounts = aggregateByAccount(data);
@@ -1664,9 +1746,9 @@
                     const avgDuration = a.count > 0 ? Math.round(a.duration / a.count) : 0;
                     const mainSlot = a.mainTimeSlot || '—';
                     const trendSessions = (Math.random() > 0.5 ? '+' : '-') + (5 + Math.floor(Math.random() *
-                    15)) + '%';
+                        15)) + '%';
                     const trendDuration = (Math.random() > 0.5 ? '+' : '-') + (3 + Math.floor(Math.random() *
-                    12)) + '%';
+                        12)) + '%';
                     const trendAvg = (Math.random() > 0.5 ? '+' : '-') + (2 + Math.floor(Math.random() * 10)) +
                         '%';
                     const arrowSessions = trendSessions.startsWith('+') ? 'up' : 'down';
@@ -1676,18 +1758,12 @@
                                 <td><strong>' + a.account + '</strong></td>\
                                 <td><span class="badge badge-blue">' + a.brand + '</span></td>\
                                 <td>' + a.store + '</td>\
-                                <td>\
-                                    ' + sessions + '\
-                                    <span class="trend-indicator ' + arrowSessions + '">' + trendSessions + '</span>\
-                                </td>\
-                                <td>\
-                                    ' + totalHours + 'h\
-                                    <span class="trend-indicator ' + arrowDuration + '">' + trendDuration + '</span>\
-                                </td>\
-                                <td>\
-                                    ' + avgDuration + 'min\
-                                    <span class="trend-indicator ' + arrowAvg + '">' + trendAvg + '</span>\
-                                </td>\
+                                <td>' + sessions +
+                        '<span class="trend-indicator ' + arrowSessions + '">' + trendSessions + '</span></td>\
+                                <td>' + totalHours +
+                        'h<span class="trend-indicator ' + arrowDuration + '">' + trendDuration + '</span></td>\
+                                <td>' + avgDuration +
+                        'min<span class="trend-indicator ' + arrowAvg + '">' + trendAvg + '</span></td>\
                                 <td><span class="badge badge-time">' + mainSlot + '</span></td>\
                             </tr>';
                 }).join('');
@@ -1779,9 +1855,7 @@
                 }
             }
 
-            // =============================================================
-            // 9.6 内容与车型策略（扩展字段：账号、品牌、经销商、主推车型、提及频次、配置、颜色、价格带、库存状态、策略变化）
-            // =============================================================
+            // 9.6 内容与车型策略
             function renderContentStrategy(data) {
                 const tbody = document.getElementById('contentStrategyBody');
                 if (data.length === 0) {
@@ -1791,22 +1865,16 @@
                 }
                 const accounts = aggregateByAccount(data);
                 accounts.sort((a, b) => b.sessions - a.sessions);
-
                 const changeKeys = ['内容方向转变', '主推车型切换', '促销策略调整', '形式创新', '留资方式转变', '钩子话术变化', '稳定运营', '加码投放'];
 
                 tbody.innerHTML = accounts.map(a => {
                     const mainModel = getTopItem(a.mainModels) || '—';
                     const mentionCount = a.mainModels[mainModel] || 0;
-                    // 配置：取出现频次最高的配置
                     const topTrim = getTopItem(a.trimCount) || '—';
-                    // 颜色：取出现频次最高的颜色
                     const topColor = getTopItem(a.colorCount) || '—';
-                    // 价格带：取出现频次最高的价格带
                     const topPrice = getTopItem(a.priceRangeCount) || '—';
-                    // 库存状态：取出现频次最高的库存状态
                     const topInv = getTopItem(a.inventoryStatusCount) || '—';
 
-                    // 策略变化：基于主推车型历史
                     let changeText = '稳定';
                     if (a.mainModelHistory.length > 1) {
                         const first = a.mainModelHistory[0];
@@ -1846,7 +1914,7 @@
                 const list = document.getElementById('innovationList');
                 if (data.length === 0) {
                     list.innerHTML =
-                    '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据</li>';
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据</li>';
                     return;
                 }
                 const accounts = aggregateByAccount(data);
@@ -1875,7 +1943,7 @@
                 }
                 if (innovations.length === 0) {
                     list.innerHTML =
-                    '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无创新获客手法</li>';
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无创新获客手法</li>';
                     return;
                 }
                 list.innerHTML = innovations.map((item, idx) => {
@@ -1886,9 +1954,7 @@
                         '';
                     return '<li>\
                                 <span class="' + pClass + '">' + label + '</span>\
-                                <div>\
-                                    <strong>' + item.account + '</strong> ' + item.method + liftText + '\
-                                </div>\
+                                <div><strong>' + item.account + '</strong> ' + item.method + liftText + '</div>\
                             </li>';
                 }).join('');
             }
@@ -2241,16 +2307,12 @@
                                 <td>' + d.shares.toLocaleString() + '</td>\
                                 <td>' + trafficBadge + '</td>\
                                 <td><span class="badge badge-blue">' + (d.liveFormat || '—') + '</span></td>\
-                                <td>\
-                                    <span class="badge ' + (hasAudience ? 'badge-audience-yes' : 'badge-audience-no') + '">\
-                                        ' + (hasAudience ? '✅ 是' : '❌ 否') + '\
-                                    </span>\
-                                </td>\
+                                <td><span class="badge ' + (hasAudience ? 'badge-audience-yes' : 'badge-audience-no') + '">' + (hasAudience ? '✅ 是' : '❌ 否') + '</span></td>\
                             </tr>';
                 }).join('');
             }
 
-            // 9.14 账号横向对比（互动版 + 互动指数）
+            // 9.14 账号横向对比（互动版）
             function renderInteractionTable(data) {
                 const tbody = document.getElementById('interactionTableBody');
                 if (data.length === 0) {
@@ -2270,22 +2332,7 @@
                 for (const [acc, scores] of Object.entries(accScoreMap)) {
                     accAvgScore[acc] = scores.reduce((a, b) => a + b, 0) / scores.length;
                 }
-                const rawScores = accounts.map(a => {
-                    const durationMin = a.duration;
-                    const denom = durationMin > 0 ? durationMin : 1;
-                    const commentDensity = a.commentsSum / denom;
-                    const likeDensity = a.likesSum / denom;
-                    const shareDensity = a.sharesSum / denom;
-                    return commentDensity * 0.5 + likeDensity * 0.3 + shareDensity * 0.2;
-                });
-                const maxRaw = Math.max(...rawScores, 0);
-                const minRaw = Math.min(...rawScores, 0);
-                const range = maxRaw - minRaw;
-                const normalizedScores = rawScores.map(raw => {
-                    if (range === 0) return 50;
-                    return Math.round(((raw - minRaw) / range) * 100);
-                });
-                const rows = accounts.map((a, idx) => {
+                const rows = accounts.map(a => {
                     const sessions = a.sessions;
                     const totalInteraction = a.interactionSum;
                     const avgInteraction = a.count > 0 ? Math.round(a.interactionSum / a.count) : 0;
@@ -2296,8 +2343,8 @@
                         100) : 0;
                     const sharePct = a.interactionSum > 0 ? Math.round((a.sharesSum / a.interactionSum) * 100) :
                         0;
-                    let mainType = '—';
-                    let mainBadge = '';
+                    let mainType = '—',
+                        mainBadge = '';
                     if (likePct >= commentPct && likePct >= sharePct) {
                         mainType = '👍 点赞 ' + likePct + '%';
                         mainBadge = 'badge-like';
@@ -2435,7 +2482,7 @@
                             let total = 0;
                             for (const p of params) {
                                 html += p.marker + ' ' + p.seriesName + '：' + p.value.toLocaleString() +
-                                '<br/>';
+                                    '<br/>';
                                 total += p.value;
                             }
                             html += '<span style="font-weight:600;">合计：' + total.toLocaleString() + '</span>';
@@ -2658,7 +2705,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.19 高频评论关键词词云（蓝色系深浅）
+            // 9.19 词云
             function renderWordCloud(data) {
                 const dom = document.getElementById('wordCloudChart');
                 const myChart = echarts.init(dom);
@@ -2713,7 +2760,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.20 评论情绪堆叠（蓝色系）
+            // 9.20 评论情绪堆叠
             function renderSentimentStack(data) {
                 const dom = document.getElementById('sentimentChart');
                 const myChart = echarts.init(dom);
@@ -2795,7 +2842,7 @@
             }
 
             // =============================================================
-            // 9.21 各品牌主推车型时序追踪（折线图）
+            // 9.21 各品牌主推车型时序追踪
             // =============================================================
             function renderMainModelTrend(data) {
                 const dom = document.getElementById('mainModelTrendChart');
@@ -2921,9 +2968,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 9.22 车型价格区间场次分布对比（柱状图）- 强制显示所有价格带
-            // =============================================================
+            // 9.22 车型价格区间场次分布对比
             function renderPriceRange(data) {
                 const dom = document.getElementById('priceRangeChart');
                 const myChart = echarts.init(dom);
@@ -3004,9 +3049,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 9.23 直播间内容主题结构分布（环形图 - 图例底部，增加间距）
-            // =============================================================
+            // 9.23 内容主题结构分布
             function renderTopicPie(data) {
                 const dom = document.getElementById('topicPieChart');
                 const myChart = echarts.init(dom);
@@ -3047,7 +3090,7 @@
                         textStyle: { fontSize: 12 },
                         itemWidth: 12,
                         itemHeight: 12,
-                        padding: [20, 0, 0, 0] // 增加与图表的间距
+                        padding: [20, 0, 0, 0]
                     },
                     series: [{
                         type: 'pie',
@@ -3073,9 +3116,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 9.24 库存状态结构（环形图 - 图例底部，增加间距）
-            // =============================================================
+            // 9.24 库存状态结构
             function renderInventoryPie(data) {
                 const dom = document.getElementById('inventoryPieChart');
                 const myChart = echarts.init(dom);
@@ -3114,7 +3155,7 @@
                         textStyle: { fontSize: 12 },
                         itemWidth: 12,
                         itemHeight: 12,
-                        padding: [20, 0, 0, 0] // 增加与图表的间距
+                        padding: [20, 0, 0, 0]
                     },
                     series: [{
                         type: 'pie',
@@ -3140,9 +3181,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 9.25 品牌 × 库存状态提及频次（堆叠柱状图）
-            // =============================================================
+            // 9.25 品牌 × 库存状态提及频次
             function renderBrandInventory(data) {
                 const dom = document.getElementById('brandInventoryChart');
                 const myChart = echarts.init(dom);
@@ -3219,9 +3258,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // =============================================================
-            // 9.26 主推车型 TOP10 排行（条形图）- 右侧直接显示品牌、配置、颜色
-            // =============================================================
+            // 9.26 主推车型 TOP10 排行
             function renderTopModels(data) {
                 const dom = document.getElementById('topModelsChart');
                 const myChart = echarts.init(dom);
@@ -3229,7 +3266,6 @@
                     myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
                     return;
                 }
-                // 按车型聚合提及次数、品牌、配置、颜色
                 const modelMap = {};
                 for (const d of data) {
                     const model = d.mainModel;
@@ -3242,7 +3278,6 @@
                         };
                     }
                     modelMap[model].count += d.modelMentionCount || 1;
-                    // 取出现频次最高的配置和颜色（随机保留一个，实际可优化）
                     if (Math.random() > 0.5) {
                         modelMap[model].trim = d.trimLevel;
                         modelMap[model].color = d.color;
@@ -3256,7 +3291,6 @@
                 const trims = top10.map(item => item[1].trim || '—');
                 const colors = top10.map(item => item[1].color || '—');
 
-                // 构建右侧标签文本：品牌 / 配置 / 颜色
                 const labelTexts = top10.map((item, idx) => {
                     return brands[idx] + ' | ' + trims[idx] + ' | ' + colors[idx];
                 });
@@ -3278,7 +3312,7 @@
                     },
                     grid: {
                         left: '12%',
-                        right: '28%', // 给右侧label留出空间
+                        right: '28%',
                         bottom: '6%',
                         top: '6%',
                         containLabel: true
@@ -3312,7 +3346,6 @@
                             show: true,
                             position: 'right',
                             formatter: function(params) {
-                                // 在条形右侧显示品牌、配置、颜色
                                 const idx = params.dataIndex;
                                 return labelTexts[idx] || '';
                             },
@@ -3328,7 +3361,251 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.27 策略建议
+            // =============================================================
+            // 【新增】9.27 优惠力度时序折线图
+            // =============================================================
+            function renderDiscountTrend(data) {
+                const dom = document.getElementById('discountTrendChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                // 按日期和品牌聚合平均优惠幅度
+                const brandMap = {};
+                for (const brand of ALL_BRANDS) {
+                    brandMap[brand] = {};
+                }
+                for (const d of data) {
+                    const brand = d.brand;
+                    const date = d.date;
+                    if (!brandMap[brand][date]) brandMap[brand][date] = { sum: 0, count: 0 };
+                    brandMap[brand][date].sum += d.discountAmount || 0;
+                    brandMap[brand][date].count += 1;
+                }
+
+                // 获取所有日期并排序，取最近7天
+                let allDates = [...new Set(data.map(d => d.date))].sort();
+                if (allDates.length > 7) {
+                    allDates = allDates.slice(allDates.length - 7);
+                }
+
+                const colors = ['#4f46e5', '#10b981', '#f59e0b'];
+                const seriesData = ALL_BRANDS.map((brand, idx) => {
+                    const vals = allDates.map(date => {
+                        const info = brandMap[brand]?.[date];
+                        if (info && info.count > 0) {
+                            return Math.round((info.sum / info.count) * 100) / 100;
+                        }
+                        return 0;
+                    });
+                    return {
+                        name: brand,
+                        type: 'line',
+                        data: vals,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: { width: 2.5 },
+                        color: colors[idx % colors.length],
+                        areaStyle: { color: colors[idx % colors.length] + '20' }
+                    };
+                });
+
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'cross' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].axisValue + '</strong><br/>';
+                            params.forEach(p => {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value.toFixed(2) +
+                                    ' 万元<br/>';
+                            });
+                            return html;
+                        }
+                    },
+                    legend: {
+                        data: ALL_BRANDS,
+                        top: 0,
+                        right: 0,
+                        textStyle: { fontSize: 11, fontWeight: 500 }
+                    },
+                    grid: {
+                        left: '8%',
+                        right: '8%',
+                        bottom: '8%',
+                        top: '15%',
+                        containLabel: false
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: allDates,
+                        axisLabel: {
+                            fontSize: 10,
+                            rotate: 25,
+                            formatter: function(value) { return value.slice(5); }
+                        },
+                        axisLine: { show: true }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '现金优惠幅度 (万元)',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } },
+                        min: 0
+                    },
+                    series: seriesData,
+                    color: colors
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 【新增】9.28 优惠形式结构分布（环形图）
+            // =============================================================
+            function renderPromoTypePie(data) {
+                const dom = document.getElementById('promoTypePieChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const map = {};
+                for (const d of data) {
+                    const type = d.promoType || '其他';
+                    map[type] = (map[type] || 0) + (d.sessionCount || 1);
+                }
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function(params) {
+                            return params.name + '<br/>场次: ' + params.value + ' (' + params.percent + '%)';
+                        }
+                    },
+                    legend: {
+                        orient: 'horizontal',
+                        bottom: 0,
+                        left: 'center',
+                        textStyle: { fontSize: 12 },
+                        itemWidth: 12,
+                        itemHeight: 12,
+                        padding: [20, 0, 0, 0]
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['50%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: {
+                            show: true,
+                            formatter: '{d}%',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: '#374151'
+                        },
+                        labelLine: { show: true },
+                        data: pieData.map(item => ({
+                            ...item,
+                            itemStyle: { color: PROMO_COLORS[item.name] || '#9ca3af' }
+                        })),
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 【新增】9.29 品牌 × 优惠形式结构分布（堆叠柱状图）
+            // =============================================================
+            function renderBrandPromo(data) {
+                const dom = document.getElementById('brandPromoChart');
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandPromoMap = {};
+                const allBrands = ALL_BRANDS;
+                allBrands.forEach(b => brandPromoMap[b] = {});
+                for (const d of data) {
+                    const brand = d.brand;
+                    const type = d.promoType || '其他';
+                    if (!brandPromoMap[brand][type]) brandPromoMap[brand][type] = 0;
+                    brandPromoMap[brand][type] += d.sessionCount || 1;
+                }
+
+                // 获取所有优惠形式
+                const allTypes = PROMO_TYPES;
+                const seriesData = allTypes.map(type => {
+                    return {
+                        name: type,
+                        type: 'bar',
+                        stack: 'total',
+                        data: allBrands.map(b => brandPromoMap[b][type] || 0),
+                        itemStyle: { color: PROMO_COLORS[type] || '#9ca3af' }
+                    };
+                });
+
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].name + '</strong><br/>';
+                            let total = 0;
+                            for (const p of params) {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value + ' 场<br/>';
+                                total += p.value;
+                            }
+                            html += '<span style="font-weight:600;">合计：' + total + ' 场</span>';
+                            return html;
+                        }
+                    },
+                    legend: {
+                        data: allTypes,
+                        top: 0,
+                        right: 0,
+                        textStyle: { fontSize: 11, fontWeight: 500 }
+                    },
+                    grid: {
+                        left: '8%',
+                        right: '4%',
+                        bottom: '12%',
+                        top: '15%',
+                        containLabel: false
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: allBrands,
+                        axisLabel: { fontSize: 13, fontWeight: 600 },
+                        axisLine: { show: true }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '场次',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    },
+                    series: seriesData
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // 9.30 策略建议
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {
@@ -3346,14 +3623,14 @@
                             account: a.account,
                             priority: 'urgent',
                             text: '建议优化留资引导话术，当前场均留资 ' + (a.leadsSum / a.sessions).toFixed(1) +
-                            ' 单'
+                                ' 单'
                         });
                     } else if (a.sessions > 3 && a.interactionSum / a.sessions < 500) {
                         suggestions.push({
                             account: a.account,
                             priority: 'important',
                             text: '互动率偏低，建议增加互动环节，当前场均互动 ' + Math.round(a.interactionSum / a
-                            .sessions)
+                                .sessions)
                         });
                     } else if (a.sessions > 2) {
                         suggestions.push({
@@ -3412,6 +3689,10 @@
                 renderInventoryPie(data);
                 renderBrandInventory(data);
                 renderTopModels(data);
+                // 新增三个促销图表
+                renderDiscountTrend(data);
+                renderPromoTypePie(data);
+                renderBrandPromo(data);
                 renderSuggestions(data);
             }
 

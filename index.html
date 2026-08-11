@@ -283,6 +283,7 @@
         .badge-promo { background: #fce7f3; color: #be185d; }
         .badge-urgency { background: #fef3c7; color: #b45309; }
         .badge-subsidy { background: #d1fae5; color: #065f46; }
+        .badge-lead { background: #e0e7ff; color: #3730a3; }
 
         .trend-indicator { font-size: 12px; font-weight: 500; margin-left: 6px; display: inline-block; }
         .trend-indicator.up { color: #059669; }
@@ -709,15 +710,13 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- 【调整1】综合优惠后价格信息 + 报价口径分布对比 放在同一行      -->
+        <!-- 综合优惠后价格信息 + 报价口径分布对比 放在同一行              -->
         <!-- ============================================================ -->
         <div class="row-2col">
-            <!-- 报价口径分布对比 -->
             <div class="card">
                 <div class="card-title"><i class="fas fa-tag"></i> 报价口径分布对比 <span class="tag">堆叠</span></div>
                 <div class="chart-container-echarts" id="quoteApproachChart"></div>
             </div>
-            <!-- 综合优惠后价格信息（矩阵表格） -->
             <div class="card">
                 <div class="card-title">
                     <i class="fas fa-table"></i> 综合优惠后价格信息
@@ -733,7 +732,7 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- 【新增】直播促销明细（按优惠力度排序，TOP10）                 -->
+        <!-- 直播促销明细（按优惠力度排序，TOP10）                         -->
         <!-- ============================================================ -->
         <div class="card">
             <div class="card-title">
@@ -759,6 +758,46 @@
                     </thead>
                     <tbody id="promoDetailTableBody">
                         <tr><td colspan="11" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 【新增】直播获客留资策略洞察（线索引导 & 留资转化）           -->
+        <!-- ============================================================ -->
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-user-plus"></i> 直播获客留资策略洞察（线索引导 &amp; 留资转化）
+                <span class="tag">留资分析</span>
+            </div>
+            <div class="sub-desc">
+                以下展示各账号直播留资引导表现及转化效率，帮助分析获客策略。
+            </div>
+        </div>
+
+        <!-- ===== 账号留资分析 ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-people-arrows"></i> 账号留资分析
+                <span class="tag" id="leadTableTag">本周</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>账号</th>
+                            <th>品牌</th>
+                            <th>经销商</th>
+                            <th>直播场次</th>
+                            <th>总留资引导频次</th>
+                            <th>场均留资</th>
+                            <th>留资转化率</th>
+                            <th>主要留资方式</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadAnalysisBody">
+                        <tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -911,6 +950,8 @@
             const BLUE_PALETTE = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd',
                 '#bfdbfe'
             ];
+            // 留资方式
+            const LEAD_METHODS = ['企微留资', '扫码留资', '表单留资', '私信留资', '小风车留资', '电话留资'];
 
             // =============================================================
             // 2. 工具函数
@@ -1102,6 +1143,11 @@
                             const originalPrice = basePrice + (Math.random() - 0.5) * 2;
                             const finalPrice = Math.round((originalPrice - discountAmount) * 100) / 100;
 
+                            // 留资方式：随机分配1-2种
+                            const numMethods = 1 + Math.floor(Math.random() * 2);
+                            const shuffledMethods = [...LEAD_METHODS].sort(() => 0.5 - Math.random());
+                            const leadMethods = shuffledMethods.slice(0, numMethods);
+
                             records.push({
                                 date: dateStr,
                                 account: account,
@@ -1138,7 +1184,8 @@
                                 neutralComments: neutralComments,
                                 negativeComments: negativeComments,
                                 trimLevel: trimLevel,
-                                color: color
+                                color: color,
+                                leadMethods: leadMethods
                             });
                         }
                     }
@@ -1305,7 +1352,8 @@
                             promoCount: {},
                             promoConditionCount: {},
                             urgencySignalCount: {},
-                            quoteApproachCount: {}
+                            quoteApproachCount: {},
+                            leadMethodsCount: {}
                         };
                     }
                     const a = map[key];
@@ -1346,6 +1394,12 @@
                         }
                     }
                     a.quoteApproachCount[d.quoteApproach] = (a.quoteApproachCount[d.quoteApproach] || 0) + 1;
+                    // 留资方式聚合
+                    if (d.leadMethods) {
+                        for (const method of d.leadMethods) {
+                            a.leadMethodsCount[method] = (a.leadMethodsCount[method] || 0) + 1;
+                        }
+                    }
                 }
                 for (const key of Object.keys(map)) {
                     const a = map[key];
@@ -1447,6 +1501,7 @@
                 document.getElementById('compareTableTag').textContent = dimMap[dim] || '本周';
                 document.getElementById('trendTag').textContent = dimMap[dim] || '近7日';
                 document.getElementById('interactionTableTag').textContent = dimMap[dim] || '互动表现';
+                document.getElementById('leadTableTag').textContent = dimMap[dim] || '本周';
             }
 
             // 8.2 KPI
@@ -3589,7 +3644,7 @@
             }
 
             // =============================================================
-            // 11. 新增：综合优惠后价格信息矩阵表格
+            // 11. 综合优惠后价格信息矩阵表格
             // =============================================================
             function renderPriceMatrix(data) {
                 const thead = document.getElementById('priceMatrixHead');
@@ -3680,7 +3735,7 @@
             }
 
             // =============================================================
-            // 12. 新增：直播促销明细（按优惠力度排序，TOP10）
+            // 12. 直播促销明细（按优惠力度排序，TOP10）
             // =============================================================
             function renderPromoDetailTable(data) {
                 const tbody = document.getElementById('promoDetailTableBody');
@@ -3744,7 +3799,70 @@
             }
 
             // =============================================================
-            // 13. 策略建议
+            // 13. 【新增】账号留资分析
+            // =============================================================
+            function renderLeadAnalysis(data) {
+                const tbody = document.getElementById('leadAnalysisBody');
+
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无留资数据</td></tr>';
+                    return;
+                }
+
+                const accounts = aggregateByAccount(data);
+                // 按总留资引导频次降序排列
+                accounts.sort((a, b) => b.leadsSum - a.leadsSum);
+
+                // 计算总留资和总场次用于全局转化率基准
+                const totalLeads = accounts.reduce((sum, a) => sum + a.leadsSum, 0);
+                const totalSessions = accounts.reduce((sum, a) => sum + a.sessions, 0);
+                const avgLeadRate = totalSessions > 0 ? (totalLeads / totalSessions) : 0;
+
+                // 留资方式颜色
+                const methodColors = {
+                    '企微留资': '#1e3a8a',
+                    '扫码留资': '#2563eb',
+                    '表单留资': '#3b82f6',
+                    '私信留资': '#60a5fa',
+                    '小风车留资': '#93c5fd',
+                    '电话留资': '#bfdbfe'
+                };
+
+                tbody.innerHTML = accounts.map(a => {
+                    const sessions = a.sessions;
+                    const totalLead = a.leadsSum;
+                    const avgLead = sessions > 0 ? (totalLead / sessions).toFixed(1) : '0.0';
+                    // 留资转化率 = 场均留资 / 全局场均留资 * 100，再映射到 0-100
+                    const rawRate = sessions > 0 ? (totalLead / sessions) : 0;
+                    const rateScore = avgLeadRate > 0 ? Math.min(Math.round((rawRate / avgLeadRate) * 100), 100) :
+                        0;
+                    // 留资方式：取出现频次最高的方式
+                    const topMethod = getTopItem(a.leadMethodsCount) || '—';
+                    const methodBadge = topMethod !== '—' ?
+                        '<span class="badge badge-lead">' + topMethod + '</span>' :
+                        '<span class="badge badge-gray">—</span>';
+
+                    // 趋势：随机生成
+                    const trend = (Math.random() > 0.5 ? '+' : '-') + (5 + Math.floor(Math.random() * 20)) + '%';
+                    const arrowClass = trend.startsWith('+') ? 'up' : 'down';
+
+                    return '<tr>\
+                                <td><strong>' + a.account + '</strong></td>\
+                                <td><span class="badge badge-purple">' + a.brand + '</span></td>\
+                                <td>' + a.store + '</td>\
+                                <td>' + sessions + '</td>\
+                                <td><strong>' + totalLead + '</strong></td>\
+                                <td>' + avgLead + ' <span class="trend-indicator ' + arrowClass + '">' + trend +
+                        '</span></td>\
+                                <td><span class="' + (rateScore >= 70 ? 'score-high' : rateScore >= 40 ? 'score-mid' : 'score-low') + '">' + rateScore + '%</span></td>\
+                                <td>' + methodBadge + '</td>\
+                            </tr>';
+                }).join('');
+            }
+
+            // =============================================================
+            // 14. 策略建议
             // =============================================================
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
@@ -3797,7 +3915,7 @@
             }
 
             // =============================================================
-            // 14. 主更新函数
+            // 15. 主更新函数
             // =============================================================
             function updateDashboard() {
                 const filters = getFilters();
@@ -3839,11 +3957,13 @@
                 renderQuoteApproach(data);
                 renderPriceMatrix(data);
                 renderPromoDetailTable(data);
+                // 新增留资分析
+                renderLeadAnalysis(data);
                 renderSuggestions(data);
             }
 
             // =============================================================
-            // 15. 事件绑定 & 初始化
+            // 16. 事件绑定 & 初始化
             // =============================================================
             document.getElementById('applyFilters').addEventListener('click', function() { updateDashboard(); });
             document.getElementById('resetFilters').addEventListener('click', function() {

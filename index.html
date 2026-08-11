@@ -13,22 +13,15 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2/dist/echarts-wordcloud.min.js">
     </script>
     <style>
-        /* ===== 全局样式 ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* ===== 全局样式（完整） ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #f0f4f8;
             color: #0a0f1e;
             padding: 24px;
         }
-        .container {
-            max-width: 1440px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1440px; margin: 0 auto; }
         .topbar {
             display: flex;
             align-items: center;
@@ -40,23 +33,11 @@
             padding: 16px 24px;
             border-radius: 16px;
             border: 1px solid #f0f2f5;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
-        .topbar-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .topbar-left h1 {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-        .topbar-left h1 span {
-            color: #6b7280;
-            font-weight: 400;
-            font-size: 16px;
-        }
+        .topbar-left { display: flex; align-items: center; gap: 14px; }
+        .topbar-left h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+        .topbar-left h1 span { color: #6b7280; font-weight: 400; font-size: 16px; }
         .topbar-right {
             font-size: 14px;
             color: #6b7280;
@@ -83,7 +64,7 @@
             flex-wrap: wrap;
             align-items: flex-end;
             gap: 14px 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
         .filter-group {
             display: flex;
@@ -100,8 +81,7 @@
             text-transform: uppercase;
             letter-spacing: 0.4px;
         }
-        .filter-group select,
-        .filter-group input {
+        .filter-group select, .filter-group input {
             padding: 8px 12px;
             border: 1px solid #e5e7eb;
             border-radius: 10px;
@@ -114,10 +94,9 @@
             font-family: 'Inter', sans-serif;
             cursor: pointer;
         }
-        .filter-group select:focus,
-        .filter-group input:focus {
+        .filter-group select:focus, .filter-group input:focus {
             border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10);
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.10);
         }
         .filter-actions {
             display: flex;
@@ -142,10 +121,7 @@
             font-family: 'Inter', sans-serif;
             white-space: nowrap;
         }
-        .btn-apply:hover {
-            background: #4338ca;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.30);
-        }
+        .btn-apply:hover { background: #4338ca; box-shadow: 0 4px 12px rgba(79,70,229,0.30); }
         .btn-reset {
             background: transparent;
             color: #6b7280;
@@ -159,10 +135,7 @@
             font-family: 'Inter', sans-serif;
             white-space: nowrap;
         }
-        .btn-reset:hover {
-            border-color: #4f46e5;
-            color: #4f46e5;
-        }
+        .btn-reset:hover { border-color: #4f46e5; color: #4f46e5; }
 
         .kpi-grid {
             display: grid;
@@ -175,12 +148,10 @@
             border-radius: 16px;
             padding: 18px 20px 16px;
             border: 1px solid #f0f2f5;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
             transition: 0.2s;
         }
-        .kpi-card:hover {
-            border-color: #e5e7eb;
-        }
+        .kpi-card:hover { border-color: #e5e7eb; }
         .kpi-card .label {
             font-size: 13px;
             font-weight: 500;
@@ -204,63 +175,16 @@
             padding: 2px 10px;
             border-radius: 40px;
         }
-        .change.up {
-            background: #ecfdf5;
-            color: #059669;
-        }
-        .change.down {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-        .change.neutral {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        /* ===== 导航按钮（新位置，在内容区上方） ===== */
-        .nav-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 24px;
-            background: #fff;
-            padding: 12px 20px;
-            border-radius: 16px;
-            border: 1px solid #f0f2f5;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-        }
-        .nav-btn {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.25s;
-            font-family: 'Inter', sans-serif;
-            background: #f3f4f6;
-            color: #6b7280;
-            white-space: nowrap;
-        }
-        .nav-btn:hover {
-            background: #e5e7eb;
-            color: #1f2937;
-        }
-        .nav-btn.active {
-            background: #4f46e5;
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
-        }
-        .nav-btn i {
-            margin-right: 6px;
-        }
+        .change.up { background: #ecfdf5; color: #059669; }
+        .change.down { background: #fef2f2; color: #dc2626; }
+        .change.neutral { background: #f3f4f6; color: #6b7280; }
 
         .card {
             background: #fff;
             border-radius: 16px;
             padding: 20px 22px 22px;
             border: 1px solid #f0f2f5;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
             margin-bottom: 20px;
         }
         .card .card-title {
@@ -272,10 +196,7 @@
             gap: 8px;
             color: #0a0f1e;
         }
-        .card .card-title i {
-            color: #4f46e5;
-            font-size: 16px;
-        }
+        .card .card-title i { color: #4f46e5; font-size: 16px; }
         .card .card-title .tag {
             font-size: 11px;
             font-weight: 500;
@@ -286,9 +207,7 @@
             margin-left: 6px;
         }
 
-        .table-wrap {
-            overflow-x: auto;
-        }
+        .table-wrap { overflow-x: auto; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -312,9 +231,7 @@
             vertical-align: middle;
             font-size: 13px;
         }
-        table tbody tr:last-child td {
-            border-bottom: none;
-        }
+        table tbody tr:last-child td { border-bottom: none; }
 
         .matrix-table thead th {
             text-align: center;
@@ -338,15 +255,9 @@
             white-space: nowrap;
         }
 
-        .trend-up {
-            color: #059669;
-        }
-        .trend-down {
-            color: #dc2626;
-        }
-        .trend-neutral {
-            color: #6b7280;
-        }
+        .trend-up { color: #059669; }
+        .trend-down { color: #dc2626; }
+        .trend-neutral { color: #6b7280; }
 
         .badge {
             display: inline-block;
@@ -356,98 +267,30 @@
             font-weight: 500;
             white-space: nowrap;
         }
-        .badge-green {
-            background: #ecfdf5;
-            color: #059669;
-        }
-        .badge-red {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-        .badge-yellow {
-            background: #fffbeb;
-            color: #d97706;
-        }
-        .badge-gray {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-        .badge-blue {
-            background: #eef2ff;
-            color: #4f46e5;
-        }
-        .badge-purple {
-            background: #f5f3ff;
-            color: #7c3aed;
-        }
-        .badge-time {
-            background: #fef9e7;
-            color: #b7950b;
-        }
-        .badge-audience-yes {
-            background: #ecfdf5;
-            color: #059669;
-        }
-        .badge-audience-no {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-        .badge-video {
-            background: #fef3c7;
-            color: #d97706;
-        }
-        .badge-like {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        .badge-comment {
-            background: #dbeafe;
-            color: #2563eb;
-        }
-        .badge-share {
-            background: #d1fae5;
-            color: #059669;
-        }
-        .badge-promo {
-            background: #fce7f3;
-            color: #be185d;
-        }
-        .badge-urgency {
-            background: #fef3c7;
-            color: #b45309;
-        }
-        .badge-subsidy {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        .badge-lead {
-            background: #e0e7ff;
-            color: #3730a3;
-        }
-        .badge-hook {
-            background: #fce7f3;
-            color: #be185d;
-        }
-        .badge-fans {
-            background: #fef3c7;
-            color: #b45309;
-        }
+        .badge-green { background: #ecfdf5; color: #059669; }
+        .badge-red { background: #fef2f2; color: #dc2626; }
+        .badge-yellow { background: #fffbeb; color: #d97706; }
+        .badge-gray { background: #f3f4f6; color: #6b7280; }
+        .badge-blue { background: #eef2ff; color: #4f46e5; }
+        .badge-purple { background: #f5f3ff; color: #7c3aed; }
+        .badge-time { background: #fef9e7; color: #b7950b; }
+        .badge-audience-yes { background: #ecfdf5; color: #059669; }
+        .badge-audience-no { background: #f3f4f6; color: #6b7280; }
+        .badge-video { background: #fef3c7; color: #d97706; }
+        .badge-like { background: #fee2e2; color: #dc2626; }
+        .badge-comment { background: #dbeafe; color: #2563eb; }
+        .badge-share { background: #d1fae5; color: #059669; }
+        .badge-promo { background: #fce7f3; color: #be185d; }
+        .badge-urgency { background: #fef3c7; color: #b45309; }
+        .badge-subsidy { background: #d1fae5; color: #065f46; }
+        .badge-lead { background: #e0e7ff; color: #3730a3; }
+        .badge-hook { background: #fce7f3; color: #be185d; }
+        .badge-fans { background: #fef3c7; color: #b45309; }
 
-        .trend-indicator {
-            font-size: 12px;
-            font-weight: 500;
-            margin-left: 6px;
-            display: inline-block;
-        }
-        .trend-indicator.up {
-            color: #059669;
-        }
-        .trend-indicator.down {
-            color: #dc2626;
-        }
-        .trend-indicator.neutral {
-            color: #6b7280;
-        }
+        .trend-indicator { font-size: 12px; font-weight: 500; margin-left: 6px; display: inline-block; }
+        .trend-indicator.up { color: #059669; }
+        .trend-indicator.down { color: #dc2626; }
+        .trend-indicator.neutral { color: #6b7280; }
 
         .row-2col {
             display: grid;
@@ -455,34 +298,14 @@
             gap: 20px;
             margin-bottom: 20px;
         }
-        .chart-container {
-            position: relative;
-            height: 220px;
-        }
-        .chart-container.tall {
-            height: 260px;
-        }
-        .chart-container-echarts {
-            width: 100%;
-            height: 380px;
-        }
-        .chart-container-echarts-pie {
-            width: 100%;
-            height: 260px;
-        }
-        .chart-container-echarts-wordcloud {
-            width: 100%;
-            height: 300px;
-        }
-        .chart-container-echarts-bar {
-            width: 100%;
-            height: 320px;
-        }
+        .chart-container { position: relative; height: 220px; }
+        .chart-container.tall { height: 260px; }
+        .chart-container-echarts { width: 100%; height: 380px; }
+        .chart-container-echarts-pie { width: 100%; height: 260px; }
+        .chart-container-echarts-wordcloud { width: 100%; height: 300px; }
+        .chart-container-echarts-bar { width: 100%; height: 320px; }
 
-        .suggest-list {
-            list-style: none;
-            padding: 0;
-        }
+        .suggest-list { list-style: none; padding: 0; }
         .suggest-list li {
             padding: 10px 0;
             border-bottom: 1px solid #f3f4f6;
@@ -492,9 +315,7 @@
             gap: 12px;
             align-items: flex-start;
         }
-        .suggest-list li:last-child {
-            border-bottom: none;
-        }
+        .suggest-list li:last-child { border-bottom: none; }
         .suggest-list .priority {
             font-weight: 600;
             font-size: 12px;
@@ -503,219 +324,69 @@
             flex-shrink: 0;
             margin-top: 1px;
         }
-        .priority.urgent {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-        .priority.important {
-            background: #fffbeb;
-            color: #d97706;
-        }
-        .priority.normal {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
+        .priority.urgent { background: #fef2f2; color: #dc2626; }
+        .priority.important { background: #fffbeb; color: #d97706; }
+        .priority.normal { background: #f3f4f6; color: #6b7280; }
 
-        .section-header {
-            margin-bottom: 12px;
-        }
-        .section-header .card-title {
-            font-size: 18px;
-            margin-bottom: 0;
-        }
-        .section-header .card-title i {
-            color: #4f46e5;
-        }
-        .section-header .card-title .tag {
-            font-size: 12px;
-        }
+        .empty-state { text-align: center; padding: 30px 20px; color: #9ca3af; }
+        .empty-state i { font-size: 36px; margin-bottom: 10px; display: block; opacity: 0.5; }
+        .empty-state p { font-size: 14px; }
+
+        .section-header { margin-bottom: 12px; }
+        .section-header .card-title { font-size: 18px; margin-bottom: 0; }
+        .section-header .card-title i { color: #4f46e5; }
+        .section-header .card-title .tag { font-size: 12px; }
         .section-header .sub-desc {
             font-size: 13px;
             color: #6b7280;
             margin-top: 4px;
         }
 
-        .score-high {
-            color: #059669;
-            font-weight: 700;
-        }
-        .score-mid {
-            color: #d97706;
-            font-weight: 700;
-        }
-        .score-low {
-            color: #dc2626;
-            font-weight: 700;
-        }
-
-        /* 区域切换动画 */
-        .section-area {
-            display: none;
-            animation: fadeIn 0.35s ease;
-        }
-        .section-area.active {
-            display: block;
-        }
-        @keyframes fadeIn {
-            0% {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        .score-high { color: #059669; font-weight: 700; }
+        .score-mid { color: #d97706; font-weight: 700; }
+        .score-low { color: #dc2626; font-weight: 700; }
 
         @media (max-width: 1024px) {
-            .row-2col {
-                grid-template-columns: 1fr;
-            }
-            .filter-group {
-                min-width: 100px;
-                max-width: 100%;
-                flex: 1 1 40%;
-            }
-            .filter-actions {
-                margin-left: 0;
-                width: 100%;
-                justify-content: flex-end;
-            }
-            .chart-container-echarts {
-                height: 320px;
-            }
-            .chart-container-echarts-wordcloud {
-                height: 260px;
-            }
-            .chart-container-echarts-bar {
-                height: 280px;
-            }
+            .row-2col { grid-template-columns: 1fr; }
+            .filter-group { min-width: 100px; max-width: 100%; flex: 1 1 40%; }
+            .filter-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
+            .chart-container-echarts { height: 320px; }
+            .chart-container-echarts-wordcloud { height: 260px; }
+            .chart-container-echarts-bar { height: 280px; }
         }
         @media (max-width: 820px) {
-            .topbar-left h1 {
-                font-size: 18px;
-            }
-            .topbar-left h1 span {
-                font-size: 13px;
-                display: block;
-            }
-            .filters-bar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-            .filter-group {
-                min-width: 100%;
-                max-width: 100%;
-                flex: 1 1 auto;
-            }
-            .filter-actions {
-                justify-content: stretch;
-                flex-wrap: wrap;
-            }
-            .filter-actions .btn-apply,
-            .filter-actions .btn-reset {
-                flex: 1;
-                justify-content: center;
-            }
-            .kpi-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .chart-container-echarts {
-                height: 280px;
-            }
-            .chart-container-echarts-pie {
-                height: 220px;
-            }
-            .chart-container-echarts-wordcloud {
-                height: 230px;
-            }
-            .chart-container-echarts-bar {
-                height: 240px;
-            }
-            .matrix-table thead th {
-                font-size: 10px;
-                padding: 4px 3px;
-            }
-            .matrix-table tbody td {
-                font-size: 10px;
-                padding: 4px 3px;
-            }
-            .nav-tabs {
-                gap: 6px;
-                padding: 10px 14px;
-            }
-            .nav-btn {
-                font-size: 12px;
-                padding: 6px 12px;
-            }
+            .topbar-left h1 { font-size: 18px; }
+            .topbar-left h1 span { font-size: 13px; display: block; }
+            .filters-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+            .filter-group { min-width: 100%; max-width: 100%; flex: 1 1 auto; }
+            .filter-actions { justify-content: stretch; flex-wrap: wrap; }
+            .filter-actions .btn-apply, .filter-actions .btn-reset { flex: 1; justify-content: center; }
+            .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+            .chart-container-echarts { height: 280px; }
+            .chart-container-echarts-pie { height: 220px; }
+            .chart-container-echarts-wordcloud { height: 230px; }
+            .chart-container-echarts-bar { height: 240px; }
+            .matrix-table thead th { font-size: 10px; padding: 4px 3px; }
+            .matrix-table tbody td { font-size: 10px; padding: 4px 3px; }
         }
         @media (max-width: 480px) {
-            body {
-                padding: 12px;
-            }
-            .kpi-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-            }
-            .kpi-card .value {
-                font-size: 20px;
-            }
-            .card {
-                padding: 16px;
-            }
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .topbar-right {
-                width: 100%;
-                justify-content: flex-start;
-            }
-            .chart-container-echarts {
-                height: 240px;
-            }
-            .chart-container-echarts-pie {
-                height: 200px;
-            }
-            .chart-container-echarts-wordcloud {
-                height: 200px;
-            }
-            .chart-container-echarts-bar {
-                height: 220px;
-            }
-            .matrix-table thead th {
-                font-size: 9px;
-                padding: 3px 2px;
-            }
-            .matrix-table tbody td {
-                font-size: 9px;
-                padding: 3px 2px;
-            }
-            .nav-tabs {
-                gap: 4px;
-                padding: 8px 10px;
-                flex-wrap: wrap;
-            }
-            .nav-btn {
-                font-size: 11px;
-                padding: 5px 10px;
-            }
+            body { padding: 12px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .kpi-card .value { font-size: 20px; }
+            .card { padding: 16px; }
+            .topbar { flex-direction: column; align-items: flex-start; }
+            .topbar-right { width: 100%; justify-content: flex-start; }
+            .chart-container-echarts { height: 240px; }
+            .chart-container-echarts-pie { height: 200px; }
+            .chart-container-echarts-wordcloud { height: 200px; }
+            .chart-container-echarts-bar { height: 220px; }
+            .matrix-table thead th { font-size: 9px; padding: 3px 2px; }
+            .matrix-table tbody td { font-size: 9px; padding: 3px 2px; }
         }
-        .table-wrap::-webkit-scrollbar {
-            height: 6px;
-        }
-        .table-wrap::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        .table-wrap::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 4px;
-        }
-        .table-wrap::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
+        .table-wrap::-webkit-scrollbar { height: 6px; }
+        .table-wrap::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .table-wrap::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        .table-wrap::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
     </style>
 </head>
 <body>
@@ -814,474 +485,443 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- ★★★ 新增导航按钮（位于内容区上方，在“直播运营态势内容”之前） ★★★ -->
-        <!-- ============================================================ -->
-        <div class="nav-tabs" id="mainNavTabs">
-            <button class="nav-btn active" data-target="section-live-operation">
-                <i class="fas fa-calendar-check"></i> 直播运营
-            </button>
-            <button class="nav-btn" data-target="section-interaction">
-                <i class="fas fa-comment-dots"></i> 直播互动
-            </button>
-            <button class="nav-btn" data-target="section-content-broadcast">
-                <i class="fas fa-bullhorn"></i> 内容讲播
-            </button>
-            <button class="nav-btn" data-target="section-promotion">
-                <i class="fas fa-tags"></i> 促销策略
-            </button>
-            <button class="nav-btn" data-target="section-lead-acquisition">
-                <i class="fas fa-user-plus"></i> 留资转化
-            </button>
-        </div>
-
-        <!-- ============================================================ -->
         <!-- 区域一：直播运营态势内容（直播排班 & 节奏策略）              -->
         <!-- ============================================================ -->
-        <div id="section-live-operation" class="section-area active">
-
-            <div class="card section-header">
-                <div class="card-title">
-                    <i class="fas fa-calendar-check"></i> 直播运营态势内容（直播排班 &amp; 节奏策略）
-                    <span class="tag">核心洞察</span>
-                </div>
-                <div class="sub-desc">
-                    以下展示各账号直播排班、时长趋势及时段分布，帮助分析对手运营节奏。
-                </div>
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-calendar-check"></i> 直播运营态势内容（直播排班 &amp; 节奏策略）
+                <span class="tag">核心洞察</span>
             </div>
+            <div class="sub-desc">
+                以下展示各账号直播排班、时长趋势及时段分布，帮助分析对手运营节奏。
+            </div>
+        </div>
 
-            <!-- ===== 账号横向对比（排班版） ===== -->
+        <!-- ===== 账号横向对比（排班版） ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-people-arrows"></i> 账号横向对比
+                <span class="tag" id="compareTableTag">本周</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>账号</th><th>品牌</th><th>经销商</th><th>监测场次</th><th>总直播时长</th><th>场均时长</th><th>主要开播时段</th></tr></thead>
+                    <tbody id="compareTableBody"><tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== 账号开播趋势 + 直播排班热力图 ===== -->
+        <div class="row-2col">
             <div class="card">
-                <div class="card-title">
-                    <i class="fas fa-people-arrows"></i> 账号横向对比
-                    <span class="tag" id="compareTableTag">本周</span>
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>账号</th><th>品牌</th><th>经销商</th><th>监测场次</th><th>总直播时长</th><th>场均时长</th><th>主要开播时段</th></tr></thead>
-                        <tbody id="compareTableBody"><tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr></tbody>
-                    </table>
-                </div>
+                <div class="card-title"><i class="fas fa-chart-line"></i> 账号开播趋势 <span class="tag">总直播时长 &amp; 开播账号数</span></div>
+                <div class="chart-container-echarts" id="trendECharts"></div>
             </div>
-
-            <!-- ===== 账号开播趋势 + 直播排班热力图 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-line"></i> 账号开播趋势 <span class="tag">总直播时长 &amp; 开播账号数</span></div>
-                    <div class="chart-container-echarts" id="trendECharts"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-fire"></i> 直播排班热力图 <span class="tag">品牌 × 时段</span></div>
-                    <div class="chart-container-echarts" id="heatmapECharts"></div>
-                </div>
-            </div>
-
-            <!-- ===== 品牌场观趋势 ===== -->
             <div class="card">
-                <div class="card-title"><i class="fas fa-chart-area"></i> 品牌场观趋势 <span class="tag" id="trendTag">近7日</span></div>
-                <div class="chart-container tall" style="height:240px;"><canvas id="trendChart"></canvas></div>
+                <div class="card-title"><i class="fas fa-fire"></i> 直播排班热力图 <span class="tag">品牌 × 时段</span></div>
+                <div class="chart-container-echarts" id="heatmapECharts"></div>
             </div>
+        </div>
 
-            <!-- ===== 流量来源 + 直播形式 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-wifi"></i> 流量来源结构 <span class="tag">占比</span></div>
-                    <div class="chart-container-echarts-pie" id="trafficChart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-tv"></i> 直播形式结构 <span class="tag">场次占比</span></div>
-                    <div class="chart-container-echarts-pie" id="formatChart"></div>
-                </div>
+        <!-- ===== 品牌场观趋势 ===== -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-chart-area"></i> 品牌场观趋势 <span class="tag" id="trendTag">近7日</span></div>
+            <div class="chart-container tall" style="height:240px;"><canvas id="trendChart"></canvas></div>
+        </div>
+
+        <!-- ===== 流量来源 + 直播形式 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-wifi"></i> 流量来源结构 <span class="tag">占比</span></div>
+                <div class="chart-container-echarts-pie" id="trafficChart"></div>
             </div>
-
-        </div><!-- /section-live-operation -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-tv"></i> 直播形式结构 <span class="tag">场次占比</span></div>
+                <div class="chart-container-echarts-pie" id="formatChart"></div>
+            </div>
+        </div>
 
         <!-- ============================================================ -->
         <!-- 区域二：直播互动内容（直播热度 & 用户反馈）                   -->
         <!-- ============================================================ -->
-        <div id="section-interaction" class="section-area">
-
-            <div class="card section-header">
-                <div class="card-title">
-                    <i class="fas fa-comment-dots"></i> 直播互动内容（直播热度 &amp; 用户反馈）
-                    <span class="tag">互动分析</span>
-                </div>
-                <div class="sub-desc">以下展示各账号直播互动表现及用户反馈热度，帮助分析内容吸引力。</div>
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-comment-dots"></i> 直播互动内容（直播热度 &amp; 用户反馈）
+                <span class="tag">互动分析</span>
             </div>
+            <div class="sub-desc">以下展示各账号直播互动表现及用户反馈热度，帮助分析内容吸引力。</div>
+        </div>
 
-            <!-- ===== 账号横向对比（互动版 + 互动指数） ===== -->
+        <!-- ===== 账号横向对比（互动版 + 互动指数） ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-people-arrows"></i> 账号横向对比
+                <span class="tag" id="interactionTableTag">互动表现</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>账号</th><th>品牌</th><th>经销商</th><th>直播场次</th><th>互动指数</th><th>总互动量</th><th>场均互动量</th><th>主要互动构成</th></tr></thead>
+                    <tbody id="interactionTableBody"><tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== 品牌互动趋势 + 品牌互动结构（双栏） ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-line"></i> 品牌互动趋势 <span class="tag">近7日</span></div>
+                <div class="chart-container-echarts" id="interactTrendECharts"></div>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-bar"></i> 品牌互动结构 <span class="tag">评论 · 点赞 · 分享</span></div>
+                <div class="chart-container-echarts" id="structureECharts"></div>
+            </div>
+        </div>
+
+        <!-- ===== 品牌互动指数条形图 + 品牌 × 时段互动指数热力图 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-bar"></i> 品牌互动指数 <span class="tag">汇总得分</span></div>
+                <div class="chart-container-echarts" id="brandScoreChart"></div>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-th"></i> 品牌 × 时段互动指数 <span class="tag">热力图</span></div>
+                <div class="chart-container-echarts" id="brandTimeHeatmap"></div>
+            </div>
+        </div>
+
+        <!-- ===== 高频评论关键词词云 + 评论情绪堆叠（双栏） ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-cloud"></i> 高频评论关键词词云 <span class="tag">热度</span></div>
+                <div class="chart-container-echarts-wordcloud" id="wordCloudChart"></div>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-face-smile"></i> 评论情绪堆叠 <span class="tag">正向 · 中性 · 负面</span></div>
+                <div class="chart-container-echarts" id="sentimentChart"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TOP10 直播明细                                                -->
+        <!-- ============================================================ -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-list"></i> TOP10 直播明细 <span class="tag">按直播时长排序</span></div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>账号</th><th>所属门店</th><th>开播时间</th><th>下播时间</th><th>直播时长</th><th>累计观看人数</th><th>累计观看人次</th><th>峰值在线人数</th><th>点赞数</th><th>评论数</th><th>分享数</th><th>流量来源</th><th>直播形式</th><th>是否现场观众</th></tr></thead>
+                    <tbody id="top10TableBody"><tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 新增大标题：直播内容讲播（车型排布 & 营销话术策略）           -->
+        <!-- ============================================================ -->
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-bullhorn"></i> 直播内容讲播（车型排布 &amp; 营销话术策略）
+                <span class="tag">内容分析</span>
+            </div>
+            <div class="sub-desc">以下展示各品牌主推车型时序、价格区间分布及内容主题结构，帮助分析讲播策略。</div>
+        </div>
+
+        <!-- ===== 内容与车型策略 ===== -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-pen-fancy"></i> 内容与车型策略 <span class="tag">策略变化</span></div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>账号</th><th>品牌</th><th>经销商</th><th>主推车型</th><th>提及频次</th><th>配置</th><th>颜色</th><th>价格带</th><th>库存状态</th><th>策略变化</th></tr></thead>
+                    <tbody id="contentStrategyBody"><tr><td colspan="10" style="text-align:center;color:#9ca3af;padding:20px 0;">加载数据中...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== 各品牌主推车型时序追踪 ===== -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-chart-line"></i> 各品牌主推车型时序追踪 <span class="tag">近7日</span></div>
+            <div class="chart-container-echarts" id="mainModelTrendChart"></div>
+        </div>
+
+        <!-- ===== 车型价格区间场次分布对比 + 直播间内容主题结构分布 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-bar"></i> 车型价格区间场次分布对比 <span class="tag">按品牌堆叠</span></div>
+                <div class="chart-container-echarts" id="priceRangeChart"></div>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-pie"></i> 直播间内容主题结构分布 <span class="tag">场次占比</span></div>
+                <div class="chart-container-echarts-pie" id="topicPieChart"></div>
+            </div>
+        </div>
+
+        <!-- ===== 库存状态结构 + 品牌×库存状态提及频次 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-boxes"></i> 库存状态结构 <span class="tag">场次占比</span></div>
+                <div class="chart-container-echarts-pie" id="inventoryPieChart"></div>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-bar"></i> 品牌 × 库存状态提及频次 <span class="tag">堆叠</span></div>
+                <div class="chart-container-echarts" id="brandInventoryChart"></div>
+            </div>
+        </div>
+
+        <!-- ===== 主推车型 TOP10 排行 ===== -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-trophy"></i> 主推车型 TOP10 排行 <span class="tag">提及次数 · 右侧标注品牌/配置/颜色</span></div>
+            <div class="chart-container-echarts" id="topModelsChart"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 直播促销情况（优惠政策 & 价格策略）                           -->
+        <!-- ============================================================ -->
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-tags"></i> 直播促销情况（优惠政策 &amp; 价格策略）
+                <span class="tag">促销分析</span>
+            </div>
+            <div class="sub-desc">以下展示各品牌直播中的优惠力度趋势、优惠形式分布及品牌对比，帮助分析促销策略。</div>
+        </div>
+
+        <!-- ===== 优惠力度时序折线图 ===== -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-chart-line"></i> 主推车型优惠力度时序追踪 <span class="tag">现金优惠幅度 (万元)</span></div>
+            <div class="chart-container-echarts" id="discountTrendChart"></div>
+        </div>
+
+        <!-- ===== 优惠形式环形图 + 品牌×优惠形式堆叠柱状图 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-pie"></i> 优惠形式结构分布 <span class="tag">场次占比</span></div>
+                <div class="chart-container-echarts-pie" id="promoTypePieChart"></div>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-bar"></i> 品牌 × 优惠形式结构分布 <span class="tag">堆叠</span></div>
+                <div class="chart-container-echarts" id="brandPromoChart"></div>
+            </div>
+        </div>
+
+        <!-- ===== 促销附加条件 & 紧迫感信号图表 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-list-ul"></i> 促销附加条件场次分布对比 <span class="tag">堆叠</span></div>
+                <div class="chart-container-echarts" id="promoConditionChart"></div>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-clock"></i> 紧迫感信号使用频次对比 <span class="tag">分组 · 蓝色系</span></div>
+                <div class="chart-container-echarts" id="urgencySignalChart"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 综合优惠后价格信息 + 报价口径分布对比 放在同一行              -->
+        <!-- ============================================================ -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-tag"></i> 报价口径分布对比 <span class="tag">堆叠</span></div>
+                <div class="chart-container-echarts" id="quoteApproachChart"></div>
+            </div>
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-people-arrows"></i> 账号横向对比
-                    <span class="tag" id="interactionTableTag">互动表现</span>
+                    <i class="fas fa-table"></i> 综合优惠后价格信息
+                    <span class="tag">行:日期 · 列:TOP10车型 · 格:优惠后价格(万元)</span>
                 </div>
                 <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>账号</th><th>品牌</th><th>经销商</th><th>直播场次</th><th>互动指数</th><th>总互动量</th><th>场均互动量</th><th>主要互动构成</th></tr></thead>
-                        <tbody id="interactionTableBody"><tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr></tbody>
+                    <table class="matrix-table" id="priceMatrixTable">
+                        <thead id="priceMatrixHead"><tr><th>日期</th></tr></thead>
+                        <tbody id="priceMatrixBody"><tr><td style="text-align:center;color:#9ca3af;padding:20px 0;">加载数据中...</td></tr></tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- ===== 品牌互动趋势 + 品牌互动结构（双栏） ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-line"></i> 品牌互动趋势 <span class="tag">近7日</span></div>
-                    <div class="chart-container-echarts" id="interactTrendECharts"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-bar"></i> 品牌互动结构 <span class="tag">评论 · 点赞 · 分享</span></div>
-                    <div class="chart-container-echarts" id="structureECharts"></div>
-                </div>
-            </div>
-
-            <!-- ===== 品牌互动指数条形图 + 品牌 × 时段互动指数热力图 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-bar"></i> 品牌互动指数 <span class="tag">汇总得分</span></div>
-                    <div class="chart-container-echarts" id="brandScoreChart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-th"></i> 品牌 × 时段互动指数 <span class="tag">热力图</span></div>
-                    <div class="chart-container-echarts" id="brandTimeHeatmap"></div>
-                </div>
-            </div>
-
-            <!-- ===== 高频评论关键词词云 + 评论情绪堆叠（双栏） ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-cloud"></i> 高频评论关键词词云 <span class="tag">热度</span></div>
-                    <div class="chart-container-echarts-wordcloud" id="wordCloudChart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-face-smile"></i> 评论情绪堆叠 <span class="tag">正向 · 中性 · 负面</span></div>
-                    <div class="chart-container-echarts" id="sentimentChart"></div>
-                </div>
-            </div>
-
-            <!-- ===== TOP10 直播明细 ===== -->
-            <div class="card">
-                <div class="card-title"><i class="fas fa-list"></i> TOP10 直播明细 <span class="tag">按直播时长排序</span></div>
-                <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>账号</th><th>所属门店</th><th>开播时间</th><th>下播时间</th><th>直播时长</th><th>累计观看人数</th><th>累计观看人次</th><th>峰值在线人数</th><th>点赞数</th><th>评论数</th><th>分享数</th><th>流量来源</th><th>直播形式</th><th>是否现场观众</th></tr></thead>
-                        <tbody id="top10TableBody"><tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div><!-- /section-interaction -->
+        </div>
 
         <!-- ============================================================ -->
-        <!-- 区域三：直播内容讲播（车型排布 & 营销话术策略）               -->
+        <!-- 直播促销明细（按优惠力度排序，TOP10）                         -->
         <!-- ============================================================ -->
-        <div id="section-content-broadcast" class="section-area">
-
-            <div class="card section-header">
-                <div class="card-title">
-                    <i class="fas fa-bullhorn"></i> 直播内容讲播（车型排布 &amp; 营销话术策略）
-                    <span class="tag">内容分析</span>
-                </div>
-                <div class="sub-desc">以下展示各品牌主推车型时序、价格区间分布及内容主题结构，帮助分析讲播策略。</div>
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-receipt"></i> 直播促销明细（按优惠力度排序）
+                <span class="tag">TOP 10 · 优惠幅度降序</span>
             </div>
-
-            <!-- ===== 内容与车型策略 ===== -->
-            <div class="card">
-                <div class="card-title"><i class="fas fa-pen-fancy"></i> 内容与车型策略 <span class="tag">策略变化</span></div>
-                <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>账号</th><th>品牌</th><th>经销商</th><th>主推车型</th><th>提及频次</th><th>配置</th><th>颜色</th><th>价格带</th><th>库存状态</th><th>策略变化</th></tr></thead>
-                        <tbody id="contentStrategyBody"><tr><td colspan="10" style="text-align:center;color:#9ca3af;padding:20px 0;">加载数据中...</td></tr></tbody>
-                    </table>
-                </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>直播账号</th>
+                            <th>品牌</th>
+                            <th>经销商</th>
+                            <th>车型</th>
+                            <th>优惠形式</th>
+                            <th>优惠有效期</th>
+                            <th>是否涉及厂家补贴</th>
+                            <th>报价口径</th>
+                            <th>价格(万元)</th>
+                            <th>附加条件</th>
+                            <th>紧迫感信号</th>
+                        </tr>
+                    </thead>
+                    <tbody id="promoDetailTableBody">
+                        <tr><td colspan="11" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
+                    </tbody>
+                </table>
             </div>
-
-            <!-- ===== 各品牌主推车型时序追踪 ===== -->
-            <div class="card">
-                <div class="card-title"><i class="fas fa-chart-line"></i> 各品牌主推车型时序追踪 <span class="tag">近7日</span></div>
-                <div class="chart-container-echarts" id="mainModelTrendChart"></div>
-            </div>
-
-            <!-- ===== 车型价格区间场次分布对比 + 直播间内容主题结构分布 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-bar"></i> 车型价格区间场次分布对比 <span class="tag">按品牌堆叠</span></div>
-                    <div class="chart-container-echarts" id="priceRangeChart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-pie"></i> 直播间内容主题结构分布 <span class="tag">场次占比</span></div>
-                    <div class="chart-container-echarts-pie" id="topicPieChart"></div>
-                </div>
-            </div>
-
-            <!-- ===== 库存状态结构 + 品牌×库存状态提及频次 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-boxes"></i> 库存状态结构 <span class="tag">场次占比</span></div>
-                    <div class="chart-container-echarts-pie" id="inventoryPieChart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-bar"></i> 品牌 × 库存状态提及频次 <span class="tag">堆叠</span></div>
-                    <div class="chart-container-echarts" id="brandInventoryChart"></div>
-                </div>
-            </div>
-
-            <!-- ===== 主推车型 TOP10 排行 ===== -->
-            <div class="card">
-                <div class="card-title"><i class="fas fa-trophy"></i> 主推车型 TOP10 排行 <span class="tag">提及次数 · 右侧标注品牌/配置/颜色</span></div>
-                <div class="chart-container-echarts" id="topModelsChart"></div>
-            </div>
-
-        </div><!-- /section-content-broadcast -->
+        </div>
 
         <!-- ============================================================ -->
-        <!-- 区域四：直播促销情况（优惠政策 & 价格策略）                   -->
+        <!-- 直播获客留资策略洞察（线索引导 & 留资转化）                   -->
         <!-- ============================================================ -->
-        <div id="section-promotion" class="section-area">
-
-            <div class="card section-header">
-                <div class="card-title">
-                    <i class="fas fa-tags"></i> 直播促销情况（优惠政策 &amp; 价格策略）
-                    <span class="tag">促销分析</span>
-                </div>
-                <div class="sub-desc">以下展示各品牌直播中的优惠力度趋势、优惠形式分布及品牌对比，帮助分析促销策略。</div>
+        <div class="card section-header">
+            <div class="card-title">
+                <i class="fas fa-user-plus"></i> 直播获客留资策略洞察（线索引导 &amp; 留资转化）
+                <span class="tag">留资分析</span>
             </div>
-
-            <!-- ===== 优惠力度时序折线图 ===== -->
-            <div class="card">
-                <div class="card-title"><i class="fas fa-chart-line"></i> 主推车型优惠力度时序追踪 <span class="tag">现金优惠幅度 (万元)</span></div>
-                <div class="chart-container-echarts" id="discountTrendChart"></div>
+            <div class="sub-desc">
+                以下展示各账号直播留资引导表现及转化效率，帮助分析获客策略。
             </div>
+        </div>
 
-            <!-- ===== 优惠形式环形图 + 品牌×优惠形式堆叠柱状图 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-pie"></i> 优惠形式结构分布 <span class="tag">场次占比</span></div>
-                    <div class="chart-container-echarts-pie" id="promoTypePieChart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-bar"></i> 品牌 × 优惠形式结构分布 <span class="tag">堆叠</span></div>
-                    <div class="chart-container-echarts" id="brandPromoChart"></div>
-                </div>
+        <!-- ===== 账号留资分析 ===== -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-people-arrows"></i> 账号留资分析
+                <span class="tag" id="leadTableTag">本周</span>
             </div>
-
-            <!-- ===== 促销附加条件 & 紧迫感信号图表 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-list-ul"></i> 促销附加条件场次分布对比 <span class="tag">堆叠</span></div>
-                    <div class="chart-container-echarts" id="promoConditionChart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-clock"></i> 紧迫感信号使用频次对比 <span class="tag">分组 · 蓝色系</span></div>
-                    <div class="chart-container-echarts" id="urgencySignalChart"></div>
-                </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>账号</th>
+                            <th>品牌</th>
+                            <th>经销商</th>
+                            <th>直播场次</th>
+                            <th>总留资引导频次</th>
+                            <th>场均留资</th>
+                            <th>留资转化率</th>
+                            <th>主要留资方式</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadAnalysisBody">
+                        <tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-            <!-- ===== 综合优惠后价格信息 + 报价口径分布对比 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-tag"></i> 报价口径分布对比 <span class="tag">堆叠</span></div>
-                    <div class="chart-container-echarts" id="quoteApproachChart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title">
-                        <i class="fas fa-table"></i> 综合优惠后价格信息
-                        <span class="tag">行:日期 · 列:TOP10车型 · 格:优惠后价格(万元)</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table class="matrix-table" id="priceMatrixTable">
-                            <thead id="priceMatrixHead"><tr><th>日期</th></tr></thead>
-                            <tbody id="priceMatrixBody"><tr><td style="text-align:center;color:#9ca3af;padding:20px 0;">加载数据中...</td></tr></tbody>
-                        </table>
-                    </div>
-                </div>
+        <!-- ============================================================ -->
+        <!-- 留资深度分析图表                                              -->
+        <!-- ============================================================ -->
+
+        <!-- 1. 折线趋势图｜各品牌留资引导频次 -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-line"></i> 各品牌留资引导频次
+                <span class="tag">近7日</span>
             </div>
+            <div class="chart-container-echarts" id="leadTrendChart"></div>
+        </div>
 
-            <!-- ===== 直播促销明细（按优惠力度排序，TOP10） ===== -->
+        <!-- 2. 堆叠柱状图｜品牌留资引导手段分布 + 3. 堆叠柱状图｜品牌钩子话术类型分布 -->
+        <div class="row-2col">
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-receipt"></i> 直播促销明细（按优惠力度排序）
-                    <span class="tag">TOP 10 · 优惠幅度降序</span>
+                    <i class="fas fa-chart-bar"></i> 品牌留资引导手段分布
+                    <span class="tag">堆叠</span>
                 </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>直播账号</th>
-                                <th>品牌</th>
-                                <th>经销商</th>
-                                <th>车型</th>
-                                <th>优惠形式</th>
-                                <th>优惠有效期</th>
-                                <th>是否涉及厂家补贴</th>
-                                <th>报价口径</th>
-                                <th>价格(万元)</th>
-                                <th>附加条件</th>
-                                <th>紧迫感信号</th>
-                            </tr>
-                        </thead>
-                        <tbody id="promoDetailTableBody">
-                            <tr><td colspan="11" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div class="chart-container-echarts" id="leadMethodChart"></div>
             </div>
-
-        </div><!-- /section-promotion -->
-
-        <!-- ============================================================ -->
-        <!-- 区域五：直播获客留资策略洞察（线索引导 & 留资转化）           -->
-        <!-- ============================================================ -->
-        <div id="section-lead-acquisition" class="section-area">
-
-            <div class="card section-header">
-                <div class="card-title">
-                    <i class="fas fa-user-plus"></i> 直播获客留资策略洞察（线索引导 &amp; 留资转化）
-                    <span class="tag">留资分析</span>
-                </div>
-                <div class="sub-desc">
-                    以下展示各账号直播留资引导表现及转化效率，帮助分析获客策略。
-                </div>
-            </div>
-
-            <!-- ===== 账号留资分析 ===== -->
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-people-arrows"></i> 账号留资分析
-                    <span class="tag" id="leadTableTag">本周</span>
+                    <i class="fas fa-chart-bar"></i> 品牌钩子话术类型分布
+                    <span class="tag">堆叠</span>
                 </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>账号</th>
-                                <th>品牌</th>
-                                <th>经销商</th>
-                                <th>直播场次</th>
-                                <th>总留资引导频次</th>
-                                <th>场均留资</th>
-                                <th>留资转化率</th>
-                                <th>主要留资方式</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leadAnalysisBody">
-                            <tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">加载数据中...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                <div class="chart-container-echarts" id="hookStackChart"></div>
             </div>
+        </div>
 
-            <!-- ===== 各品牌留资引导频次 ===== -->
+        <!-- 4. 堆叠面积图｜趋势：留资引导手段变化（跟随筛选器时间维度） -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-area"></i> 趋势：留资引导手段变化
+                <span class="tag" id="leadTrendTag">堆叠面积</span>
+            </div>
+            <div class="chart-container-echarts" id="leadMethodTrendChart"></div>
+        </div>
+
+        <!-- 5. 柱状图｜留资组件使用情况 + 6. 柱状图｜品牌粉丝群引导 -->
+        <div class="row-2col">
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-chart-line"></i> 各品牌留资引导频次
-                    <span class="tag">近7日</span>
+                    <i class="fas fa-chart-bar"></i> 留资组件使用情况
+                    <span class="tag">柱状图</span>
                 </div>
-                <div class="chart-container-echarts" id="leadTrendChart"></div>
+                <div class="chart-container-echarts-bar" id="leadComponentBar"></div>
             </div>
-
-            <!-- ===== 品牌留资引导手段分布 + 品牌钩子话术类型分布 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title">
-                        <i class="fas fa-chart-bar"></i> 品牌留资引导手段分布
-                        <span class="tag">堆叠</span>
-                    </div>
-                    <div class="chart-container-echarts" id="leadMethodChart"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title">
-                        <i class="fas fa-chart-bar"></i> 品牌钩子话术类型分布
-                        <span class="tag">堆叠</span>
-                    </div>
-                    <div class="chart-container-echarts" id="hookStackChart"></div>
-                </div>
-            </div>
-
-            <!-- ===== 趋势：留资引导手段变化 ===== -->
             <div class="card">
                 <div class="card-title">
-                    <i class="fas fa-chart-area"></i> 趋势：留资引导手段变化
-                    <span class="tag" id="leadTrendTag">堆叠面积</span>
+                    <i class="fas fa-users"></i> 品牌粉丝群引导
+                    <span class="tag">蓝色系</span>
                 </div>
-                <div class="chart-container-echarts" id="leadMethodTrendChart"></div>
+                <div class="chart-container-echarts-bar" id="fansGroupChart"></div>
             </div>
-
-            <!-- ===== 留资组件使用情况 + 品牌粉丝群引导 ===== -->
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title">
-                        <i class="fas fa-chart-bar"></i> 留资组件使用情况
-                        <span class="tag">柱状图</span>
-                    </div>
-                    <div class="chart-container-echarts-bar" id="leadComponentBar"></div>
-                </div>
-                <div class="card">
-                    <div class="card-title">
-                        <i class="fas fa-users"></i> 品牌粉丝群引导
-                        <span class="tag">蓝色系</span>
-                    </div>
-                    <div class="chart-container-echarts-bar" id="fansGroupChart"></div>
-                </div>
-            </div>
-
-        </div><!-- /section-lead-acquisition -->
+        </div>
 
         <!-- ============================================================ -->
-        <!-- 底部：促销 + 竞品 + 创新 + 策略建议                          -->
+        <!-- 促销 + 竞品                                                  -->
         <!-- ============================================================ -->
-        <div id="section-footer" style="display:block;">
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-gift"></i> 促销策略周报</div>
-                    <div id="promoContent">
-                        <div style="font-size:14px;color:#1f2937;margin-bottom:12px;">
-                            <span class="badge badge-green">⬇ 现金直降 2万</span> <span id="promoHighlightAccount">—</span> · <span id="promoHighlightDate">本周</span>
-                        </div>
-                        <div style="font-size:14px;color:#4b5563;margin-bottom:8px;"><strong>优惠形式分布</strong></div>
-                        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;margin-bottom:12px;" id="promoTypeDistribution">
-                            <span>💰 现金直降 <strong id="promoType1">0</strong> 场</span>
-                            <span>🏦 金融贴息 <strong id="promoType2">0</strong> 场</span>
-                            <span>🔄 置换补贴 <strong id="promoType3">0</strong> 场</span>
-                        </div>
-                        <div style="font-size:14px;color:#4b5563;">
-                            <strong>紧迫感话术</strong> <span id="promoUrgencyAccount">—</span> 最高（平均每场 <span id="promoUrgencyCount">0</span> 次）
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-crosshairs"></i> 竞品提及分析</div>
-                    <div id="competitorContent">
-                        <div style="font-size:28px;font-weight:700;color:#4f46e5;" id="compTotalCount">0 <span style="font-size:16px;font-weight:400;color:#6b7280;">次</span></div>
-                        <div style="font-size:13px;color:#6b7280;margin-bottom:10px;">环比上周 <span class="trend-neutral" id="compTrend">持平</span></div>
-                        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
-                            <span>🟢 正面 <strong id="compPositive">0</strong></span>
-                            <span>🟡 中性 <strong id="compNeutral">0</strong></span>
-                            <span>🔴 负面 <strong id="compNegative">0</strong></span>
-                        </div>
-                        <div style="margin-top:8px;font-size:13px;color:#4b5563;" id="compDimensions">主要对比维度：暂无数据</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row-2col">
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-rocket"></i> 创新获客手法</div>
-                    <ul class="suggest-list" id="innovationList"><li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">加载数据中...</li></ul>
-                </div>
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-chart-simple"></i> 额外洞察</div>
-                    <div style="color:#9ca3af;padding:20px 0;text-align:center;">——</div>
-                </div>
-            </div>
-
+        <div class="row-2col">
             <div class="card">
-                <div class="card-title"><i class="fas fa-list-check"></i> 策略建议</div>
-                <ul class="suggest-list" id="suggestList"><li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">加载数据中...</li></ul>
+                <div class="card-title"><i class="fas fa-gift"></i> 促销策略周报</div>
+                <div id="promoContent">
+                    <div style="font-size:14px;color:#1f2937;margin-bottom:12px;">
+                        <span class="badge badge-green">⬇ 现金直降 2万</span> <span id="promoHighlightAccount">—</span> · <span id="promoHighlightDate">本周</span>
+                    </div>
+                    <div style="font-size:14px;color:#4b5563;margin-bottom:8px;"><strong>优惠形式分布</strong></div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;margin-bottom:12px;" id="promoTypeDistribution">
+                        <span>💰 现金直降 <strong id="promoType1">0</strong> 场</span>
+                        <span>🏦 金融贴息 <strong id="promoType2">0</strong> 场</span>
+                        <span>🔄 置换补贴 <strong id="promoType3">0</strong> 场</span>
+                    </div>
+                    <div style="font-size:14px;color:#4b5563;">
+                        <strong>紧迫感话术</strong> <span id="promoUrgencyAccount">—</span> 最高（平均每场 <span id="promoUrgencyCount">0</span> 次）
+                    </div>
+                </div>
             </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-crosshairs"></i> 竞品提及分析</div>
+                <div id="competitorContent">
+                    <div style="font-size:28px;font-weight:700;color:#4f46e5;" id="compTotalCount">0 <span style="font-size:16px;font-weight:400;color:#6b7280;">次</span></div>
+                    <div style="font-size:13px;color:#6b7280;margin-bottom:10px;">环比上周 <span class="trend-neutral" id="compTrend">持平</span></div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+                        <span>🟢 正面 <strong id="compPositive">0</strong></span>
+                        <span>🟡 中性 <strong id="compNeutral">0</strong></span>
+                        <span>🔴 负面 <strong id="compNegative">0</strong></span>
+                    </div>
+                    <div style="margin-top:8px;font-size:13px;color:#4b5563;" id="compDimensions">主要对比维度：暂无数据</div>
+                </div>
+            </div>
+        </div>
 
-            <div style="margin-top:24px;text-align:center;font-size:13px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:20px;">
-                <i class="far fa-file-alt"></i> 数据基于实时采集 · 仅供内部参考
+        <!-- ===== 创新获客 ===== -->
+        <div class="row-2col">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-rocket"></i> 创新获客手法</div>
+                <ul class="suggest-list" id="innovationList"><li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">加载数据中...</li></ul>
             </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-simple"></i> 额外洞察</div>
+                <div style="color:#9ca3af;padding:20px 0;text-align:center;">——</div>
+            </div>
+        </div>
+
+        <!-- ===== 策略建议 ===== -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-list-check"></i> 策略建议</div>
+            <ul class="suggest-list" id="suggestList"><li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">加载数据中...</li></ul>
+        </div>
+
+        <div style="margin-top:24px;text-align:center;font-size:13px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:20px;">
+            <i class="far fa-file-alt"></i> 数据基于实时采集 · 仅供内部参考
         </div>
 
     </div>
@@ -1983,86 +1623,10 @@
             }
 
             // =============================================================
-            // 8. 导航切换（新版按钮 + 保留原有切换逻辑）
-            // =============================================================
-            function initNavigation() {
-                // 使用新位置的 nav-tabs（id="mainNavTabs"）
-                const navContainer = document.getElementById('mainNavTabs');
-                if (!navContainer) return;
-                const buttons = navContainer.querySelectorAll('.nav-btn');
-                const sections = {
-                    'section-live-operation': document.getElementById('section-live-operation'),
-                    'section-interaction': document.getElementById('section-interaction'),
-                    'section-content-broadcast': document.getElementById('section-content-broadcast'),
-                    'section-promotion': document.getElementById('section-promotion'),
-                    'section-lead-acquisition': document.getElementById('section-lead-acquisition'),
-                };
-
-                // 默认显示第一个
-                let activeSection = 'section-live-operation';
-                for (const [id, el] of Object.entries(sections)) {
-                    if (id === activeSection) {
-                        el.classList.add('active');
-                    } else {
-                        el.classList.remove('active');
-                    }
-                }
-
-                // 确保默认按钮高亮
-                buttons.forEach(btn => {
-                    if (btn.dataset.target === activeSection) {
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                    }
-                });
-
-                buttons.forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const target = this.dataset.target;
-                        if (!target || !sections[target]) return;
-
-                        // 更新按钮状态
-                        buttons.forEach(b => b.classList.remove('active'));
-                        this.classList.add('active');
-
-                        // 更新区域显示
-                        for (const [id, el] of Object.entries(sections)) {
-                            if (id === target) {
-                                el.classList.add('active');
-                            } else {
-                                el.classList.remove('active');
-                            }
-                        }
-
-                        // 延迟执行图表resize
-                        setTimeout(function() {
-                            resizeAllCharts();
-                        }, 150);
-                    });
-                });
-            }
-
-            function resizeAllCharts() {
-                if (window.trendChartInstance) {
-                    try { window.trendChartInstance.resize(); } catch (e) {}
-                }
-                const echartsContainers = document.querySelectorAll('.chart-container-echarts, .chart-container-echarts-pie, .chart-container-echarts-wordcloud, .chart-container-echarts-bar');
-                echartsContainers.forEach(function(container) {
-                    try {
-                        const instance = echarts.getInstanceByDom(container);
-                        if (instance) {
-                            instance.resize();
-                        }
-                    } catch (e) {}
-                });
-            }
-
-            // =============================================================
-            // 9. 所有渲染函数（完整实现，与之前一致）
+            // 8. 所有渲染函数（完整实现）
             // =============================================================
 
-            // 9.1 顶部标签
+            // 8.1 顶部标签
             function updateLabels(filterResult, filters) {
                 const dim = filters.timeDim;
                 const val = filters.dateVal;
@@ -2094,7 +1658,7 @@
                 document.getElementById('leadTrendTag').textContent = '堆叠面积 · ' + dimMap[dim];
             }
 
-            // 9.2 KPI
+            // 8.2 KPI
             function renderKPI(data) {
                 const totalSessions = data.reduce((s, d) => s + (d.sessionCount || 1), 0);
                 const totalDuration = data.reduce((s, d) => s + d.duration, 0);
@@ -2132,7 +1696,7 @@
                 }
             }
 
-            // 9.3 账号横向对比（排班版）
+            // 8.3 账号横向对比（排班版）
             function renderCompareTable(data) {
                 const tbody = document.getElementById('compareTableBody');
                 if (data.length === 0) {
@@ -2171,7 +1735,7 @@
                 }).join('');
             }
 
-            // 9.4 促销策略
+            // 8.4 促销策略
             function renderPromo(data) {
                 if (data.length === 0) {
                     document.getElementById('promoContent').innerHTML =
@@ -2215,7 +1779,7 @@
                 document.getElementById('promoUrgencyCount').textContent = maxUrgency || 0;
             }
 
-            // 9.5 竞品提及
+            // 8.5 竞品提及
             function renderCompetitor(data) {
                 if (data.length === 0) {
                     document.getElementById('competitorContent').innerHTML =
@@ -2257,7 +1821,7 @@
                 }
             }
 
-            // 9.6 内容与车型策略
+            // 8.6 内容与车型策略
             function renderContentStrategy(data) {
                 const tbody = document.getElementById('contentStrategyBody');
                 if (data.length === 0) {
@@ -2311,7 +1875,7 @@
                 }).join('');
             }
 
-            // 9.7 创新获客
+            // 8.7 创新获客
             function renderInnovation(data) {
                 const list = document.getElementById('innovationList');
                 if (data.length === 0) {
@@ -2361,7 +1925,7 @@
                 }).join('');
             }
 
-            // 9.8 Chart.js 品牌场观趋势
+            // 8.8 Chart.js 品牌场观趋势
             let trendChartInstance = null;
 
             function renderTrendChartJS(data) {
@@ -2436,7 +2000,7 @@
                 });
             }
 
-            // 9.9 账号开播趋势
+            // 8.9 账号开播趋势
             function renderTrendECharts(data) {
                 const dom = document.getElementById('trendECharts');
                 if (!dom) return;
@@ -2500,7 +2064,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.10 直播排班热力图（品牌 × 时段）
+            // 8.10 直播排班热力图（品牌 × 时段）
             function renderHeatmap(data) {
                 const dom = document.getElementById('heatmapECharts');
                 if (!dom) return;
@@ -2585,7 +2149,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.11 流量来源结构图
+            // 8.11 流量来源结构图
             function renderTrafficChart(data) {
                 const dom = document.getElementById('trafficChart');
                 if (!dom) return;
@@ -2636,7 +2200,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.12 直播形式结构图
+            // 8.12 直播形式结构图
             function renderFormatChart(data) {
                 const dom = document.getElementById('formatChart');
                 if (!dom) return;
@@ -2687,7 +2251,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.13 TOP10 直播明细
+            // 8.13 TOP10 直播明细
             function renderTop10Table(data) {
                 const tbody = document.getElementById('top10TableBody');
                 if (data.length === 0) {
@@ -2728,7 +2292,7 @@
                 }).join('');
             }
 
-            // 9.14 账号横向对比（互动版）
+            // 8.14 账号横向对比（互动版）
             function renderInteractionTable(data) {
                 const tbody = document.getElementById('interactionTableBody');
                 if (data.length === 0) {
@@ -2802,7 +2366,7 @@
                 }).join('');
             }
 
-            // 9.15 品牌互动趋势
+            // 8.15 品牌互动趋势
             function renderInteractTrend(data) {
                 const dom = document.getElementById('interactTrendECharts');
                 if (!dom) return;
@@ -2863,7 +2427,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.16 品牌互动结构
+            // 8.16 品牌互动结构
             function renderStructure(data) {
                 const dom = document.getElementById('structureECharts');
                 if (!dom) return;
@@ -2948,7 +2512,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.17 品牌互动指数条形图
+            // 8.17 品牌互动指数条形图
             function renderBrandScore(data) {
                 const dom = document.getElementById('brandScoreChart');
                 if (!dom) return;
@@ -3038,7 +2602,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.18 品牌 × 时段互动指数热力图
+            // 8.18 品牌 × 时段互动指数热力图
             function renderBrandTimeHeatmap(data) {
                 const dom = document.getElementById('brandTimeHeatmap');
                 if (!dom) return;
@@ -3121,7 +2685,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.19 词云
+            // 8.19 词云
             function renderWordCloud(data) {
                 const dom = document.getElementById('wordCloudChart');
                 if (!dom) return;
@@ -3177,7 +2741,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 9.20 评论情绪堆叠
+            // 8.20 评论情绪堆叠
             function renderSentimentStack(data) {
                 const dom = document.getElementById('sentimentChart');
                 if (!dom) return;
@@ -3260,7 +2824,7 @@
             }
 
             // =============================================================
-            // 10. 其他图表（主推车型时序、价格区间、主题、库存等）
+            // 9. 其他图表（主推车型时序、价格区间、主题、库存等）
             // =============================================================
             function renderMainModelTrend(data) {
                 const dom = document.getElementById('mainModelTrendChart');
@@ -3668,7 +3232,7 @@
             }
 
             // =============================================================
-            // 11. 促销相关图表
+            // 10. 促销相关图表
             // =============================================================
             function renderDiscountTrend(data) {
                 const dom = document.getElementById('discountTrendChart');
@@ -4002,7 +3566,7 @@
             }
 
             // =============================================================
-            // 12. 综合优惠后价格信息矩阵表格
+            // 11. 综合优惠后价格信息矩阵表格
             // =============================================================
             function renderPriceMatrix(data) {
                 const thead = document.getElementById('priceMatrixHead');
@@ -4084,7 +3648,7 @@
             }
 
             // =============================================================
-            // 13. 直播促销明细（按优惠力度排序，TOP10）
+            // 12. 直播促销明细（按优惠力度排序，TOP10）
             // =============================================================
             function renderPromoDetailTable(data) {
                 const tbody = document.getElementById('promoDetailTableBody');
@@ -4140,7 +3704,7 @@
             }
 
             // =============================================================
-            // 14. 账号留资分析
+            // 13. 账号留资分析
             // =============================================================
             function renderLeadAnalysis(data) {
                 const tbody = document.getElementById('leadAnalysisBody');
@@ -4182,10 +3746,10 @@
             }
 
             // =============================================================
-            // 15. 留资深度分析（品牌维度）
+            // 14. 留资深度分析（品牌维度）
             // =============================================================
 
-            // 15.1 各品牌留资引导频次
+            // 14.1 各品牌留资引导频次
             function renderLeadTrend(data) {
                 const dom = document.getElementById('leadTrendChart');
                 if (!dom) return;
@@ -4260,7 +3824,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 15.2 品牌留资引导手段分布
+            // 14.2 品牌留资引导手段分布
             function renderLeadMethodDist(data) {
                 const dom = document.getElementById('leadMethodChart');
                 if (!dom) return;
@@ -4321,7 +3885,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 15.3 品牌钩子话术类型分布
+            // 14.3 品牌钩子话术类型分布
             function renderHookStack(data) {
                 const dom = document.getElementById('hookStackChart');
                 if (!dom) return;
@@ -4382,7 +3946,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 15.4 趋势：留资引导手段变化
+            // 14.4 趋势：留资引导手段变化（完整实现）
             function renderLeadMethodTrend(data, timeDim, filters) {
                 const dom = document.getElementById('leadMethodTrendChart');
                 if (!dom) return;
@@ -4508,7 +4072,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 15.5 留资组件使用情况
+            // 14.5 留资组件使用情况
             function renderLeadComponentBar(data) {
                 const dom = document.getElementById('leadComponentBar');
                 if (!dom) return;
@@ -4563,7 +4127,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 15.6 品牌粉丝群引导
+            // 14.6 品牌粉丝群引导
             function renderFansGroup(data) {
                 const dom = document.getElementById('fansGroupChart');
                 if (!dom) return;
@@ -4617,7 +4181,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 16. 策略建议
+            // 15. 策略建议
             function renderSuggestions(data) {
                 const list = document.getElementById('suggestList');
                 if (data.length === 0) {
@@ -4741,8 +4305,6 @@
             window.addEventListener('load', function() {
                 updateDatePicker();
                 updateDashboard();
-                // 初始化导航（新位置按钮）
-                initNavigation();
             });
 
         })();

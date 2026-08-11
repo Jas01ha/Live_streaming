@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2/dist/echarts-wordcloud.min.js">
     </script>
     <style>
-        /* ===== 全局样式 ===== */
+        /* ===== 全局样式（完整） ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -934,7 +934,7 @@
             'use strict';
 
             // =============================================================
-            // 1. 数据定义（同之前，完整）
+            // 1. 数据定义
             // =============================================================
             const BRAND_DATA = {
                 '雷克萨斯': { store: '上海东昌', account: '上海东昌_001', models: ['ES', 'NX', 'RX', 'LM'] },
@@ -1015,7 +1015,7 @@
             const LEAD_COMPONENTS = ['企微二维码', '小程序卡片', '表单组件', '咨询按钮'];
 
             // =============================================================
-            // 2. 工具函数（与之前一致）
+            // 2. 工具函数
             // =============================================================
             function formatDate(d) {
                 const y = d.getFullYear();
@@ -1074,7 +1074,7 @@
             }
 
             // =============================================================
-            // 3. 生成模拟数据（完整）
+            // 3. 生成模拟数据
             // =============================================================
             function generateMockData() {
                 const records = [];
@@ -1382,7 +1382,7 @@
             }
 
             // =============================================================
-            // 7. 聚合工具（保留账号聚合，新增品牌聚合）
+            // 7. 聚合工具
             // =============================================================
             function aggregateByAccount(data) {
                 const map = {};
@@ -1623,8 +1623,7 @@
             }
 
             // =============================================================
-            // 8. 所有渲染函数（完整实现，但为了简洁省略部分与之前相同的）
-            //     只列出修改过的函数，其余与之前一致。
+            // 8. 所有渲染函数（完整实现）
             // =============================================================
 
             // 8.1 顶部标签
@@ -1659,25 +1658,274 @@
                 document.getElementById('leadTrendTag').textContent = '堆叠面积 · ' + dimMap[dim];
             }
 
-            // 8.2 KPI（与之前相同，此处略）
-            function renderKPI(data) { /* 已实现，省略 */ }
+            // 8.2 KPI
+            function renderKPI(data) {
+                const totalSessions = data.reduce((s, d) => s + (d.sessionCount || 1), 0);
+                const totalDuration = data.reduce((s, d) => s + d.duration, 0);
+                const totalViewership = data.reduce((s, d) => s + (d.viewership || 0), 0);
+                const maxPeak = data.reduce((max, d) => Math.max(max, d.peakViewers || 0), 0);
+                const totalInteraction = data.reduce((s, d) => s + (d.interactions || 0), 0);
+                const totalLeads = data.reduce((s, d) => s + d.leads, 0);
+                document.getElementById('kpiSessions').textContent = totalSessions;
+                document.getElementById('kpiDuration').textContent = (totalDuration / 60).toFixed(1) + 'h';
+                document.getElementById('kpiViewership').textContent = totalViewership.toLocaleString();
+                document.getElementById('kpiPeak').textContent = maxPeak.toLocaleString();
+                document.getElementById('kpiInteraction').textContent = totalInteraction.toLocaleString();
+                document.getElementById('kpiLeads').textContent = totalLeads;
+                const changeMap = {
+                    sessions: { val: totalSessions, el: 'kpiSessionsChange' },
+                    duration: { val: totalDuration, el: 'kpiDurationChange' },
+                    viewership: { val: totalViewership, el: 'kpiViewershipChange' },
+                    peak: { val: maxPeak, el: 'kpiPeakChange' },
+                    interaction: { val: totalInteraction, el: 'kpiInteractionChange' },
+                    leads: { val: totalLeads, el: 'kpiLeadsChange' }
+                };
+                for (const [key, obj] of Object.entries(changeMap)) {
+                    const el = document.getElementById(obj.el);
+                    const change = Math.round((Math.random() * 20) - 5);
+                    if (change > 5) {
+                        el.className = 'change up';
+                        el.innerHTML = '<i class="fas fa-arrow-up"></i> +' + change + '%';
+                    } else if (change < -5) {
+                        el.className = 'change down';
+                        el.innerHTML = '<i class="fas fa-arrow-down"></i> ' + change + '%';
+                    } else {
+                        el.className = 'change neutral';
+                        el.textContent = '持平';
+                    }
+                }
+            }
 
-            // 8.3 账号横向对比（排班版）（略）
-            function renderCompareTable(data) { /* 省略 */ }
+            // 8.3 账号横向对比（排班版）
+            function renderCompareTable(data) {
+                const tbody = document.getElementById('compareTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.sessions - a.sessions);
+                tbody.innerHTML = accounts.map(a => {
+                    const sessions = a.sessions;
+                    const totalHours = (a.duration / 60).toFixed(1);
+                    const avgDuration = a.count > 0 ? Math.round(a.duration / a.count) : 0;
+                    const mainSlot = a.mainTimeSlot || '—';
+                    const trendSessions = (Math.random() > 0.5 ? '+' : '-') + (5 + Math.floor(Math.random() *
+                        15)) + '%';
+                    const trendDuration = (Math.random() > 0.5 ? '+' : '-') + (3 + Math.floor(Math.random() *
+                        12)) + '%';
+                    const trendAvg = (Math.random() > 0.5 ? '+' : '-') + (2 + Math.floor(Math.random() * 10)) +
+                        '%';
+                    const arrowSessions = trendSessions.startsWith('+') ? 'up' : 'down';
+                    const arrowDuration = trendDuration.startsWith('+') ? 'up' : 'down';
+                    const arrowAvg = trendAvg.startsWith('+') ? 'up' : 'down';
+                    return '<tr>\
+                                <td><strong>' + a.account + '</strong></td>\
+                                <td><span class="badge badge-blue">' + a.brand + '</span></td>\
+                                <td>' + a.store + '</td>\
+                                <td>' + sessions +
+                        '<span class="trend-indicator ' + arrowSessions + '">' + trendSessions + '</span></td>\
+                                <td>' + totalHours +
+                        'h<span class="trend-indicator ' + arrowDuration + '">' + trendDuration + '</span></td>\
+                                <td>' + avgDuration +
+                        'min<span class="trend-indicator ' + arrowAvg + '">' + trendAvg + '</span></td>\
+                                <td><span class="badge badge-time">' + mainSlot + '</span></td>\
+                            </tr>';
+                }).join('');
+            }
 
-            // 8.4 促销策略（略）
-            function renderPromo(data) { /* 省略 */ }
+            // 8.4 促销策略
+            function renderPromo(data) {
+                if (data.length === 0) {
+                    document.getElementById('promoContent').innerHTML =
+                        '<div class="empty-state"><i class="fas fa-gift"></i><p>暂无促销数据</p></div>';
+                    return;
+                }
+                const promoMap = {};
+                for (const d of data) {
+                    promoMap[d.promoType] = (promoMap[d.promoType] || 0) + 1;
+                }
+                const accMap = {};
+                for (const d of data) {
+                    if (!accMap[d.account]) accMap[d.account] = { count: 0 };
+                    accMap[d.account].count += 1;
+                }
+                let maxAccount = '—',
+                    maxCount = 0;
+                for (const [acc, val] of Object.entries(accMap)) {
+                    if (val.count > maxCount) { maxCount = val.count;
+                        maxAccount = acc; }
+                }
+                const urgencyMap = {};
+                for (const d of data) {
+                    urgencyMap[d.account] = (urgencyMap[d.account] || 0) + Math.floor(Math.random() * 5) + 2;
+                }
+                let maxUrgencyAcc = '—',
+                    maxUrgency = 0;
+                for (const [acc, val] of Object.entries(urgencyMap)) {
+                    if (val > maxUrgency) { maxUrgency = val;
+                        maxUrgencyAcc = acc; }
+                }
+                document.getElementById('promoHighlightAccount').textContent = maxAccount;
+                document.getElementById('promoHighlightDate').textContent = '本周内';
+                const types = ['现金直降', '综合优惠', '金融贴息'];
+                for (let i = 0; i < 3; i++) {
+                    const el = document.getElementById('promoType' + (i + 1));
+                    const type = types[i] || '—';
+                    el.textContent = promoMap[type] || 0;
+                }
+                document.getElementById('promoUrgencyAccount').textContent = maxUrgencyAcc;
+                document.getElementById('promoUrgencyCount').textContent = maxUrgency || 0;
+            }
 
-            // 8.5 竞品提及（略）
-            function renderCompetitor(data) { /* 省略 */ }
+            // 8.5 竞品提及
+            function renderCompetitor(data) {
+                if (data.length === 0) {
+                    document.getElementById('competitorContent').innerHTML =
+                        '<div class="empty-state"><i class="fas fa-crosshairs"></i><p>暂无竞品数据</p></div>';
+                    return;
+                }
+                let allComps = [];
+                for (const d of data) {
+                    if (d.competitorMentions) allComps = allComps.concat(d.competitorMentions);
+                }
+                const total = allComps.length;
+                const positive = allComps.filter(c => c.sentiment === '正面').length;
+                const neutral = allComps.filter(c => c.sentiment === '中性').length;
+                const negative = allComps.filter(c => c.sentiment === '负面').length;
+                const dimMap = {};
+                for (const c of allComps) {
+                    if (c.dimension) dimMap[c.dimension] = (dimMap[c.dimension] || 0) + 1;
+                }
+                const dimSorted = Object.entries(dimMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+                const dimStr = dimSorted.map(([d, v]) => d + ' (' + v + ')').join(' · ');
+                document.getElementById('compTotalCount').innerHTML =
+                    total + ' <span style="font-size:16px;font-weight:400;color:#6b7280;">次</span>';
+                document.getElementById('compPositive').textContent = positive;
+                document.getElementById('compNeutral').textContent = neutral;
+                document.getElementById('compNegative').textContent = negative;
+                document.getElementById('compDimensions').textContent = dimStr ? '主要对比维度：' + dimStr :
+                    '暂无对比维度数据';
+                const change = Math.round((Math.random() * 60) - 10);
+                const trendEl = document.getElementById('compTrend');
+                if (change > 10) {
+                    trendEl.className = 'trend-up';
+                    trendEl.innerHTML = '<i class="fas fa-arrow-up"></i> +' + change + '%';
+                } else if (change < -10) {
+                    trendEl.className = 'trend-down';
+                    trendEl.innerHTML = '<i class="fas fa-arrow-down"></i> ' + change + '%';
+                } else {
+                    trendEl.className = 'trend-neutral';
+                    trendEl.textContent = '持平';
+                }
+            }
 
-            // 8.6 内容与车型策略（略）
-            function renderContentStrategy(data) { /* 省略 */ }
+            // 8.6 内容与车型策略
+            function renderContentStrategy(data) {
+                const tbody = document.getElementById('contentStrategyBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="10" style="text-align:center;color:#9ca3af;padding:20px 0;">暂无数据</td></tr>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.sessions - a.sessions);
+                const changeKeys = ['内容方向转变', '主推车型切换', '促销策略调整', '形式创新', '留资方式转变', '钩子话术变化', '稳定运营', '加码投放'];
 
-            // 8.7 创新获客（略）
-            function renderInnovation(data) { /* 省略 */ }
+                tbody.innerHTML = accounts.map(a => {
+                    const mainModel = getTopItem(a.mainModels) || '—';
+                    const mentionCount = a.mainModels[mainModel] || 0;
+                    const topTrim = getTopItem(a.trimCount) || '—';
+                    const topColor = getTopItem(a.colorCount) || '—';
+                    const topPrice = getTopItem(a.priceRangeCount) || '—';
+                    const topInv = getTopItem(a.inventoryStatusCount) || '—';
 
-            // ===== 8.8 品牌场观趋势（Chart.js） =====
+                    let changeText = '稳定';
+                    if (a.mainModelHistory.length > 1) {
+                        const first = a.mainModelHistory[0];
+                        const last = a.mainModelHistory[a.mainModelHistory.length - 1];
+                        if (first !== last) {
+                            changeText = '主推车型切换 (' + first + ' → ' + last + ')';
+                        } else {
+                            const rand = changeKeys[Math.floor(Math.random() * changeKeys.length)];
+                            changeText = rand;
+                            if (rand === '内容方向转变') changeText += ' (参数讲解→试驾体验)';
+                            else if (rand === '促销策略调整') changeText += ' (力度加大)';
+                            else if (rand === '形式创新') changeText += ' (新增车主分享)';
+                            else if (rand === '留资方式转变') changeText += ' (增加扫码留资)';
+                            else if (rand === '钩子话术变化') changeText += ' (转向痛点钩子)';
+                            else if (rand === '加码投放') changeText += ' (增加直播场次)';
+                        }
+                    }
+                    const tagClass = changeText.includes('切换') ? 'badge-yellow' :
+                        changeText.includes('创新') || changeText.includes('加码') ? 'badge-green' : 'badge-blue';
+                    return '<tr>\
+                                <td><strong>' + a.account + '</strong></td>\
+                                <td><span class="badge badge-purple">' + a.brand + '</span></td>\
+                                <td>' + a.store + '</td>\
+                                <td><span class="badge badge-blue">' + mainModel + '</span></td>\
+                                <td>' + mentionCount + '</td>\
+                                <td>' + topTrim + '</td>\
+                                <td>' + topColor + '</td>\
+                                <td>' + topPrice + '</td>\
+                                <td><span class="badge ' + (topInv === '现车充足' ? 'badge-green' : topInv === '库存紧张' ? 'badge-red' : 'badge-yellow') + '">' + topInv + '</span></td>\
+                                <td><span class="badge ' + tagClass + '">' + changeText + '</span></td>\
+                            </tr>';
+                }).join('');
+            }
+
+            // 8.7 创新获客
+            function renderInnovation(data) {
+                const list = document.getElementById('innovationList');
+                if (data.length === 0) {
+                    list.innerHTML =
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据</li>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.leadsSum - a.leadsSum);
+                const topAccount = accounts.length > 0 ? accounts[0] : null;
+                const innovations = [];
+                if (topAccount) {
+                    const methods = ['扫码预约试驾送咖啡券', '企微二维码留资抽奖', '小风车留资送保养', '私信回复送定制礼品', '粉丝群专属福利'];
+                    const method = methods[Math.floor(Math.random() * methods.length)];
+                    const lift = 20 + Math.floor(Math.random() * 50);
+                    innovations.push({
+                        account: topAccount.account,
+                        method: method,
+                        lift: lift,
+                        priority: 'important'
+                    });
+                }
+                if (accounts.length > 1) {
+                    const second = accounts[1];
+                    innovations.push({
+                        account: second.account,
+                        method: '试驾体验内容转化率提升明显',
+                        lift: 15 + Math.floor(Math.random() * 30),
+                        priority: 'normal'
+                    });
+                }
+                if (innovations.length === 0) {
+                    list.innerHTML =
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无创新获客手法</li>';
+                    return;
+                }
+                list.innerHTML = innovations.map((item, idx) => {
+                    const label = idx === 0 ? '⭐ 亮点' : '📌 可借鉴';
+                    const pClass = idx === 0 ? 'priority important' : 'priority normal';
+                    const liftText = item.lift ?
+                        '<br /><span style="font-size:13px;color:#6b7280;">留资量提升 ' + item.lift + '%</span>' :
+                        '';
+                    return '<li>\
+                                <span class="' + pClass + '">' + label + '</span>\
+                                <div><strong>' + item.account + '</strong> ' + item.method + liftText + '</div>\
+                            </li>';
+                }).join('');
+            }
+
+            // 8.8 Chart.js 品牌场观趋势
             let trendChartInstance = null;
 
             function renderTrendChartJS(data) {
@@ -1752,10 +2000,71 @@
                 });
             }
 
-            // 8.9 账号开播趋势（不变，仍按账号）
-            function renderTrendECharts(data) { /* 省略，与之前一致 */ }
+            // 8.9 账号开播趋势
+            function renderTrendECharts(data) {
+                const dom = document.getElementById('trendECharts');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                let dateAgg = aggregateByDate(data);
+                if (dateAgg.length > 7) { dateAgg = dateAgg.slice(dateAgg.length - 7); }
+                const dates = dateAgg.map(d => d.date);
+                const totalDuration = dateAgg.map(d => Math.round(d.duration / 60));
+                const accountCount = dateAgg.map(d => d.accounts.size);
+                if (dates.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const option = {
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+                    legend: { data: ['总直播时长 (h)', '开播账号数'], textStyle: { fontSize: 12, fontWeight: 500 } },
+                    grid: { left: '8%', right: '8%', bottom: '6%', top: '15%', containLabel: false },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: { fontSize: 10, rotate: 25, formatter: function(value) { return value.slice(5); } },
+                        axisLine: { show: true }
+                    },
+                    yAxis: [{
+                        type: 'value',
+                        name: '总直播时长 (h)',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    }, {
+                        type: 'value',
+                        name: '开播账号数',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { show: false },
+                        min: 0
+                    }],
+                    series: [{
+                        name: '总直播时长 (h)',
+                        type: 'line',
+                        data: totalDuration,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: { width: 2.5, color: '#4f46e5' },
+                        areaStyle: { color: 'rgba(79,70,229,0.08)' },
+                        yAxisIndex: 0
+                    }, {
+                        name: '开播账号数',
+                        type: 'line',
+                        data: accountCount,
+                        smooth: true,
+                        symbol: 'diamond',
+                        symbolSize: 8,
+                        lineStyle: { width: 2.5, color: '#10b981' },
+                        areaStyle: { color: 'rgba(16,185,129,0.08)' },
+                        yAxisIndex: 1
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // ===== 8.10 直播排班热力图（品牌 × 时段） =====
+            // 8.10 直播排班热力图（品牌 × 时段）
             function renderHeatmap(data) {
                 const dom = document.getElementById('heatmapECharts');
                 if (!dom) return;
@@ -1840,19 +2149,224 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 8.11 流量来源结构图（略）
-            function renderTrafficChart(data) { /* 省略 */ }
+            // 8.11 流量来源结构图
+            function renderTrafficChart(data) {
+                const dom = document.getElementById('trafficChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const map = {};
+                for (const d of data) {
+                    if (d.trafficSource) {
+                        map[d.trafficSource] = (map[d.trafficSource] || 0) + (d.sessionCount || 1);
+                    }
+                }
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF'];
+                const option = {
+                    tooltip: { trigger: 'item', formatter: '{b}<br/>场次: {c} ({d}%)' },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        top: 'center',
+                        textStyle: { fontSize: 12 },
+                        itemWidth: 12,
+                        itemHeight: 12
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['60%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: { show: true, formatter: '{d}%', fontSize: 11, fontWeight: 500, color: '#374151' },
+                        labelLine: { show: true },
+                        data: pieData.map((item, idx) => ({
+                            ...item,
+                            itemStyle: { color: colors[idx % colors.length] }
+                        })),
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 8.12 直播形式结构图（略）
-            function renderFormatChart(data) { /* 省略 */ }
+            // 8.12 直播形式结构图
+            function renderFormatChart(data) {
+                const dom = document.getElementById('formatChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const map = {};
+                for (const d of data) {
+                    if (d.liveFormat) {
+                        map[d.liveFormat] = (map[d.liveFormat] || 0) + (d.sessionCount || 1);
+                    }
+                }
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8'];
+                const option = {
+                    tooltip: { trigger: 'item', formatter: '{b}<br/>场次: {c} ({d}%)' },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        top: 'center',
+                        textStyle: { fontSize: 12 },
+                        itemWidth: 12,
+                        itemHeight: 12
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['60%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: { show: true, formatter: '{d}%', fontSize: 11, fontWeight: 500, color: '#374151' },
+                        labelLine: { show: true },
+                        data: pieData.map((item, idx) => ({
+                            ...item,
+                            itemStyle: { color: colors[idx % colors.length] }
+                        })),
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 8.13 TOP10 直播明细（略）
-            function renderTop10Table(data) { /* 省略 */ }
+            // 8.13 TOP10 直播明细
+            function renderTop10Table(data) {
+                const tbody = document.getElementById('top10TableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="14" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>';
+                    return;
+                }
+                const sorted = [...data].sort((a, b) => b.duration - a.duration);
+                const top10 = sorted.slice(0, 10);
+                tbody.innerHTML = top10.map(d => {
+                    const startDateTime = d.date + ' ' + String(d.startHour).padStart(2, '0') + ':00:00';
+                    const startDateObj = new Date(d.date + 'T' + String(d.startHour).padStart(2, '0') +
+                        ':00:00');
+                    const endDateObj = new Date(startDateObj.getTime() + d.duration * 60000);
+                    const endDateTime = formatDateTimeFromDate(endDateObj);
+                    const durationHours = (d.duration / 60).toFixed(1);
+                    const hasAudience = d.hasLiveAudience === 1;
+                    let trafficBadge = '<span class="badge badge-gray">' + (d.trafficSource || '—') + '</span>';
+                    if (d.trafficSource === '视频推荐') {
+                        trafficBadge = '<span class="badge badge-video">视频推荐</span>';
+                    }
+                    return '<tr>\
+                                <td><strong>' + d.account + '</strong></td>\
+                                <td>' + d.store + '</td>\
+                                <td>' + startDateTime + '</td>\
+                                <td>' + endDateTime + '</td>\
+                                <td>' + durationHours + 'h</td>\
+                                <td>' + Math.floor(d.viewership * 0.7).toLocaleString() + '</td>\
+                                <td>' + d.viewership.toLocaleString() + '</td>\
+                                <td>' + d.peakViewers.toLocaleString() + '</td>\
+                                <td>' + d.likes.toLocaleString() + '</td>\
+                                <td>' + d.comments.toLocaleString() + '</td>\
+                                <td>' + d.shares.toLocaleString() + '</td>\
+                                <td>' + trafficBadge + '</td>\
+                                <td><span class="badge badge-blue">' + (d.liveFormat || '—') + '</span></td>\
+                                <td><span class="badge ' + (hasAudience ? 'badge-audience-yes' : 'badge-audience-no') + '">' + (hasAudience ? '✅ 是' : '❌ 否') + '</span></td>\
+                            </tr>';
+                }).join('');
+            }
 
-            // 8.14 账号横向对比（互动版）（略）
-            function renderInteractionTable(data) { /* 省略 */ }
+            // 8.14 账号横向对比（互动版）
+            function renderInteractionTable(data) {
+                const tbody = document.getElementById('interactionTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无数据</td></tr>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.interactionSum - a.interactionSum);
+                const scoredData = computeScores([...data]);
+                const accScoreMap = {};
+                for (const d of scoredData) {
+                    if (!accScoreMap[d.account]) accScoreMap[d.account] = [];
+                    accScoreMap[d.account].push(d.score);
+                }
+                const accAvgScore = {};
+                for (const [acc, scores] of Object.entries(accScoreMap)) {
+                    accAvgScore[acc] = scores.reduce((a, b) => a + b, 0) / scores.length;
+                }
+                const rows = accounts.map(a => {
+                    const sessions = a.sessions;
+                    const totalInteraction = a.interactionSum;
+                    const avgInteraction = a.count > 0 ? Math.round(a.interactionSum / a.count) : 0;
+                    const score = Math.round(accAvgScore[a.account] || 50);
+                    const likePct = a.interactionSum > 0 ? Math.round((a.likesSum / a.interactionSum) * 100) :
+                        0;
+                    const commentPct = a.interactionSum > 0 ? Math.round((a.commentsSum / a.interactionSum) *
+                        100) : 0;
+                    const sharePct = a.interactionSum > 0 ? Math.round((a.sharesSum / a.interactionSum) * 100) :
+                        0;
+                    let mainType = '—',
+                        mainBadge = '';
+                    if (likePct >= commentPct && likePct >= sharePct) {
+                        mainType = '👍 点赞 ' + likePct + '%';
+                        mainBadge = 'badge-like';
+                    } else if (commentPct >= likePct && commentPct >= sharePct) {
+                        mainType = '💬 评论 ' + commentPct + '%';
+                        mainBadge = 'badge-comment';
+                    } else if (sharePct > 0) {
+                        mainType = '↗️ 分享 ' + sharePct + '%';
+                        mainBadge = 'badge-share';
+                    }
+                    let scoreClass = 'score-mid';
+                    if (score >= 70) scoreClass = 'score-high';
+                    else if (score < 40) scoreClass = 'score-low';
+                    return {
+                        account: a.account,
+                        brand: a.brand,
+                        store: a.store,
+                        sessions: sessions,
+                        score: score,
+                        scoreClass: scoreClass,
+                        totalInteraction: totalInteraction,
+                        avgInteraction: avgInteraction,
+                        mainType: mainType,
+                        mainBadge: mainBadge
+                    };
+                });
+                rows.sort((a, b) => b.totalInteraction - a.totalInteraction);
+                tbody.innerHTML = rows.map(r => {
+                    return '<tr>\
+                                <td><strong>' + r.account + '</strong></td>\
+                                <td><span class="badge badge-blue">' + r.brand + '</span></td>\
+                                <td>' + r.store + '</td>\
+                                <td>' + r.sessions + '</td>\
+                                <td><span class="' + r.scoreClass + '">' + r.score + '</span></td>\
+                                <td>' + r.totalInteraction.toLocaleString() + '</td>\
+                                <td>' + r.avgInteraction.toLocaleString() + '</td>\
+                                <td><span class="badge ' + r.mainBadge + '">' + r.mainType + '</span></td>\
+                            </tr>';
+                }).join('');
+            }
 
-            // ===== 8.15 品牌互动趋势 =====
+            // 8.15 品牌互动趋势
             function renderInteractTrend(data) {
                 const dom = document.getElementById('interactTrendECharts');
                 if (!dom) return;
@@ -1913,7 +2427,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // ===== 8.16 品牌互动结构 =====
+            // 8.16 品牌互动结构
             function renderStructure(data) {
                 const dom = document.getElementById('structureECharts');
                 if (!dom) return;
@@ -1998,7 +2512,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 8.17 品牌互动指数条形图（略，但需要确保使用品牌维度）
+            // 8.17 品牌互动指数条形图
             function renderBrandScore(data) {
                 const dom = document.getElementById('brandScoreChart');
                 if (!dom) return;
@@ -2026,7 +2540,6 @@
                     .sort((a, b) => b.score - a.score);
                 const brandNames = sorted.map(d => d.brand);
                 const scores = sorted.map(d => d.score);
-
                 const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7'];
                 const option = {
                     tooltip: {
@@ -2089,45 +2602,1154 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 8.18 品牌 × 时段互动指数热力图（略，保持不变）
-            function renderBrandTimeHeatmap(data) { /* 省略 */ }
+            // 8.18 品牌 × 时段互动指数热力图
+            function renderBrandTimeHeatmap(data) {
+                const dom = document.getElementById('brandTimeHeatmap');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const scoredData = computeScores([...data]);
+                const slots = ['早场 (5-8)', '上午场 (9-12)', '下午场 (13-17)', '黄金档 (18-22)', '深夜场 (22之后)'];
+                const brands = [...new Set(scoredData.map(d => d.brand))];
+                if (brands.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const heatData = [];
+                for (let i = 0; i < slots.length; i++) {
+                    for (let j = 0; j < brands.length; j++) {
+                        const brand = brands[j];
+                        const slot = slots[i];
+                        const vals = scoredData
+                            .filter(d => d.brand === brand && getTimeSlot(d.startHour) === slot)
+                            .map(d => d.score);
+                        const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+                        heatData.push([i, j, avg]);
+                    }
+                }
+                const maxVal = Math.max(...heatData.map(d => d[2]), 1);
+                const option = {
+                    tooltip: {
+                        position: 'top',
+                        formatter: function(params) {
+                            const slot = slots[params.value[0]];
+                            const brand = brands[params.value[1]];
+                            const val = params.value[2];
+                            return brand + '<br/>' + slot + '<br/>平均互动指数：' + val.toFixed(1);
+                        }
+                    },
+                    grid: { left: '12%', right: '6%', bottom: '10%', top: '6%', containLabel: false },
+                    xAxis: {
+                        type: 'category',
+                        data: slots,
+                        splitArea: { show: true },
+                        axisLabel: { fontSize: 10, rotate: 20 },
+                        axisLine: { show: false }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: brands,
+                        splitArea: { show: true },
+                        axisLabel: { fontSize: 13, fontWeight: 600 },
+                        axisLine: { show: false }
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: 100,
+                        calculable: true,
+                        orient: 'vertical',
+                        right: '2%',
+                        top: 'center',
+                        inRange: { color: ['#f0f4f8', '#dbeafe', '#93c5fd', '#3b82f6', '#1e40af'] },
+                        textStyle: { fontSize: 10 }
+                    },
+                    series: [{
+                        name: '互动指数',
+                        type: 'heatmap',
+                        data: heatData,
+                        label: {
+                            show: true,
+                            color: '#1f2937',
+                            fontSize: 10,
+                            fontWeight: 500,
+                            formatter: function(params) { return params.value[2] > 0 ? params.value[2].toFixed(
+                                0) : ''; }
+                        },
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.2)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 8.19 词云（略）
-            function renderWordCloud(data) { /* 省略 */ }
+            // 8.19 词云
+            function renderWordCloud(data) {
+                const dom = document.getElementById('wordCloudChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const freqMap = {};
+                for (const d of data) {
+                    if (d.commentKeywords) {
+                        for (const kw of d.commentKeywords) {
+                            freqMap[kw] = (freqMap[kw] || 0) + 1;
+                        }
+                    }
+                }
+                const words = Object.keys(freqMap);
+                if (words.length === 0) {
+                    myChart.setOption({ title: { text: '暂无关键词', left: 'center', top: 'center' } });
+                    return;
+                }
+                const wordData = words.map(kw => ({ name: kw, value: freqMap[kw] }));
+                wordData.sort((a, b) => b.value - a.value);
+                const topWords = wordData.slice(0, 50);
+                const maxVal = topWords.length > 0 ? topWords[0].value : 1;
+                const minVal = topWords.length > 0 ? topWords[topWords.length - 1].value : 1;
+                const range = maxVal - minVal || 1;
+                const bluePalette = ['#0a2463', '#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
+                const option = {
+                    tooltip: { show: true, formatter: function(params) { return params.name + '：' + params.value +
+                                ' 次'; } },
+                    series: [{
+                        type: 'wordCloud',
+                        gridSize: 20,
+                        sizeRange: [16, 64],
+                        rotationRange: [-45, 45],
+                        shape: 'circle',
+                        width: '100%',
+                        height: '100%',
+                        textStyle: {
+                            color: function(params) {
+                                const val = params.value;
+                                const normalized = (val - minVal) / range;
+                                const idx = Math.floor(normalized * (bluePalette.length - 1));
+                                return bluePalette[Math.min(idx, bluePalette.length - 1)];
+                            },
+                            fontWeight: 600
+                        },
+                        data: topWords
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 8.20 评论情绪堆叠（略）
-            function renderSentimentStack(data) { /* 省略 */ }
+            // 8.20 评论情绪堆叠
+            function renderSentimentStack(data) {
+                const dom = document.getElementById('sentimentChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandMap = {};
+                for (const d of data) {
+                    const brand = d.brand;
+                    if (!brandMap[brand]) {
+                        brandMap[brand] = { positive: 0, neutral: 0, negative: 0 };
+                    }
+                    brandMap[brand].positive += d.positiveComments || 0;
+                    brandMap[brand].neutral += d.neutralComments || 0;
+                    brandMap[brand].negative += d.negativeComments || 0;
+                }
+                const brands = Object.keys(brandMap);
+                if (brands.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const positiveData = brands.map(b => brandMap[b].positive);
+                const neutralData = brands.map(b => brandMap[b].neutral);
+                const negativeData = brands.map(b => brandMap[b].negative);
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].name + '</strong><br/>';
+                            let total = 0;
+                            for (const p of params) {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value + '<br/>';
+                                total += p.value;
+                            }
+                            html += '<span style="font-weight:600;">合计评论数：' + total + '</span>';
+                            return html;
+                        }
+                    },
+                    legend: { data: ['正向', '中性', '负面'], top: 0, right: 0, textStyle: { fontSize: 11,
+                            fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
+                    xAxis: {
+                        type: 'category',
+                        data: brands,
+                        axisLabel: { fontSize: 13, fontWeight: 600 },
+                        axisLine: { show: true }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '评论数',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    },
+                    series: [{
+                        name: '正向',
+                        type: 'bar',
+                        stack: 'total',
+                        data: positiveData,
+                        color: '#1e3a8a'
+                    }, {
+                        name: '中性',
+                        type: 'bar',
+                        stack: 'total',
+                        data: neutralData,
+                        color: '#3b82f6'
+                    }, {
+                        name: '负面',
+                        type: 'bar',
+                        stack: 'total',
+                        data: negativeData,
+                        color: '#93c5fd'
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 9. 各品牌主推车型时序追踪等（略）
-            function renderMainModelTrend(data) { /* 省略 */ }
-            function renderPriceRange(data) { /* 省略 */ }
-            function renderTopicPie(data) { /* 省略 */ }
-            function renderInventoryPie(data) { /* 省略 */ }
-            function renderBrandInventory(data) { /* 省略 */ }
-            function renderTopModels(data) { /* 省略 */ }
+            // =============================================================
+            // 9. 其他图表（主推车型时序、价格区间、主题、库存等）
+            // =============================================================
+            function renderMainModelTrend(data) {
+                const dom = document.getElementById('mainModelTrendChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                let dateAgg = aggregateByDate(data);
+                if (dateAgg.length > 7) { dateAgg = dateAgg.slice(dateAgg.length - 7); }
+                const dates = dateAgg.map(d => d.date);
+                if (dates.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandMap = {};
+                for (const brand of ALL_BRANDS) {
+                    brandMap[brand] = {};
+                }
+                for (const d of data) {
+                    const brand = d.brand;
+                    const date = d.date;
+                    const model = d.mainModel;
+                    const count = d.modelMentionCount || 1;
+                    if (!brandMap[brand][date]) brandMap[brand][date] = {};
+                    if (!brandMap[brand][date][model]) brandMap[brand][date][model] = 0;
+                    brandMap[brand][date][model] += count;
+                }
+                const seriesData = [];
+                const colors = ['#4f46e5', '#10b981', '#f59e0b'];
+                const brandList = ALL_BRANDS;
+                brandList.forEach((brand, idx) => {
+                    const dailyData = dates.map(date => {
+                        const dateModelMap = brandMap[brand]?.[date] || {};
+                        let maxCount = 0;
+                        for (const cnt of Object.values(dateModelMap)) {
+                            if (cnt > maxCount) maxCount = cnt;
+                        }
+                        return maxCount;
+                    });
+                    const modelNames = dates.map(date => {
+                        const dateModelMap = brandMap[brand]?.[date] || {};
+                        let maxModel = null,
+                            maxCount = 0;
+                        for (const [model, cnt] of Object.entries(dateModelMap)) {
+                            if (cnt > maxCount) { maxCount = cnt;
+                                maxModel = model; }
+                        }
+                        return maxModel || '—';
+                    });
+                    seriesData.push({
+                        brand: brand,
+                        data: dailyData,
+                        modelNames: modelNames,
+                        color: colors[idx % colors.length]
+                    });
+                });
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].axisValue + '</strong><br/>';
+                            params.forEach(p => {
+                                const brand = p.seriesName;
+                                const idx = seriesData.findIndex(s => s.brand === brand);
+                                if (idx !== -1) {
+                                    const modelName = seriesData[idx].modelNames[p.dataIndex] || '—';
+                                    html += p.marker + ' ' + brand + '：主推 ' + modelName + ' (' + p
+                                        .value + ' 次)<br/>';
+                                } else {
+                                    html += p.marker + ' ' + brand + '：' + p.value + '<br/>';
+                                }
+                            });
+                            return html;
+                        }
+                    },
+                    legend: {
+                        data: brandList,
+                        top: 0,
+                        right: 0,
+                        textStyle: { fontSize: 11, fontWeight: 500 }
+                    },
+                    grid: {
+                        left: '8%',
+                        right: '8%',
+                        bottom: '8%',
+                        top: '15%',
+                        containLabel: false
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: {
+                            fontSize: 10,
+                            rotate: 25,
+                            formatter: function(value) { return value.slice(5); }
+                        },
+                        axisLine: { show: true }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '主推车型提及频次',
+                        nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }
+                    },
+                    series: seriesData.map(s => ({
+                        name: s.brand,
+                        type: 'line',
+                        data: s.data,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: { width: 2.5 },
+                        color: s.color,
+                        areaStyle: { color: s.color + '20' }
+                    }))
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 10. 促销相关（略）
-            function renderDiscountTrend(data) { /* 省略 */ }
-            function renderPromoTypePie(data) { /* 省略 */ }
-            function renderBrandPromo(data) { /* 省略 */ }
-            function renderPromoCondition(data) { /* 省略 */ }
-            function renderUrgencySignal(data) { /* 省略 */ }
-            function renderQuoteApproach(data) { /* 省略 */ }
+            function renderPriceRange(data) {
+                const dom = document.getElementById('priceRangeChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandPriceMap = {};
+                const allBrands = ALL_BRANDS;
+                allBrands.forEach(b => brandPriceMap[b] = {});
+                for (const d of data) {
+                    const brand = d.brand;
+                    const price = d.priceRange || '其他';
+                    if (!brandPriceMap[brand][price]) brandPriceMap[brand][price] = 0;
+                    brandPriceMap[brand][price] += d.sessionCount || 1;
+                }
+                const allPrices = PRICE_GROUPS;
+                const seriesData = allBrands.map(brand => {
+                    return {
+                        name: brand,
+                        type: 'bar',
+                        stack: 'total',
+                        data: allPrices.map(p => brandPriceMap[brand][p] || 0)
+                    };
+                });
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8'];
+                seriesData.forEach((s, idx) => s.color = colors[idx % colors.length]);
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].name + '</strong><br/>';
+                            let total = 0;
+                            for (const p of params) {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value + ' 场<br/>';
+                                total += p.value;
+                            }
+                            html += '<span style="font-weight:600;">合计：' + total + ' 场</span>';
+                            return html;
+                        }
+                    },
+                    legend: { data: allBrands, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
+                    xAxis: { type: 'category', data: allPrices, axisLabel: { fontSize: 10, rotate: 25 },
+                    axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '直播场次', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } } },
+                    series: seriesData
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 11. 综合优惠后价格信息（略）
-            function renderPriceMatrix(data) { /* 省略 */ }
+            function renderTopicPie(data) {
+                const dom = document.getElementById('topicPieChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const map = {};
+                for (const d of data) {
+                    const topic = d.contentTopic;
+                    if (topic) {
+                        map[topic] = (map[topic] || 0) + (d.sessionCount || 1);
+                    }
+                }
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                if (sorted.length === 0) {
+                    myChart.setOption({ title: { text: '暂无主题数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+                const colors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8', '#dbeafe', '#bfdbfe'];
+                const option = {
+                    tooltip: { trigger: 'item', formatter: function(params) { return params.name + '<br/>场次: ' +
+                                params.value + ' (' + params.percent + '%)'; } },
+                    legend: { orient: 'horizontal', bottom: 0, left: 'center', textStyle: { fontSize: 12 },
+                        itemWidth: 12, itemHeight: 12, padding: [20, 0, 0, 0] },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['50%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: { show: true, formatter: '{d}%', fontSize: 11, fontWeight: 500, color: '#374151' },
+                        labelLine: { show: true },
+                        data: pieData.map((item, idx) => ({ ...item, itemStyle: { color: colors[idx % colors
+                                    .length] } })),
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 12. 直播促销明细（略）
-            function renderPromoDetailTable(data) { /* 省略 */ }
+            function renderInventoryPie(data) {
+                const dom = document.getElementById('inventoryPieChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const map = {};
+                for (const d of data) {
+                    const status = d.inventoryStatus || '未知';
+                    map[status] = (map[status] || 0) + (d.sessionCount || 1);
+                }
+                const sorted = INVENTORY_STATUSES.filter(s => map[s]).map(s => ({ name: s, value: map[s] }));
+                if (sorted.length === 0) {
+                    myChart.setOption({ title: { text: '暂无库存数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const total = sorted.reduce((sum, item) => sum + item.value, 0);
+                const pieData = sorted.map(item => ({
+                    name: item.name,
+                    value: item.value,
+                    percent: ((item.value / total) * 100).toFixed(1)
+                }));
+                const option = {
+                    tooltip: { trigger: 'item', formatter: function(params) { return params.name + '<br/>场次: ' +
+                                params.value + ' (' + params.percent + '%)'; } },
+                    legend: { orient: 'horizontal', bottom: 0, left: 'center', textStyle: { fontSize: 12 },
+                        itemWidth: 12, itemHeight: 12, padding: [20, 0, 0, 0] },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['50%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: { show: true, formatter: '{d}%', fontSize: 11, fontWeight: 500, color: '#374151' },
+                        labelLine: { show: true },
+                        data: pieData.map(item => ({ ...item, itemStyle: { color: INVENTORY_COLORS[item.name] ||
+                                    '#9ca3af' } })),
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 13. 账号留资分析（略，仍按账号）
-            function renderLeadAnalysis(data) { /* 省略 */ }
+            function renderBrandInventory(data) {
+                const dom = document.getElementById('brandInventoryChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandInvMap = {};
+                const allBrands = ALL_BRANDS;
+                allBrands.forEach(b => brandInvMap[b] = {});
+                for (const d of data) {
+                    const brand = d.brand;
+                    const status = d.inventoryStatus || '未知';
+                    if (!brandInvMap[brand][status]) brandInvMap[brand][status] = 0;
+                    brandInvMap[brand][status] += d.sessionCount || 1;
+                }
+                const statuses = INVENTORY_STATUSES;
+                const seriesData = statuses.map(status => {
+                    return {
+                        name: status,
+                        type: 'bar',
+                        stack: 'total',
+                        data: allBrands.map(b => brandInvMap[b][status] || 0),
+                        itemStyle: { color: INVENTORY_COLORS[status] || '#9ca3af' }
+                    };
+                });
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].name + '</strong><br/>';
+                            let total = 0;
+                            for (const p of params) {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value + ' 场<br/>';
+                                total += p.value;
+                            }
+                            html += '<span style="font-weight:600;">合计：' + total + ' 场</span>';
+                            return html;
+                        }
+                    },
+                    legend: { data: statuses, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
+                    xAxis: { type: 'category', data: allBrands, axisLabel: { fontSize: 13, fontWeight: 600 },
+                        axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '场次', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } } },
+                    series: seriesData
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            function renderTopModels(data) {
+                const dom = document.getElementById('topModelsChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const modelMap = {};
+                for (const d of data) {
+                    const model = d.mainModel;
+                    if (!modelMap[model]) {
+                        modelMap[model] = { count: 0, brand: d.brand, trim: d.trimLevel, color: d.color };
+                    }
+                    modelMap[model].count += d.modelMentionCount || 1;
+                    if (Math.random() > 0.5) {
+                        modelMap[model].trim = d.trimLevel;
+                        modelMap[model].color = d.color;
+                    }
+                }
+                const sorted = Object.entries(modelMap).sort((a, b) => b[1].count - a[1].count);
+                const top10 = sorted.slice(0, 10);
+                const names = top10.map(item => item[0]);
+                const counts = top10.map(item => item[1].count);
+                const brands = top10.map(item => item[1].brand);
+                const trims = top10.map(item => item[1].trim || '—');
+                const colors = top10.map(item => item[1].color || '—');
+                const labelTexts = top10.map((item, idx) => {
+                    return brands[idx] + ' | ' + trims[idx] + ' | ' + colors[idx];
+                });
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            const idx = params[0].dataIndex;
+                            const name = names[idx];
+                            const count = counts[idx];
+                            const brand = brands[idx];
+                            const trim = trims[idx];
+                            const color = colors[idx];
+                            return '<strong>' + name + '</strong><br/>品牌：' + brand + '<br/>配置：' + trim +
+                                '<br/>颜色：' + color + '<br/>提及次数：' + count;
+                        }
+                    },
+                    grid: { left: '12%', right: '28%', bottom: '6%', top: '6%', containLabel: true },
+                    xAxis: { type: 'value', name: '提及次数', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } } },
+                    yAxis: { type: 'category', data: names, axisLabel: { fontSize: 12, fontWeight: 500 },
+                        axisLine: { show: true } },
+                    series: [{
+                        type: 'bar',
+                        data: counts.map((val, idx) => ({
+                            value: val,
+                            itemStyle: {
+                                color: ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#4A7BA7', '#93B9D8',
+                                    '#dbeafe', '#bfdbfe', '#9ca3af', '#6b7280'
+                                ][idx % 10],
+                                borderRadius: [0, 4, 4, 0]
+                            }
+                        })),
+                        barWidth: 20,
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: function(params) {
+                                const idx = params.dataIndex;
+                                return labelTexts[idx] || '';
+                            },
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: '#1f2937',
+                            width: 140,
+                            overflow: 'break'
+                        }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 10. 促销相关图表
+            // =============================================================
+            function renderDiscountTrend(data) {
+                const dom = document.getElementById('discountTrendChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandMap = {};
+                for (const brand of ALL_BRANDS) {
+                    brandMap[brand] = {};
+                }
+                for (const d of data) {
+                    const brand = d.brand;
+                    const date = d.date;
+                    if (!brandMap[brand][date]) brandMap[brand][date] = { sum: 0, count: 0 };
+                    brandMap[brand][date].sum += d.discountAmount || 0;
+                    brandMap[brand][date].count += 1;
+                }
+                let allDates = [...new Set(data.map(d => d.date))].sort();
+                if (allDates.length > 7) {
+                    allDates = allDates.slice(allDates.length - 7);
+                }
+                const colors = ['#4f46e5', '#10b981', '#f59e0b'];
+                const seriesData = ALL_BRANDS.map((brand, idx) => {
+                    const vals = allDates.map(date => {
+                        const info = brandMap[brand]?.[date];
+                        if (info && info.count > 0) {
+                            return Math.round((info.sum / info.count) * 100) / 100;
+                        }
+                        return 0;
+                    });
+                    return {
+                        name: brand,
+                        type: 'line',
+                        data: vals,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        lineStyle: { width: 2.5 },
+                        color: colors[idx % colors.length],
+                        areaStyle: { color: colors[idx % colors.length] + '20' }
+                    };
+                });
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'cross' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].axisValue + '</strong><br/>';
+                            params.forEach(p => {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value.toFixed(2) +
+                                    ' 万元<br/>';
+                            });
+                            return html;
+                        }
+                    },
+                    legend: { data: ALL_BRANDS, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
+                    grid: { left: '8%', right: '8%', bottom: '8%', top: '15%', containLabel: false },
+                    xAxis: { type: 'category', data: allDates, axisLabel: { fontSize: 10, rotate: 25,
+                            formatter: function(value) { return value.slice(5); } }, axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '现金优惠幅度 (万元)', nameTextStyle: { fontSize: 11 },
+                        axisLabel: { fontSize: 10 }, splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } },
+                        min: 0 },
+                    series: seriesData,
+                    color: colors
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            function renderPromoTypePie(data) {
+                const dom = document.getElementById('promoTypePieChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const map = {};
+                for (const d of data) {
+                    const type = d.promoType || '其他';
+                    map[type] = (map[type] || 0) + (d.sessionCount || 1);
+                }
+                const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+                const total = sorted.reduce((sum, item) => sum + item[1], 0);
+                const pieData = sorted.map(([name, value]) => ({
+                    name: name,
+                    value: value,
+                    percent: ((value / total) * 100).toFixed(1)
+                }));
+                const option = {
+                    tooltip: { trigger: 'item', formatter: function(params) { return params.name + '<br/>场次: ' +
+                                params.value + ' (' + params.percent + '%)'; } },
+                    legend: { orient: 'horizontal', bottom: 0, left: 'center', textStyle: { fontSize: 12 },
+                        itemWidth: 12, itemHeight: 12, padding: [20, 0, 0, 0] },
+                    series: [{
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        center: ['50%', '50%'],
+                        avoidLabelOverlap: true,
+                        label: { show: true, formatter: '{d}%', fontSize: 11, fontWeight: 500, color: '#374151' },
+                        labelLine: { show: true },
+                        data: pieData.map(item => ({ ...item, itemStyle: { color: PROMO_COLORS[item.name] ||
+                                    '#9ca3af' } })),
+                        emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0,0,0,0.08)' } }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            function renderBrandPromo(data) {
+                const dom = document.getElementById('brandPromoChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandPromoMap = {};
+                const allBrands = ALL_BRANDS;
+                allBrands.forEach(b => brandPromoMap[b] = {});
+                for (const d of data) {
+                    const brand = d.brand;
+                    const type = d.promoType || '其他';
+                    if (!brandPromoMap[brand][type]) brandPromoMap[brand][type] = 0;
+                    brandPromoMap[brand][type] += d.sessionCount || 1;
+                }
+                const allTypes = PROMO_TYPES;
+                const seriesData = allTypes.map(type => {
+                    return {
+                        name: type,
+                        type: 'bar',
+                        stack: 'total',
+                        data: allBrands.map(b => brandPromoMap[b][type] || 0),
+                        itemStyle: { color: PROMO_COLORS[type] || '#9ca3af' }
+                    };
+                });
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].name + '</strong><br/>';
+                            let total = 0;
+                            for (const p of params) {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value + ' 场<br/>';
+                                total += p.value;
+                            }
+                            html += '<span style="font-weight:600;">合计：' + total + ' 场</span>';
+                            return html;
+                        }
+                    },
+                    legend: { data: allTypes, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
+                    xAxis: { type: 'category', data: allBrands, axisLabel: { fontSize: 13, fontWeight: 600 },
+                        axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '场次', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } } },
+                    series: seriesData
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            function renderPromoCondition(data) {
+                const dom = document.getElementById('promoConditionChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandConditionMap = {};
+                const allBrands = ALL_BRANDS;
+                allBrands.forEach(b => brandConditionMap[b] = {});
+                for (const d of data) {
+                    const brand = d.brand;
+                    const condition = d.promoCondition || '无附加条件';
+                    if (!brandConditionMap[brand][condition]) brandConditionMap[brand][condition] = 0;
+                    brandConditionMap[brand][condition] += d.sessionCount || 1;
+                }
+                const allConditions = PROMO_CONDITIONS;
+                const colors = ['#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'];
+                const seriesData = allConditions.map((condition, idx) => {
+                    return {
+                        name: condition,
+                        type: 'bar',
+                        stack: 'total',
+                        data: allBrands.map(b => brandConditionMap[b][condition] || 0),
+                        itemStyle: { color: colors[idx % colors.length] }
+                    };
+                });
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].name + '</strong><br/>';
+                            let total = 0;
+                            for (const p of params) {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value + ' 场<br/>';
+                                total += p.value;
+                            }
+                            html += '<span style="font-weight:600;">合计：' + total + ' 场</span>';
+                            return html;
+                        }
+                    },
+                    legend: { data: allConditions, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
+                    xAxis: { type: 'category', data: allBrands, axisLabel: { fontSize: 13, fontWeight: 600 },
+                        axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '场次', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } } },
+                    series: seriesData
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            function renderUrgencySignal(data) {
+                const dom = document.getElementById('urgencySignalChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandSignalMap = {};
+                const allBrands = ALL_BRANDS;
+                allBrands.forEach(b => brandSignalMap[b] = {});
+                for (const d of data) {
+                    const brand = d.brand;
+                    if (d.urgencySignals) {
+                        for (const signal of d.urgencySignals) {
+                            if (!brandSignalMap[brand][signal]) brandSignalMap[brand][signal] = 0;
+                            brandSignalMap[brand][signal] += 1;
+                        }
+                    }
+                }
+                const allSignals = URGENCY_SIGNALS;
+                const blueColors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#1e3a8a', '#2563eb'];
+                const seriesData = allBrands.map((brand, idx) => {
+                    return {
+                        name: brand,
+                        type: 'bar',
+                        data: allSignals.map(signal => brandSignalMap[brand][signal] || 0),
+                        itemStyle: { color: blueColors[idx % blueColors.length] },
+                        barWidth: '20%'
+                    };
+                });
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].name + '</strong><br/>';
+                            for (const p of params) {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value + ' 次<br/>';
+                            }
+                            return html;
+                        }
+                    },
+                    legend: { data: allBrands, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
+                    xAxis: { type: 'category', data: allSignals, axisLabel: { fontSize: 10, rotate: 20, interval: 0 },
+                        axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '使用频次', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } } },
+                    series: seriesData
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            function renderQuoteApproach(data) {
+                const dom = document.getElementById('quoteApproachChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const brandApproachMap = {};
+                const allBrands = ALL_BRANDS;
+                allBrands.forEach(b => brandApproachMap[b] = {});
+                for (const d of data) {
+                    const brand = d.brand;
+                    const approach = d.quoteApproach || '指导价报价';
+                    if (!brandApproachMap[brand][approach]) brandApproachMap[brand][approach] = 0;
+                    brandApproachMap[brand][approach] += d.sessionCount || 1;
+                }
+                const allApproaches = QUOTE_APPROACHES;
+                const blueColors = ['#002060', '#0051BC', '#00B0F0', '#7ADBFF', '#1e3a8a', '#2563eb'];
+                const seriesData = allApproaches.map((approach, idx) => {
+                    return {
+                        name: approach,
+                        type: 'bar',
+                        stack: 'total',
+                        data: allBrands.map(b => brandApproachMap[b][approach] || 0),
+                        itemStyle: { color: blueColors[idx % blueColors.length] }
+                    };
+                });
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].name + '</strong><br/>';
+                            let total = 0;
+                            for (const p of params) {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value + ' 场<br/>';
+                                total += p.value;
+                            }
+                            html += '<span style="font-weight:600;">合计：' + total + ' 场</span>';
+                            return html;
+                        }
+                    },
+                    legend: { data: allApproaches, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
+                    xAxis: { type: 'category', data: allBrands, axisLabel: { fontSize: 13, fontWeight: 600 },
+                        axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '场次', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } } },
+                    series: seriesData
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
+
+            // =============================================================
+            // 11. 综合优惠后价格信息矩阵表格
+            // =============================================================
+            function renderPriceMatrix(data) {
+                const thead = document.getElementById('priceMatrixHead');
+                const tbody = document.getElementById('priceMatrixBody');
+                if (data.length === 0) {
+                    thead.innerHTML = '<tr><th>日期</th></tr>';
+                    tbody.innerHTML = '<tr><td style="text-align:center;color:#9ca3af;padding:20px 0;">暂无数据</td></tr>';
+                    return;
+                }
+                const modelFreq = {};
+                for (const d of data) {
+                    const model = d.mainModel;
+                    if (model) {
+                        modelFreq[model] = (modelFreq[model] || 0) + 1;
+                    }
+                }
+                const sortedModels = Object.entries(modelFreq).sort((a, b) => b[1] - a[1]);
+                const topModels = sortedModels.slice(0, 10).map(item => item[0]);
+                if (topModels.length === 0) {
+                    thead.innerHTML = '<tr><th>日期</th></tr>';
+                    tbody.innerHTML = '<tr><td style="text-align:center;color:#9ca3af;padding:20px 0;">暂无车型数据</td></tr>';
+                    return;
+                }
+                const dateSet = new Set();
+                for (const d of data) {
+                    dateSet.add(d.date);
+                }
+                const dates = Array.from(dateSet).sort();
+                const recentDates = dates.slice(-10);
+                if (recentDates.length === 0) {
+                    thead.innerHTML = '<tr><th>日期</th></tr>';
+                    tbody.innerHTML = '<tr><td style="text-align:center;color:#9ca3af;padding:20px 0;">暂无日期数据</td></tr>';
+                    return;
+                }
+                const priceMap = {};
+                for (const d of data) {
+                    const date = d.date;
+                    const model = d.mainModel;
+                    if (!topModels.includes(model)) continue;
+                    if (!priceMap[date]) priceMap[date] = {};
+                    if (!priceMap[date][model]) priceMap[date][model] = [];
+                    if (d.finalPrice !== undefined && d.finalPrice !== null) {
+                        priceMap[date][model].push(d.finalPrice);
+                    }
+                }
+                const avgPriceMap = {};
+                for (const date of recentDates) {
+                    avgPriceMap[date] = {};
+                    for (const model of topModels) {
+                        const prices = priceMap[date]?.[model] || [];
+                        if (prices.length > 0) {
+                            const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+                            avgPriceMap[date][model] = Math.round(avg * 100) / 100;
+                        } else {
+                            avgPriceMap[date][model] = null;
+                        }
+                    }
+                }
+                let headerHtml = '<tr><th>日期</th>';
+                for (const model of topModels) {
+                    headerHtml += '<th>' + model + '</th>';
+                }
+                headerHtml += '</tr>';
+                thead.innerHTML = headerHtml;
+                let bodyHtml = '';
+                for (const date of recentDates) {
+                    bodyHtml += '<tr><td class="row-label">' + date + '</td>';
+                    for (const model of topModels) {
+                        const price = avgPriceMap[date]?.[model];
+                        if (price !== null && price !== undefined) {
+                            bodyHtml += '<td class="price-cell">' + price.toFixed(2) + '</td>';
+                        } else {
+                            bodyHtml += '<td class="empty-cell">—</td>';
+                        }
+                    }
+                    bodyHtml += '</tr>';
+                }
+                tbody.innerHTML = bodyHtml;
+            }
+
+            // =============================================================
+            // 12. 直播促销明细（按优惠力度排序，TOP10）
+            // =============================================================
+            function renderPromoDetailTable(data) {
+                const tbody = document.getElementById('promoDetailTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="11" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无促销数据</td></tr>';
+                    return;
+                }
+                const sorted = [...data].sort((a, b) => (b.discountAmount || 0) - (a.discountAmount || 0));
+                const top = sorted.slice(0, 10);
+                function generateValidPeriod(dateStr) {
+                    const d = new Date(dateStr);
+                    const days = 15 + Math.floor(Math.random() * 16);
+                    const end = new Date(d);
+                    end.setDate(end.getDate() + days);
+                    const startStr = dateStr;
+                    const endStr = formatDate(end);
+                    return startStr + ' 至 ' + endStr;
+                }
+                function generateSubsidy() { return Math.random() > 0.5 ? '是' : '否'; }
+                tbody.innerHTML = top.map(d => {
+                    const validPeriod = generateValidPeriod(d.date);
+                    const subsidy = generateSubsidy();
+                    const priceDisplay = d.finalPrice !== undefined ? d.finalPrice.toFixed(2) : '—';
+                    const urgencyBadge = (d.urgencySignals && d.urgencySignals.length > 0) ?
+                        d.urgencySignals.slice(0, 2).join('; ') :
+                        '无';
+                    const promoBadge = d.promoType ? '<span class="badge badge-promo">' + d.promoType + '</span>' :
+                        '—';
+                    const subsidyBadge = subsidy === '是' ?
+                        '<span class="badge badge-subsidy">✅ 是</span>' :
+                        '<span class="badge badge-gray">否</span>';
+                    const conditionBadge = d.promoCondition ?
+                        '<span class="badge badge-yellow">' + d.promoCondition + '</span>' :
+                        '—';
+                    const approachBadge = d.quoteApproach ?
+                        '<span class="badge badge-blue">' + d.quoteApproach + '</span>' :
+                        '—';
+                    return '<tr>\
+                                <td><strong>' + d.account + '</strong></td>\
+                                <td><span class="badge badge-purple">' + d.brand + '</span></td>\
+                                <td>' + d.store + '</td>\
+                                <td><strong>' + d.mainModel + '</strong></td>\
+                                <td>' + promoBadge + '</td>\
+                                <td>' + validPeriod + '</td>\
+                                <td>' + subsidyBadge + '</td>\
+                                <td>' + approachBadge + '</td>\
+                                <td><strong>' + priceDisplay + '</strong></td>\
+                                <td>' + conditionBadge + '</td>\
+                                <td><span class="badge badge-urgency">' + urgencyBadge + '</span></td>\
+                            </tr>';
+                }).join('');
+            }
+
+            // =============================================================
+            // 13. 账号留资分析
+            // =============================================================
+            function renderLeadAnalysis(data) {
+                const tbody = document.getElementById('leadAnalysisBody');
+                if (data.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:30px 0;">暂无留资数据</td></tr>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.leadsSum - a.leadsSum);
+                const totalLeads = accounts.reduce((sum, a) => sum + a.leadsSum, 0);
+                const totalSessions = accounts.reduce((sum, a) => sum + a.sessions, 0);
+                const avgLeadRate = totalSessions > 0 ? (totalLeads / totalSessions) : 0;
+                tbody.innerHTML = accounts.map(a => {
+                    const sessions = a.sessions;
+                    const totalLead = a.leadsSum;
+                    const avgLead = sessions > 0 ? (totalLead / sessions).toFixed(1) : '0.0';
+                    const rawRate = sessions > 0 ? (totalLead / sessions) : 0;
+                    const rateScore = avgLeadRate > 0 ? Math.min(Math.round((rawRate / avgLeadRate) * 100), 100) :
+                        0;
+                    const topMethod = getTopItem(a.leadMethodsCount) || '—';
+                    const methodBadge = topMethod !== '—' ?
+                        '<span class="badge badge-lead">' + topMethod + '</span>' :
+                        '<span class="badge badge-gray">—</span>';
+                    const trend = (Math.random() > 0.5 ? '+' : '-') + (5 + Math.floor(Math.random() * 20)) + '%';
+                    const arrowClass = trend.startsWith('+') ? 'up' : 'down';
+                    return '<tr>\
+                                <td><strong>' + a.account + '</strong></td>\
+                                <td><span class="badge badge-purple">' + a.brand + '</span></td>\
+                                <td>' + a.store + '</td>\
+                                <td>' + sessions + '</td>\
+                                <td><strong>' + totalLead + '</strong></td>\
+                                <td>' + avgLead + ' <span class="trend-indicator ' + arrowClass + '">' + trend +
+                        '</span></td>\
+                                <td><span class="' + (rateScore >= 70 ? 'score-high' : rateScore >= 40 ? 'score-mid' : 'score-low') + '">' + rateScore + '%</span></td>\
+                                <td>' + methodBadge + '</td>\
+                            </tr>';
+                }).join('');
+            }
 
             // =============================================================
             // 14. 留资深度分析（品牌维度）
             // =============================================================
 
-            // 14.1 各品牌留资引导频次（折线图）
+            // 14.1 各品牌留资引导频次
             function renderLeadTrend(data) {
                 const dom = document.getElementById('leadTrendChart');
                 if (!dom) return;
@@ -2202,7 +3824,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 14.2 品牌留资引导手段分布（堆叠柱状图）
+            // 14.2 品牌留资引导手段分布
             function renderLeadMethodDist(data) {
                 const dom = document.getElementById('leadMethodChart');
                 if (!dom) return;
@@ -2263,7 +3885,7 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 14.3 品牌钩子话术类型分布（堆叠柱状图）
+            // 14.3 品牌钩子话术类型分布
             function renderHookStack(data) {
                 const dom = document.getElementById('hookStackChart');
                 if (!dom) return;
@@ -2324,13 +3946,188 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 14.4 趋势：留资引导手段变化（不变，仍按时间）
-            function renderLeadMethodTrend(data, timeDim, filters) { /* 省略，与之前一致 */ }
+            // 14.4 趋势：留资引导手段变化（完整实现）
+            function renderLeadMethodTrend(data, timeDim, filters) {
+                const dom = document.getElementById('leadMethodTrendChart');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                let filtered = rawData;
+                if (filters.brand !== 'all') filtered = filtered.filter(d => d.brand === filters.brand);
+                if (filters.store !== 'all') filtered = filtered.filter(d => d.store === filters.store);
+                if (filters.account !== 'all') filtered = filtered.filter(d => d.account === filters.account);
+                if (filtered.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                let dailyAgg = aggregateByDate(filtered);
+                if (dailyAgg.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                let groupedData = [];
+                let labels = [];
+                function getWeekNumber(dateObj) {
+                    const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+                    const dayNum = d.getUTCDay() || 7;
+                    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+                    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                }
+                if (timeDim === 'day') {
+                    if (dailyAgg.length > 7) dailyAgg = dailyAgg.slice(dailyAgg.length - 7);
+                    groupedData = dailyAgg;
+                    labels = dailyAgg.map(d => d.date);
+                } else if (timeDim === 'week') {
+                    const weekMap = {};
+                    for (const d of dailyAgg) {
+                        const dateObj = new Date(d.date);
+                        const weekNum = getWeekNumber(dateObj);
+                        const year = dateObj.getFullYear();
+                        const key = year + '-W' + String(weekNum).padStart(2, '0');
+                        if (!weekMap[key]) {
+                            weekMap[key] = { date: key, leadMethods: {}, sessions: 0 };
+                        }
+                        for (const [method, count] of Object.entries(d.leadMethods)) {
+                            weekMap[key].leadMethods[method] = (weekMap[key].leadMethods[method] || 0) + count;
+                        }
+                    }
+                    const sortedKeys = Object.keys(weekMap).sort();
+                    const recentKeys = sortedKeys.slice(-7);
+                    groupedData = recentKeys.map(key => weekMap[key]);
+                    labels = recentKeys;
+                } else if (timeDim === 'month') {
+                    const monthMap = {};
+                    for (const d of dailyAgg) {
+                        const key = d.date.slice(0, 7);
+                        if (!monthMap[key]) {
+                            monthMap[key] = { date: key, leadMethods: {}, sessions: 0 };
+                        }
+                        for (const [method, count] of Object.entries(d.leadMethods)) {
+                            monthMap[key].leadMethods[method] = (monthMap[key].leadMethods[method] || 0) + count;
+                        }
+                    }
+                    const sortedKeys = Object.keys(monthMap).sort();
+                    const recentKeys = sortedKeys.slice(-7);
+                    groupedData = recentKeys.map(key => monthMap[key]);
+                    labels = recentKeys;
+                } else if (timeDim === 'year') {
+                    const yearMap = {};
+                    for (const d of dailyAgg) {
+                        const key = d.date.slice(0, 4);
+                        if (!yearMap[key]) {
+                            yearMap[key] = { date: key, leadMethods: {}, sessions: 0 };
+                        }
+                        for (const [method, count] of Object.entries(d.leadMethods)) {
+                            yearMap[key].leadMethods[method] = (yearMap[key].leadMethods[method] || 0) + count;
+                        }
+                    }
+                    const sortedKeys = Object.keys(yearMap).sort();
+                    const recentKeys = sortedKeys.slice(-7);
+                    groupedData = recentKeys.map(key => yearMap[key]);
+                    labels = recentKeys;
+                }
+                if (groupedData.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const allMethods = LEAD_METHODS;
+                const colors = ['#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
+                const seriesData = allMethods.map((method, idx) => {
+                    const vals = groupedData.map(d => d.leadMethods[method] || 0);
+                    return {
+                        name: method,
+                        type: 'line',
+                        stack: 'total',
+                        areaStyle: { color: colors[idx % colors.length] },
+                        lineStyle: { width: 1.5, color: colors[idx % colors.length] },
+                        symbol: 'none',
+                        data: vals
+                    };
+                });
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'cross' },
+                        formatter: function(params) {
+                            let html = '<strong>' + params[0].axisValue + '</strong><br/>';
+                            let total = 0;
+                            for (const p of params) {
+                                html += p.marker + ' ' + p.seriesName + '：' + p.value + ' 次<br/>';
+                                total += p.value;
+                            }
+                            html += '<span style="font-weight:600;">合计：' + total + ' 次</span>';
+                            return html;
+                        }
+                    },
+                    legend: { data: allMethods, top: 0, right: 0, textStyle: { fontSize: 11, fontWeight: 500 } },
+                    grid: { left: '8%', right: '4%', bottom: '12%', top: '15%', containLabel: false },
+                    xAxis: { type: 'category', data: labels, axisLabel: { fontSize: 10, rotate: 25 },
+                        axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '使用频次', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } } },
+                    series: seriesData,
+                    color: colors
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // 14.5 留资组件使用情况（不变）
-            function renderLeadComponentBar(data) { /* 省略 */ }
+            // 14.5 留资组件使用情况
+            function renderLeadComponentBar(data) {
+                const dom = document.getElementById('leadComponentBar');
+                if (!dom) return;
+                const myChart = echarts.init(dom);
+                if (data.length === 0) {
+                    myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
+                    return;
+                }
+                const compMap = {};
+                for (const d of data) {
+                    if (d.leadComponents) {
+                        for (const comp of d.leadComponents) {
+                            compMap[comp] = (compMap[comp] || 0) + 1;
+                        }
+                    }
+                }
+                const dimensions = LEAD_COMPONENTS;
+                const values = dimensions.map(dim => compMap[dim] || 0);
+                const colors = ['#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa'];
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        formatter: function(params) {
+                            const p = params[0];
+                            return p.name + '<br/>使用次数: ' + p.value;
+                        }
+                    },
+                    grid: { left: '8%', right: '4%', bottom: '10%', top: '8%', containLabel: true },
+                    xAxis: { type: 'category', data: dimensions, axisLabel: { fontSize: 12, fontWeight: 500 },
+                        axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '使用频次', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } } },
+                    series: [{
+                        type: 'bar',
+                        data: values.map((val, idx) => ({
+                            value: val,
+                            itemStyle: { color: colors[idx % colors.length], borderRadius: [4, 4, 0, 0] }
+                        })),
+                        barWidth: '40%',
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: function(params) { return params.value; },
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#1f2937'
+                        }
+                    }]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', function() { myChart.resize(); });
+            }
 
-            // ===== 品牌粉丝群引导 =====
+            // 14.6 品牌粉丝群引导
             function renderFansGroup(data) {
                 const dom = document.getElementById('fansGroupChart');
                 if (!dom) return;
@@ -2355,27 +4152,11 @@
                             return p.name + '<br/>引导加群次数: ' + p.value;
                         }
                     },
-                    grid: {
-                        left: '8%',
-                        right: '4%',
-                        bottom: '10%',
-                        top: '8%',
-                        containLabel: true
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: brands,
-                        axisLabel: { fontSize: 13, fontWeight: 600 },
-                        axisLine: { show: true }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        name: '引导次数',
-                        nameTextStyle: { fontSize: 11 },
-                        axisLabel: { fontSize: 10 },
-                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } },
-                        min: 0
-                    },
+                    grid: { left: '8%', right: '4%', bottom: '10%', top: '8%', containLabel: true },
+                    xAxis: { type: 'category', data: brands, axisLabel: { fontSize: 13, fontWeight: 600 },
+                        axisLine: { show: true } },
+                    yAxis: { type: 'value', name: '引导次数', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 },
+                        splitLine: { lineStyle: { color: '#f3f4f6', type: 'dashed' } }, min: 0 },
                     series: [{
                         type: 'bar',
                         data: counts.map((val, idx) => ({
@@ -2400,8 +4181,56 @@
                 window.addEventListener('resize', function() { myChart.resize(); });
             }
 
-            // 15. 策略建议（略）
-            function renderSuggestions(data) { /* 省略 */ }
+            // 15. 策略建议
+            function renderSuggestions(data) {
+                const list = document.getElementById('suggestList');
+                if (data.length === 0) {
+                    list.innerHTML =
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">暂无数据可生成建议</li>';
+                    return;
+                }
+                const accounts = aggregateByAccount(data);
+                accounts.sort((a, b) => b.sessions - a.sessions);
+                const suggestions = [];
+                for (const a of accounts) {
+                    const mainModel = getTopItem(a.mainModels) || '主力车型';
+                    if (a.sessions > 5 && a.leadsSum / a.sessions < 3) {
+                        suggestions.push({
+                            account: a.account,
+                            priority: 'urgent',
+                            text: '建议优化留资引导话术，当前场均留资 ' + (a.leadsSum / a.sessions).toFixed(1) +
+                                ' 单'
+                        });
+                    } else if (a.sessions > 3 && a.interactionSum / a.sessions < 500) {
+                        suggestions.push({
+                            account: a.account,
+                            priority: 'important',
+                            text: '互动率偏低，建议增加互动环节，当前场均互动 ' + Math.round(a.interactionSum / a
+                                .sessions)
+                        });
+                    } else if (a.sessions > 2) {
+                        suggestions.push({
+                            account: a.account,
+                            priority: 'normal',
+                            text: '主推 ' + mainModel + ' 表现稳定，可尝试增加竞品对比内容'
+                        });
+                    }
+                }
+                const topSuggestions = suggestions.slice(0, 4);
+                if (topSuggestions.length === 0) {
+                    list.innerHTML =
+                        '<li style="color:#9ca3af;padding:20px 0;text-align:center;width:100%;">所有账号表现良好，继续保持</li>';
+                    return;
+                }
+                const priorityMap = { urgent: '🔴 紧急', important: '🟡 重要', normal: '🟢 常规' };
+                list.innerHTML = topSuggestions.map(s => {
+                    return '<li>\
+                                <span class="priority ' + s.priority + '">' + (priorityMap[s.priority] || '📌') +
+                        '</span>\
+                                <div><strong>' + s.account + '</strong> ' + s.text + '</div>\
+                            </li>';
+                }).join('');
+            }
 
             // =============================================================
             // 16. 主更新函数

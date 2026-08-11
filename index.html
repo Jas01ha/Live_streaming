@@ -1557,7 +1557,7 @@
             }
 
             // =============================================================
-            // 8. 渲染函数
+            // 8. 渲染函数（完整实现）
             // =============================================================
 
             // 8.1 顶部标签
@@ -3934,7 +3934,7 @@
             }
 
             // =============================================================
-            // 14. 新增/调整的留资深度分析图表
+            // 14. 留资深度分析图表（含时间粒度跟随）
             // =============================================================
 
             // 14.1 各竞品账号留资引导频次（折线图）
@@ -4185,16 +4185,25 @@
                     return;
                 }
 
-                // 先按日聚合
+                // 按日聚合
                 let dailyAgg = aggregateByDate(data);
                 if (dailyAgg.length === 0) {
                     myChart.setOption({ title: { text: '暂无数据', left: 'center', top: 'center' } });
                     return;
                 }
 
-                // 根据时间维度进行二次聚合
+                // 根据时间维度进行二次聚合，取最近7个周期
                 let groupedData = [];
                 let labels = [];
+
+                // 辅助：获取周数
+                function getWeekNumber(dateObj) {
+                    const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+                    const dayNum = d.getUTCDay() || 7;
+                    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+                    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                }
 
                 if (timeDim === 'day') {
                     // 取最近7天
@@ -4202,12 +4211,14 @@
                     groupedData = dailyAgg;
                     labels = dailyAgg.map(d => d.date);
                 } else if (timeDim === 'week') {
-                    // 按周聚合
+                    // 按周聚合，取最近7周
                     const weekMap = {};
                     for (const d of dailyAgg) {
                         const dateObj = new Date(d.date);
                         const weekNum = getWeekNumber(dateObj);
-                        const key = dateObj.getFullYear() + '-W' + String(weekNum).padStart(2, '0');
+                        const year = dateObj.getFullYear();
+                        // 处理跨年周，使周标签唯一
+                        const key = year + '-W' + String(weekNum).padStart(2, '0');
                         if (!weekMap[key]) {
                             weekMap[key] = {
                                 date: key,
@@ -4220,9 +4231,12 @@
                         }
                     }
                     const sortedKeys = Object.keys(weekMap).sort();
-                    groupedData = sortedKeys.map(key => weekMap[key]);
-                    labels = sortedKeys;
+                    // 取最近7周
+                    const recentKeys = sortedKeys.slice(-7);
+                    groupedData = recentKeys.map(key => weekMap[key]);
+                    labels = recentKeys;
                 } else if (timeDim === 'month') {
+                    // 按月聚合，取最近7个月
                     const monthMap = {};
                     for (const d of dailyAgg) {
                         const key = d.date.slice(0, 7); // YYYY-MM
@@ -4238,9 +4252,11 @@
                         }
                     }
                     const sortedKeys = Object.keys(monthMap).sort();
-                    groupedData = sortedKeys.map(key => monthMap[key]);
-                    labels = sortedKeys;
+                    const recentKeys = sortedKeys.slice(-7);
+                    groupedData = recentKeys.map(key => monthMap[key]);
+                    labels = recentKeys;
                 } else if (timeDim === 'year') {
+                    // 按年聚合，取最近7年
                     const yearMap = {};
                     for (const d of dailyAgg) {
                         const key = d.date.slice(0, 4);
@@ -4256,8 +4272,9 @@
                         }
                     }
                     const sortedKeys = Object.keys(yearMap).sort();
-                    groupedData = sortedKeys.map(key => yearMap[key]);
-                    labels = sortedKeys;
+                    const recentKeys = sortedKeys.slice(-7);
+                    groupedData = recentKeys.map(key => yearMap[key]);
+                    labels = recentKeys;
                 }
 
                 if (groupedData.length === 0) {
@@ -4330,15 +4347,6 @@
                 };
                 myChart.setOption(option);
                 window.addEventListener('resize', function() { myChart.resize(); });
-            }
-
-            // 辅助：获取周数
-            function getWeekNumber(dateObj) {
-                const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
-                const dayNum = d.getUTCDay() || 7;
-                d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-                return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
             }
 
             // 14.5 留资组件使用情况（树状图-整体）
